@@ -645,7 +645,7 @@ const PROFILE_FIELDS=[
 {key:'height',q:'РОСТ, СМ',max:6},
 {key:'weight',q:'ВЕС, КГ',max:6},
 {key:'features',q:'ОТЛИЧИТЕЛЬНЫЕ ЧЕРТЫ (ШРАМЫ, АНОМАЛИИ, ИМПЛАНТЫ)',max:140},
-{key:'department',q:'ОТДЕЛ (ЦИФРА ИЛИ СЛОВОМ): 1-ИНЖЕНЕР 2-МЕДИК 3-БОЕВАЯ ЕДИНИЦА 4-УЧЁНЫЙ',max:60,dept:true},
+{key:'department',q:'ОТДЕЛ (ЦИФРА ИЛИ СЛОВОМ)',max:60,dept:true},
 {key:'skills',q:'НАВЫКИ: 3 КЛЮЧЕВЫХ УМЕНИЯ + УРОВЕНЬ',max:200},
 {key:'mentor',q:'НАСТАВНИК (ЕСЛИ ИМЕЕТСЯ)',max:40},
 {key:'history',q:'КРАТКАЯ ИСТОРИЯ (ПРОИСХОЖДЕНИЕ, СОБЫТИЯ, ПРИЧИНА ВСТУПЛЕНИЯ)',max:400},
@@ -1025,7 +1025,8 @@ function stableKeyOf(ch){const map={'A':'A','Ф':'A','B':'B','И':'B','C':'C','�
 'D':'D','В':'D','E':'E','У':'E','F':'F','А':'F','H':'H','Р':'H'};
 return map[ch.toUpperCase()]||null;}
 
-/* ==================== ВЫБОР ОПЕРАТОРА (v7.7.1: полная перерисовка) ==================== */
+/* ==================== ВЫБОР ОПЕРАТОРА (v7.8: выбор цифрой + ENTER) ==================== */
+let selEntries=[];
 function buildSelGrid(){
 const users=loadUsers();
 const cols=DEPT_GROUPS.map(g=>({g,names:[]}));
@@ -1038,72 +1039,50 @@ let placed=false;
 cols.forEach(c=>{if(!placed&&c.g.key===grp){c.names.push(nick);placed=true;}});
 if(!placed)guests.push(nick);});
 return{cols,guests};}
-function selNameAt(r,c){
-if(!selGrid)return null;
-if(r<selGrid.cols.length)return selGrid.cols[r].names[c]||null;
-if(r===selGrid.cols.length)return selGrid.guests[c]||null;
-return null;}
-function selCellRender(name,sel){
-const w=13;
-const nm=padR(name.slice(0,w-2),w-2);
-return sel?('>'+nm):(' '+nm);}
-/* v7.7.1: экран выбора рисуется ЦЕЛИКОМ при каждом движении */
+function buildSelEntries(){
+if(!selGrid)selGrid=buildSelGrid();
+const arr=[];
+selGrid.cols.forEach(c=>c.names.forEach(n=>arr.push({name:n,group:c.g.name})));
+selGrid.guests.forEach(n=>arr.push({name:n,group:'ГОСТИ (БЕЗ ОТДЕЛА)'}));
+return arr;}
 async function renderSelGrid(){
-if(!selGrid)return;
-const CW=15;
+if(!selEntries||!selEntries.length)return;
 const lines=[];
 lines.push('+================================================+');
 lines.push('|   PLAGUE.INC - СИСТЕМА КОНТРОЛЯ ДОСТУПА        |');
 lines.push('|      ТЕРМИНАЛ ОИДЛ // ВЫБОР ОПЕРАТОРА          |');
 lines.push('+================================================+');
 lines.push('');
-lines.push(' '+(DEPT_GROUPS.map(g=>padR(g.name,CW)).join('| ')));
-lines.push(' '+(DEPT_GROUPS.map(()=>'-'.repeat(CW)).join('| ')));
-const maxRows=Math.max(2,...selGrid.cols.map(c=>c.names.length));
-for(let r=0;r<maxRows;r++){
-let row=' ';
-DEPT_GROUPS.forEach((g,ci)=>{
-const name=selGrid.cols[ci].names[r];
-row+=selCellRender(name||'· · ·',!!name&&r===selR&&ci===selC);
-if(ci<DEPT_GROUPS.length-1)row+='| ';});
-lines.push(row);}
-if(selGrid.guests.length){
-lines.push(' '+'-'.repeat(CW*4+9));
-lines.push(' '+padR('ГОСТИ (БЕЗ ОТДЕЛА)',CW*4+9));
-let row=' ';
-selGrid.guests.slice(0,12).forEach((name,ci)=>{
-row+=selCellRender(name,selR===selGrid.cols.length&&ci===selC);});
-lines.push(row);}
+const num=parseInt(passBuffer,10);
+const pick=(num>=1&&num<=selEntries.length)?selEntries[num-1].name:null;
+lines.push(' НОМЕР: '+(passBuffer||'__')+(pick?' -> '+pick:''));
 lines.push('');
-lines.push(' WASD/СТРЕЛКИ - ПЕРЕМЕЩЕНИЕ СТРЕЛКИ ►');
-lines.push(' ENTER - ВЫБРАТЬ ОПЕРАТОРА | [N] - РЕГИСТРАЦИЯ');
+let buf=[],lastGroup=null;
+const flush=()=>{if(buf.length){lines.push(' '+buf.join(' '));buf=[];}};
+selEntries.forEach((e,i)=>{
+if(e.group!==lastGroup){flush();lines.push(' --- '+e.group+' ---');lastGroup=e.group;}
+const n=i+1,mark=(num===n);
+buf.push((mark?'[':' ')+String(n).padStart(2,'0')+(mark?']':'')+' '+padR(e.name.slice(0,17),17));
+if(buf.length===2)flush();});
+flush();
+lines.push('');
+lines.push(' ВВЕДИТЕ НОМЕР ОПЕРАТОРА + ENTER');
+lines.push(' BACKSPACE - СТЕРЕТЬ | [N] - РЕГИСТРАЦИЯ | ESC - ВЫХОД');
 clearScreen();
 for(const line of lines)commit(line);
 liveEl.textContent='';}
-function menuSelectMove(dr,dc){
-if(!selGrid)return;
-let r=selR,c=selC;
-for(let step=0;step<30;step++){
-r+=dr;c+=dc;
-if(r<0||c<0||r>selGrid.cols.length||c>=12)break;
-if(selNameAt(r,c)){selR=r;selC=c;Sound.navBlip();
-safe(renderSelGrid);return;}}
-Sound.beep(400,.04);}
 function menuSelectConfirm(){
-const name=selNameAt(selR,selC);
-if(!name){Sound.beep(400,.05);return;}
+const num=parseInt(passBuffer,10);
+if(!num||num<1||num>selEntries.length){Sound.beep(400,.05);return;}
 Sound.beep(700,.07);
+const name=selEntries[num-1].name;
+passBuffer='';
 return void safe(()=>selectUser(name));}
 async function startAuth(){setState('menu');currentUser=null;passBuffer='';safeKey=null;clearScreen();
 const lockUntil=getLockUntil();
 if(Date.now()<lockUntil)return lockTerminal(lockUntil);
 selGrid=buildSelGrid();
-/* v7.7.1: старт на первом существующем операторе (колонка за колонкой) */
-selR=0;selC=0;
-(function pickFirst(){
-for(let c=0;c<selGrid.cols.length;c++){
-if(selGrid.cols[c].names.length){selR=0;selC=c;return;}}
-if(selGrid.guests.length){selR=selGrid.cols.length;selC=0;}})();
+selEntries=buildSelEntries();
 const users=loadUsers();const names=Object.keys(users);
 if(!names.length){
 await printLines(['+================================================+','|   PLAGUE.INC - СИСТЕМА КОНТРОЛЯ ДОСТУПА        |','|      ТЕРМИНАЛ ОИДЛ // ВЫБОР ОПЕРАТОРА          |','+================================================+','',
@@ -1112,99 +1091,6 @@ await sleep(400);return startRegistration();}
 setState('waitprint');
 await renderSelGrid();
 setState('menu-select');passBuffer='';liveEl.textContent='';}
-async function selectUser(name){
-setState('waitprint');currentUser=name;passBuffer='';attemptsLeft=MAX_ATTEMPTS;
-clearScreen();
-await printLines(['СКАНИРОВАНИЕ СЕТЧАТКИ...'],16);
-const pct=(97.2+Math.random()*2.6).toFixed(1);
-const N=16;
-for(let i=0;i<=N;i++){ensurePower();
-liveEl.textContent='СЕТЧАТКА: ['+'▓'.repeat(i)+'░'.repeat(N-i)+'] '+Math.round(i/N*100)+'%';
-scrollDown();Sound.tick();pulseLED();await sleep(45);}
-Sound.scanner();
-commit('СЕТЧАТКА: ['+'▓'.repeat(N)+'] СОВПАДЕНИЕ '+pct+'%');
-commit('ОПЕРАТОР ПОДТВЕРЖДЁН.');
-commit('');
-await printLines(['ОПЕРАТОР: '+name,'ВВЕДИТЕ ПАРОЛЬ. ПОПЫТОК: '+'▓'.repeat(attemptsLeft)+' ('+attemptsLeft+')','']);
-setState('pass');passBuffer='';redraw();}
-async function checkPassword(){
-const users=loadUsers();const user=users[currentUser];
-if(user&&user.hash===hashPass(passBuffer)){logEvent('вход в систему');return grantAccess(currentUser);}
-attemptsLeft--;Sound.error();doGlitch();
-if(attemptsLeft<=0){logEvent('блокировка: 4 неверных пароля');return lockTerminal();}
-passBuffer='';
-await printLines(['НЕВЕРНЫЙ ПАРОЛЬ. ОСТАЛОСЬ ПОПЫТОК: '+'▓'.repeat(attemptsLeft)+' ('+attemptsLeft+')']);
-redraw();}
-async function lockTerminal(customUntil){setState('locked');passBuffer='';
-const until=customUntil||(Date.now()+LOCK_SECONDS*1000);setLockUntil(until);
-Sound.error();doGlitch();
-ledAct.classList.add('err');setTimeout(()=>ledAct.classList.remove('err'),3200);
-clearScreen();
-await printLines(['+========================================+','|             !!! ВНИМАНИЕ !!!           |','+========================================+','',
-'НЕВЕРНЫЙ ПАРОЛЬ ВВЕДЁН '+MAX_ATTEMPTS+' РАЗ ПОДРЯД.','ТЕРМИНАЛ ЗАБЛОКИРОВАН СИСТЕМОЙ БЕЗОПАСНОСТИ.','СОБЫТИЕ ЗАНЕСЕНО В ЖУРНАЛ ОИДЛ.',''],50);
-function tick(){if(!powerOn){clearInterval(lockTimer);return;}
-const left=Math.max(0,Math.ceil((until-Date.now())/1000));
-liveEl.textContent='РАЗБЛОКИРОВКА ЧЕРЕЗ: '+left+' СЕК';scrollDown();
-if(left<=0){clearInterval(lockTimer);safe(startAuth);}}
-tick();clearInterval(lockTimer);lockTimer=setInterval(tick,1000);}
-async function startRegistration(){setState('reg-nick');passBuffer='';clearScreen();
-await printLines(['+========================================+','|     РЕГИСТРАЦИЯ НОВОГО ОПЕРАТОРА       |','+========================================+','',
-'ПОЗЫВНОЙ: 2-16 СИМВОЛОВ, БУКВЫ/ЦИФРЫ/_/-','ПАРОЛЬ:   МИНИМУМ 4 СИМВОЛА',
-isTouch?'КНОПКИ: ⌫ СТЕРЕТЬ, ВВОД, ESC ОТМЕНА':'ESC - ОТМЕНА','']);
-redraw();}
-async function submitNick(){const nick=passBuffer.trim();
-if(!NICK_RE.test(nick)){Sound.error();passBuffer='';
-await printLines(['ОШИБКА: ПОЗЫВНОЙ ДОЛЖЕН СОДЕРЖАТЬ 2-16 СИМВОЛОВ (БУКВЫ, ЦИФРЫ, _, -)']);redraw();return;}
-const users=loadUsers();
-if(Object.keys(users).some(k=>k.toUpperCase()===nick.toUpperCase())){
-Sound.error();doGlitch();passBuffer='';
-await printLines(['ОШИБКА: ТАКОЙ ОПЕРАТОР УЖЕ ЗАРЕГИСТРИРОВАН.']);redraw();return;}
-regNick=nick;passBuffer='';setState('reg-pass');
-await printLines(['ОПЕРАТОР "'+nick+'" СВОБОДЕН.','']);redraw();}
-async function submitPass(){if(passBuffer.length<4){Sound.error();passBuffer='';
-await printLines(['ОШИБКА: ПАРОЛЬ КОРОЧЕ 4 СИМВОЛОВ.']);redraw();return;}
-passFirst=passBuffer;passBuffer='';setState('reg-pass2');commit('');redraw();}
-async function submitPass2(){if(passBuffer!==passFirst){Sound.error();doGlitch();passBuffer='';passFirst='';
-setState('reg-pass');await printLines(['ОШИБКА: ПАРОЛИ НЕ СОВПАДАЮТ. НАЧНИТЕ ЗАНОВО.']);redraw();return;}
-const users=loadUsers();
-users[regNick]={hash:hashPass(passBuffer),created:new Date().toISOString(),last:null,clearance:2,profile:null,medical:null,medals:{},inventory:{},xp:0};
-await saveUsers(users);
-const masked='█'.repeat(passFirst.length);
-passBuffer='';commit('ПОВТОРИТЕ ПАРОЛЬ: '+masked);
-busy=true;liveEl.textContent='СОЗДАНИЕ ЗАПИСИ ОПЕРАТОРА...';scrollDown();
-Sound.beep(600,.06);pulseLED();await sleep(700);ensurePower();
-Sound.clunk();commit('ЗАПИСЬ ВНЕСЕНА В РЕЕСТР ОИДЛ .......... ОК');
-await sleep(400);busy=false;
-logEvent('регистрация оператора '+regNick);
-return grantAccess(regNick,true);}
-function birthdaysToday(){const users=loadUsers();const d=new Date();
-const dd=String(d.getDate()).padStart(2,'0'),mm=String(d.getMonth()+1).padStart(2,'0');
-return Object.keys(users).filter(n=>{const b=users[n].profile&&users[n].profile.birth;
-if(!b)return false;const m=b.match(/^(\d{1,2})\.(\d{1,2})/);
-return m&&m[1].padStart(2,'0')===dd&&m[2].padStart(2,'0')===mm;});}
-async function grantAccess(name,isNew=false){setState('waitprint');
-currentUser=name;passBuffer='';
-const users=loadUsers();const user=users[name]||{};
-const lastText=isNew?'ПЕРВЫЙ ВХОД - ЗАПИСЬ СОЗДАНА':fmtDate(user.last);
-users[name]={...user,last:new Date().toISOString()};await saveUsers(users);
-Sound.chord();clearScreen();
-const medalCount=Object.keys(user.medals||{}).length;
-const lines=['+------------------------------------+','|          ДОСТУП РАЗРЕШЁН           |','+------------------------------------+','',
-'ОПЕРАТОР ......... '+name,'ДОПУСК ........... '+clearanceLabel(user.clearance||2),
-'ЗВАНИЕ ........... '+rankOf(user.xp||0)[0]+' (XP: '+(user.xp||0)+')',
-'ПОСЛЕДНИЙ ВХОД ... '+lastText];
-if(medalCount)lines.push('МЕДАЛЕЙ .......... '+medalCount);
-if(isNew)lines.push('ЗАПИСЬ ОПЕРАТОРА ВНЕСЕНА В РЕЕСТР ОИДЛ.');
-const bd=birthdaysToday();
-if(bd.length)lines.push('','★ СЕГОДНЯ ДЕНЬ РОЖДЕНИЯ У: '+bd.join(', ')+'!');
-if(stableData().alarm)lines.push('','!!! РЕЖИМ ТРЕВОГИ СТОЙЛА АКТИВЕН !!!');
-await printLines(lines,40);
-await sleep(300);ensurePower();
-addXP(name,2,false);
-lastIncoming=Date.now();
-if(!user.profile){await printLines(['','! НЕТ ДАННЫХ АНКЕТЫ УЧАСТНИКА КЛАНА.','! АНКЕТА + МЕДИЦИНСКИЙ БЛОК ОБЯЗАТЕЛЬНЫ.','! ПУСТОЙ ОТВЕТ = ПРОЧЕРК. ESC - ОТЛОЖИТЬ.','']);
-return startProfile(false);}
-openMainMenu();}
 
 /* ==================== ГЛАВНОЕ МЕНЮ ==================== */
 function unreadMailCount(){if(!currentUser)return 0;
@@ -3071,7 +2957,7 @@ b.addEventListener('pointerdown',e=>e.preventDefault());
 b.addEventListener('click',()=>{if(Sound.enabled)Sound.tick();safe(k.act);});
 touchbarEl.appendChild(b);}}
 
-/* ==================== КЛАВИАТУРА ==================== */
+/* ==================== КЛАВИАТУРА (v7.8) ==================== */
 function handleKey(e){
 if(!adminModalEl.hidden){if(e.key==='Escape')closeAdminModal();return;}
 if(!masterModalEl.hidden){if(e.key==='Escape')closeMasterModal();return;}
@@ -3083,14 +2969,16 @@ const ae=document.activeElement;
 if(ae===adminPassEl||ae===masterPassEl)return;
 if(ae&&ae.tagName==='INPUT'&&ae!==mobileInput)return;
 if(ae&&ae.tagName==='TEXTAREA')return;
+/* --- выбор оператора: ввод номера + ENTER (WASD/стрелки убраны) --- */
 if(state==='menu-select'){
+if(e.key==='Enter'){e.preventDefault();safe(menuSelectConfirm);return;}
+if(e.key==='Backspace'){e.preventDefault();if(passBuffer)passBuffer=passBuffer.slice(0,-1);safe(renderSelGrid);return;}
 const kk=e.key.toLowerCase();
-if(e.key==='ArrowUp'||kk==='w'||kk==='ц'){e.preventDefault();safe(()=>menuSelectMove(-1,0));redraw();return;}
-if(e.key==='ArrowDown'||kk==='s'||kk==='ы'){e.preventDefault();safe(()=>menuSelectMove(1,0));redraw();return;}
-if(e.key==='ArrowLeft'||kk==='a'||kk==='ф'){e.preventDefault();safe(()=>menuSelectMove(0,-1));redraw();return;}
-if(e.key==='ArrowRight'||kk==='d'||kk==='в'){e.preventDefault();safe(()=>menuSelectMove(0,1));redraw();return;}
-if(e.key==='Enter'){e.preventDefault();if(typeof menuSelectConfirm==='function'){safe(menuSelectConfirm);}else{safe(inputEnter);}return;}
-if(kk==='n'||kk==='т'){safe(startRegistration);return;}}
+if(kk==='n'||kk==='т'){safe(startRegistration);return;}
+if(e.key==='Escape'){safe(inputEscape);return;}
+if(e.key.length===1&&e.key>='0'&&e.key<='9'){passBuffer=(passBuffer+e.key).slice(0,2);safe(renderSelGrid);return;}
+return;}
+/* --- общая обработка для остальных экранов --- */
 if(e.key==='Enter'){safe(inputEnter);return;}
 if(e.key==='Escape'){safe(inputEscape);return;}
 if(e.key==='Backspace'){inputBack();return;}
