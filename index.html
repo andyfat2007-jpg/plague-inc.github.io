@@ -1,0 +1,3123 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#050505">
+<title>PLAGUE.INC // ТЕРМИНАЛ ОИДЛ</title>
+<link rel="icon" type="image/png" href="icon.png">
+<link rel="apple-touch-icon" href="icon.png">
+<link rel="manifest" href="manifest.json">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="apple-mobile-web-app-title" content="ТЕРМИНАЛ ОИДЛ">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anonymous+Pro:wght@400;700&family=PT+Mono&display=swap" rel="stylesheet">
+<style>
+:root{--phosphor:#33ff66;--phosphor-rgb:51,255,102;--master:#b366ff;--master-rgb:179,102,255}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%;overflow:hidden;background:#050505;touch-action:manipulation}
+body{display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent}
+.bezel{position:relative;width:min(97vw,1280px);height:min(95vh,860px);height:min(95dvh,860px);
+padding:clamp(20px,3vw,40px) clamp(14px,2.5vw,34px);border-radius:26px;
+background:linear-gradient(155deg,#262626 0%,#141414 55%,#0a0a0a 100%);
+box-shadow:inset 0 1px 0 rgba(255,255,255,.07),inset 0 -2px 6px rgba(0,0,0,.8),0 30px 80px rgba(0,0,0,.9)}
+.bezel::before{content:'';position:absolute;inset:0;border-radius:26px;pointer-events:none;z-index:1;opacity:.5;
+background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='200'%3E%3Cfilter id='s1'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.012 0.09' numOctaves='3' seed='7'/%3E%3CfeColorMatrix values='0 0 0 0 0.55 0 0 0 0 0.55 0 0 0 0 0.58 0 0 0 0.16 0'/%3E%3C/filter%3E%3Crect width='300' height='200' filter='url(%23s1)'/%3E%3C/svg%3E");
+mix-blend-mode:screen}
+.bezel::after{content:'';position:absolute;inset:0;border-radius:26px;pointer-events:none;z-index:1;opacity:.6;
+background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='180'%3E%3Cfilter id='s2'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.02 0.03' numOctaves='4' seed='23'/%3E%3CfeColorMatrix values='0 0 0 0 0.9 0 0 0 0 0.88 0 0 0 0 0.8 0 0 0 0.05 0'/%3E%3C/filter%3E%3Crect width='240' height='180' filter='url(%23s2)'/%3E%3C/svg%3E");
+mix-blend-mode:overlay}
+.tapflash{position:absolute;border-radius:50%;pointer-events:none;z-index:45;
+background:radial-gradient(circle,rgba(255,255,255,.5) 0%,rgba(255,255,255,.14) 40%,transparent 70%);
+transform:translate(-50%,-50%);animation:tapflash .55s ease-out forwards}
+@keyframes tapflash{0%{opacity:.85;width:8px;height:8px}60%{opacity:.3;width:52px;height:52px}100%{opacity:0;width:76px;height:76px}}
+.bezel.nudge{animation:nudge .1s ease}
+@keyframes nudge{50%{transform:translateY(1px)}}
+.polish{position:absolute;border-radius:50%;pointer-events:none;z-index:1;
+background:radial-gradient(circle,rgba(255,255,255,.05) 0%,rgba(255,255,255,.018) 55%,transparent 75%);
+transform:translate(-50%,-50%)}
+.brand{position:absolute;bottom:9px;left:50%;transform:translateX(-50%);font-family:'Anonymous Pro',monospace;font-size:10px;letter-spacing:5px;color:#3d3d3d;user-select:none}
+.brand::after{content:'';position:absolute;top:45%;left:-12%;width:124%;height:1px;
+background:linear-gradient(90deg,transparent,rgba(120,120,120,.35) 20%,rgba(160,160,160,.4) 50%,rgba(120,120,120,.3) 78%,transparent);
+transform:rotate(-1.2deg)}
+.camera{position:absolute;top:clamp(2px,.6vw,9px);right:clamp(96px,12vw,150px);width:clamp(16px,2.2vw,26px);height:clamp(16px,2.2vw,26px);border-radius:50%;z-index:30;cursor:pointer;
+background:radial-gradient(circle at 38% 32%,#3c4148 0%,#17191c 45%,#050607 80%);
+box-shadow:inset 0 1px 2px rgba(255,255,255,.12),inset 0 -2px 4px #000,0 1px 3px rgba(0,0,0,.8)}
+.camera::before{content:'';position:absolute;inset:22%;border-radius:50%;
+background:radial-gradient(circle at 40% 35%,#0a1418 0%,#020404 70%);box-shadow:inset 0 0 0 1.5px rgba(90,110,120,.35)}
+.camera::after{content:'';position:absolute;top:14%;left:20%;width:34%;height:22%;border-radius:50%;
+background:linear-gradient(135deg,rgba(255,255,255,.28),transparent 70%);transform:rotate(-18deg)}
+.cam-led{position:absolute;top:-1px;right:-3px;width:6px;height:6px;border-radius:50%;background:#3a0a0a;box-shadow:inset 0 1px 1px #000;transition:background .15s,box-shadow .15s}
+.cam-led.blink{background:#ff3333;box-shadow:0 0 7px rgba(255,60,60,.9)}
+.cam-led.hot{background:#ff5555;box-shadow:0 0 9px rgba(255,60,60,1)}
+.cam-led.steady{background:#ff2222;box-shadow:0 0 10px rgba(255,40,40,1);animation:ledpulse .5s ease-in-out infinite alternate}
+@keyframes ledpulse{from{opacity:.55}to{opacity:1}}
+.vault{position:absolute;top:50%;right:clamp(6px,1vw,14px);transform:translateY(-50%);
+width:clamp(74px,10vw,112px);height:clamp(56px,7.6vw,82px);z-index:30}
+.vault-slot{position:absolute;inset:0;border-radius:8px;opacity:0;pointer-events:none;transition:opacity .3s;
+background:linear-gradient(#17181b,#0a0b0c);box-shadow:inset 0 2px 8px #000,inset 0 0 0 1px rgba(179,102,255,.18)}
+.vault.open .vault-slot{opacity:1;pointer-events:auto;transition-delay:2.1s}
+.vault-slot::after{content:'';position:absolute;inset:0;border-radius:8px;pointer-events:none;opacity:.4;
+background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='90' height='60'%3E%3Cfilter id='sw'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.09 0.16' numOctaves='2' seed='13'/%3E%3CfeColorMatrix values='0 0 0 0 0.5 0 0 0 0 0.5 0 0 0 0 0.52 0 0 0 0.3 0'/%3E%3C/filter%3E%3Crect width='90' height='60' filter='url(%23sw)'/%3E%3C/svg%3E");
+mix-blend-mode:screen}
+.slot-cut{position:absolute;left:5%;right:5%;top:32%;height:11%;border-radius:3px;background:#000;
+box-shadow:inset 0 1px 3px #000,0 0 0 1px rgba(179,102,255,.3),0 0 9px rgba(179,102,255,.14)}
+.slot-led{position:absolute;bottom:5px;left:50%;transform:translateX(-50%);width:6px;height:6px;border-radius:50%;background:#1c1024;transition:background .2s,box-shadow .2s}
+.slot-led.card{background:rgba(179,102,255,.55);box-shadow:0 0 7px rgba(179,102,255,.5)}
+.slot-led.on{background:var(--master);box-shadow:0 0 10px rgba(179,102,255,.95)}
+.slot-led.err{background:#ff4444;box-shadow:0 0 8px rgba(255,60,60,.9);animation:errblink .4s steps(2,end) 5}
+.card-stuck{position:absolute;left:50%;bottom:30%;width:86%;aspect-ratio:100/62;transform:translateX(-50%) rotate(-1.5deg);
+border-radius:8px;z-index:3;cursor:grab;touch-action:none;user-select:none;-webkit-user-select:none;
+background:linear-gradient(135deg,#2c1450 0%,#6a28c2 45%,#a259f0 100%);border:1px solid #cdaaff;
+box-shadow:0 3px 12px rgba(0,0,0,.75),0 0 12px rgba(179,102,255,.4);animation:card-pulse 2.6s ease-in-out infinite}
+.card-stuck:active{cursor:grabbing}
+.card-stuck[hidden]{display:none}
+.card-stuck.in{animation:stuck-in .45s cubic-bezier(.2,.7,.3,1),card-pulse 2.6s ease-in-out .45s infinite}
+@keyframes stuck-in{from{transform:translateX(-50%) translateY(-34px) rotate(-7deg);opacity:.2}
+to{transform:translateX(-50%) rotate(-1.5deg);opacity:1}}
+.card-stuck .chip{position:absolute;top:14%;left:9%;width:26%;height:30%;border-radius:3px;
+background:linear-gradient(135deg,#e8d48a,#b89a3e);box-shadow:inset 0 0 0 1px rgba(255,255,255,.35)}
+.card-stuck .stripe{position:absolute;left:0;right:0;bottom:30%;height:2px;background:rgba(240,224,255,.28)}
+.card-stuck .mk1{position:absolute;right:6%;top:12%;font-family:'Anonymous Pro',monospace;font-size:clamp(6px,.75vw,9px);letter-spacing:1px;color:#f3e8ff;text-shadow:0 0 6px rgba(179,102,255,.9)}
+.card-stuck .mk2{position:absolute;right:6%;bottom:10%;font-family:'Anonymous Pro',monospace;font-size:clamp(5px,.6vw,7px);letter-spacing:1px;color:rgba(240,224,255,.75)}
+.vault-cover{position:absolute;inset:0;border-radius:8px;z-index:2;cursor:pointer;
+background:linear-gradient(150deg,#2e2e30 0%,#1b1b1d 50%,#101012 100%);
+box-shadow:inset 0 1px 0 rgba(255,255,255,.08),inset 0 -2px 5px rgba(0,0,0,.8),0 3px 8px rgba(0,0,0,.6)}
+.vault-cover .vc-wear{position:absolute;inset:0;border-radius:8px;pointer-events:none;opacity:.55;
+background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='80'%3E%3Cfilter id='cw'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.05 0.13' numOctaves='3' seed='41'/%3E%3CfeColorMatrix values='0 0 0 0 0.6 0 0 0 0 0.6 0 0 0 0 0.62 0 0 0 0.22 0'/%3E%3C/filter%3E%3Crect width='120' height='80' filter='url(%23cw)'/%3E%3C/svg%3E");
+mix-blend-mode:screen}
+.vault-cover::before,.vault-cover::after{content:'';position:absolute;width:7px;height:7px;border-radius:50%;
+background:radial-gradient(circle at 35% 30%,#4a4a4a,#222 65%,#111);box-shadow:inset 0 1px 1px rgba(255,255,255,.2),0 1px 2px #000,inset 0 0 2px rgba(200,200,190,.12)}
+.vault-cover::before{top:6px;left:50%;transform:translateX(-50%)}
+.vault-cover::after{bottom:6px;left:50%;transform:translateX(-50%)}
+.vault-cover .vc-label{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+font-family:'Anonymous Pro',monospace;font-size:7px;letter-spacing:2px;color:#3c3c3e;white-space:nowrap;user-select:none;opacity:.85}
+.vault.open .vault-cover{animation:cover-open 2.5s cubic-bezier(.55,.08,.6,.95) forwards}
+.vault.closing .vault-cover{animation:cover-close 1.4s cubic-bezier(.6,0,.75,.5) forwards}
+@keyframes cover-open{0%{transform:none}14%{transform:translateX(13%)}21%{transform:translateX(10%)}
+46%{transform:translateX(58%) rotate(2deg)}58%{transform:translateX(53%) rotate(2deg)}
+80%{transform:translateX(118%) rotate(6deg)}100%{transform:translateX(165%) rotate(9deg)}}
+@keyframes cover-close{0%{transform:translateX(165%) rotate(9deg)}30%{transform:translateX(55%) rotate(2deg)}
+44%{transform:translateX(62%) rotate(2deg)}72%{transform:translateX(12%)}82%{transform:translateX(8%)}100%{transform:none}}
+.mcard{position:fixed;right:max(2vw,10px);bottom:max(4vh,14px);width:clamp(66px,9vw,100px);height:clamp(42px,5.8vw,64px);
+border-radius:8px;z-index:60;cursor:grab;user-select:none;-webkit-user-select:none;transform:rotate(-3deg);
+background:linear-gradient(135deg,#2c1450 0%,#6a28c2 45%,#a259f0 100%);border:1px solid #cdaaff;
+box-shadow:0 4px 14px rgba(0,0,0,.7),0 0 14px rgba(179,102,255,.35);animation:card-pulse 2.6s ease-in-out infinite;touch-action:none}
+.mcard[hidden]{display:none}
+.mcard::after{content:'';position:absolute;inset:0;border-radius:8px;pointer-events:none;opacity:.5;
+background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='64'%3E%3Cfilter id='mc'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.11 0.2' numOctaves='2' seed='31'/%3E%3CfeColorMatrix values='0 0 0 0 0.85 0 0 0 0 0.78 0 0 0 0 0.95 0 0 0 0.12 0'/%3E%3C/filter%3E%3Crect width='100' height='64' filter='url(%23mc)'/%3E%3C/svg%3E");
+mix-blend-mode:screen}
+@keyframes card-pulse{0%,100%{box-shadow:0 4px 14px rgba(0,0,0,.7),0 0 12px rgba(179,102,255,.3)}
+50%{box-shadow:0 4px 16px rgba(0,0,0,.7),0 0 24px rgba(179,102,255,.6)}}
+.mcard .chip{position:absolute;top:16%;left:10%;width:26%;height:30%;border-radius:4px;
+background:linear-gradient(135deg,#e8d48a,#b89a3e);box-shadow:inset 0 0 0 1px rgba(255,255,255,.35)}
+.mcard .mk1{position:absolute;right:8%;top:14%;font-family:'Anonymous Pro',monospace;font-size:clamp(7px,.9vw,10px);letter-spacing:1px;color:#f3e8ff;text-shadow:0 0 6px rgba(179,102,255,.9)}
+.mcard .mk2{position:absolute;right:8%;bottom:12%;font-family:'Anonymous Pro',monospace;font-size:clamp(6px,.7vw,8px);letter-spacing:1px;color:rgba(240,224,255,.75)}
+.mcard .stripe{position:absolute;left:0;right:0;bottom:32%;height:2px;background:rgba(240,224,255,.28)}
+.mcard.drag{cursor:grabbing;z-index:90;transform:rotate(0deg) scale(1.1);animation:none;
+box-shadow:0 12px 30px rgba(0,0,0,.8),0 0 34px rgba(179,102,255,.85)}
+.mcard.over{outline:2px solid rgba(220,180,255,.9);outline-offset:3px;box-shadow:0 0 40px rgba(179,102,255,1)}
+.leds{position:absolute;right:26px;bottom:10px;display:flex;gap:18px;align-items:center}
+.led-wrap{display:flex;align-items:center;gap:6px}
+.led{width:7px;height:7px;border-radius:50%;background:#161616;box-shadow:inset 0 1px 2px #000;transition:background .2s,box-shadow .2s}
+.led-label{font-family:'Anonymous Pro',monospace;font-size:9px;letter-spacing:1px;color:#4a4a4a;user-select:none}
+#led-power.on{background:var(--phosphor);box-shadow:0 0 8px rgba(var(--phosphor-rgb),.8)}
+#led-act.on{background:#ffb000;box-shadow:0 0 8px rgba(255,176,0,.8)}
+#led-act.violet{background:var(--master);box-shadow:0 0 9px rgba(var(--master-rgb),.9)}
+#led-act.err{background:#ff4444;box-shadow:0 0 9px rgba(255,60,60,.9);animation:errblink .45s steps(2,end) 7}
+@keyframes errblink{50%{opacity:.2}}
+.crt{position:relative;width:100%;height:100%;border-radius:3.5%/5%;overflow:hidden;
+background:radial-gradient(ellipse at center,#0b1a10 0%,#06100a 55%,#030705 100%);
+box-shadow:inset 0 0 clamp(40px,8vw,110px) rgba(0,0,0,.9),0 0 30px rgba(var(--phosphor-rgb),.07)}
+.crt .glass-sheen{position:absolute;top:-12%;left:-8%;width:64%;height:52%;pointer-events:none;z-index:7;
+background:linear-gradient(115deg,rgba(255,255,255,.055),rgba(255,255,255,.015) 55%,transparent 75%);
+transform:rotate(-6deg);border-radius:50%}
+.crt .glass-edge{position:absolute;bottom:0;left:4%;right:4%;height:7%;pointer-events:none;z-index:7;
+background:linear-gradient(to top,rgba(255,255,255,.05),transparent);border-radius:0 0 40% 40%/0 0 100% 100%}
+.crt.off .glass-sheen{background:linear-gradient(115deg,rgba(255,255,255,.09),rgba(255,255,255,.03) 55%,transparent 75%)}
+.crt.off{background:radial-gradient(ellipse at 28% 18%,#191c1b 0%,#0c0e0d 45%,#060707 100%);box-shadow:inset 0 0 clamp(40px,8vw,110px) rgba(0,0,0,.95)}
+.crt.off::before{content:'';position:absolute;top:-30%;left:-10%;width:70%;height:55%;
+background:linear-gradient(115deg,rgba(255,255,255,.045),transparent 60%);transform:rotate(-8deg);pointer-events:none}
+.crt.off .screen,.crt.off .noise,.crt.off .scanlines,.crt.off .beam,.crt.off .vignette,.crt.off .flicker,
+.crt.off .skip-hint,.crt.off .admin-console{display:none}
+.screen{position:absolute;inset:0;padding:clamp(20px,4vw,60px);overflow-y:auto;overscroll-behavior:contain;scrollbar-width:none;animation:brightness-breath 6s ease-in-out infinite}
+.screen::-webkit-scrollbar{display:none}
+.crt.igniting .screen{animation:crt-on 2.3s cubic-bezier(.23,1,.32,1) .1s backwards,brightness-breath 6s ease-in-out 3s infinite}
+@keyframes crt-on{0%{transform:scale(.001,.003);filter:brightness(0)}8%{transform:scale(.001,.003);filter:brightness(1)}
+30%{transform:scale(1,.003);filter:brightness(12)}55%{transform:scale(1,1);filter:brightness(4)}
+68%{filter:brightness(.6)}78%{filter:brightness(1.5)}88%{filter:brightness(.8)}100%{transform:none;filter:brightness(1)}}
+.crt.dying .screen{animation:crt-off .45s ease-in forwards}
+@keyframes crt-off{0%{transform:none;filter:brightness(1)}55%{transform:scale(1,.006);filter:brightness(14)}
+78%{transform:scale(.002,.004);filter:brightness(6)}100%{transform:scale(.0001,.0001);filter:brightness(0)}}
+#terminal{font-family:'Anonymous Pro','PT Mono','Courier New',monospace;font-size:clamp(13px,1.45vw,19px);line-height:1.55;color:var(--phosphor);
+text-shadow:0 0 5px rgba(var(--phosphor-rgb),.75),0 0 14px rgba(var(--phosphor-rgb),.4),0 0 38px rgba(var(--phosphor-rgb),.2);
+white-space:pre-wrap;word-break:break-word}
+#terminal.roll{animation:roll-slip .5s ease}
+@keyframes roll-slip{0%,100%{transform:translateY(0)}35%{transform:translateY(-3%)}65%{transform:translateY(2%)}}
+.cursor{display:inline-block;width:.62em;height:1.15em;margin-left:3px;vertical-align:text-bottom;background:var(--phosphor);
+box-shadow:0 0 9px rgba(var(--phosphor-rgb),.9);animation:blink 1.06s steps(1,end) infinite}
+@keyframes blink{0%,49%{opacity:1}50%,100%{opacity:0}}
+.crt.glitch{animation:crt-jitter .22s steps(2,end) 1}
+@keyframes crt-jitter{0%{transform:translate(0,0)}20%{transform:translate(-4px,2px) skewX(.8deg)}
+45%{transform:translate(3px,-2px) skewX(-.5deg)}70%{transform:translate(-2px,1px)}100%{transform:translate(0,0)}}
+.crt.glitch #terminal{text-shadow:2px 0 rgba(255,60,60,.35),-2px 0 rgba(60,255,255,.3),0 0 5px rgba(var(--phosphor-rgb),.75)}
+.crt.glitch .noise{opacity:.28}
+.noise{position:absolute;inset:-60%;opacity:.05;animation:grain .7s steps(5) infinite;pointer-events:none;transition:opacity .15s;
+background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='240' height='240' filter='url(%23n)'/%3E%3C/svg%3E")}
+@keyframes grain{0%{transform:translate(0,0)}20%{transform:translate(-3%,2%)}40%{transform:translate(2%,-3%)}
+60%{transform:translate(-2%,-2%)}80%{transform:translate(3%,3%)}100%{transform:translate(0,0)}}
+.scanlines{position:absolute;inset:0;pointer-events:none;background:repeating-linear-gradient(to bottom,rgba(0,0,0,0) 0px,rgba(0,0,0,0) 2px,rgba(0,0,0,.28) 3px,rgba(0,0,0,.28) 4px)}
+.beam{position:absolute;left:0;right:0;top:-25%;height:22%;pointer-events:none;animation:beam 8s linear infinite;
+background:linear-gradient(to bottom,rgba(var(--phosphor-rgb),0) 0%,rgba(var(--phosphor-rgb),.04) 50%,rgba(var(--phosphor-rgb),0) 100%)}
+@keyframes beam{0%{top:-25%}100%{top:110%}}
+.vignette{position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse at center,transparent 50%,rgba(0,0,0,.4) 80%,rgba(0,0,0,.9) 100%)}
+.flicker{position:absolute;inset:0;background:#000;pointer-events:none;animation:flicker 4s linear infinite}
+@keyframes flicker{0%{opacity:.015}6%{opacity:.05}10%{opacity:.01}14%{opacity:.06}18%{opacity:.02}22%{opacity:.015}
+50%{opacity:.02}52%{opacity:.08}54%{opacity:.02}78%{opacity:.03}100%{opacity:.015}}
+@keyframes brightness-breath{0%,100%{filter:brightness(1)}50%{filter:brightness(1.09)}}
+.clock{position:absolute;top:clamp(14px,2.4vw,26px);right:clamp(18px,3vw,44px);font-family:'Anonymous Pro',monospace;
+font-size:clamp(10px,1vw,13px);letter-spacing:1px;color:rgba(var(--phosphor-rgb),.4);text-shadow:0 0 6px rgba(var(--phosphor-rgb),.3);pointer-events:none;user-select:none}
+.sound-hint{position:absolute;bottom:clamp(12px,2.5vw,26px);left:0;right:0;text-align:center;font-family:'Anonymous Pro',monospace;
+font-size:clamp(11px,1.1vw,14px);color:rgba(var(--phosphor-rgb),.55);text-shadow:0 0 8px rgba(var(--phosphor-rgb),.4);
+animation:hint-blink 2.2s ease-in-out infinite;pointer-events:none;user-select:none;transition:opacity .6s;z-index:4}
+.crt.off .sound-hint{display:block;color:rgba(255,255,255,.22);text-shadow:none;animation:none}
+@keyframes hint-blink{0%,100%{opacity:.9}50%{opacity:.3}}
+.skip-hint{position:absolute;bottom:clamp(12px,2.5vw,26px);left:clamp(18px,3vw,44px);font-family:'Anonymous Pro',monospace;
+font-size:clamp(10px,1vw,13px);color:rgba(var(--phosphor-rgb),.35);text-shadow:0 0 6px rgba(var(--phosphor-rgb),.25);pointer-events:none;user-select:none;transition:opacity .5s}
+.controls{position:absolute;left:clamp(18px,3vw,34px);bottom:7px;display:flex;gap:clamp(18px,3vw,34px);align-items:flex-end}
+.switch-label{font-family:'Anonymous Pro',monospace;font-size:9px;letter-spacing:1px;color:#4a4a4a;text-align:center;margin-top:5px;user-select:none}
+.power-switch{cursor:pointer;user-select:none;-webkit-user-select:none;outline:none}
+.switch-track{position:relative;width:30px;height:54px;margin:0 auto;border-radius:7px;background:linear-gradient(#101010,#1e1e1e);
+box-shadow:inset 0 2px 6px #000,inset 0 -1px 0 rgba(255,255,255,.05)}
+.switch-track::after{content:'';position:absolute;inset:0;border-radius:7px;pointer-events:none;
+background:linear-gradient(rgba(255,255,255,.05),transparent 22%,transparent 80%,rgba(255,255,255,.04))}
+.switch-lever{position:absolute;left:50%;bottom:5px;width:14px;height:42px;transform:translateX(-50%);transition:bottom .13s ease}
+.lever-stick{position:absolute;left:50%;bottom:0;width:6px;height:32px;transform:translateX(-50%);background:linear-gradient(90deg,#3a3a3a,#6e6e6e,#3a3a3a);border-radius:3px}
+.lever-stick::after{content:'';position:absolute;inset:0;border-radius:3px;
+background:linear-gradient(90deg,transparent 25%,rgba(220,220,210,.14) 50%,transparent 75%)}
+.lever-cap{position:absolute;top:0;left:50%;transform:translateX(-50%);width:17px;height:17px;border-radius:50%;
+background:radial-gradient(circle at 35% 30%,#a0a0a0,#4a4a4a 60%,#2b2b2b);box-shadow:0 2px 4px rgba(0,0,0,.7)}
+.lever-dot{position:absolute;top:5px;left:50%;transform:translateX(-50%);width:5px;height:5px;border-radius:50%;background:#332211}
+.power-switch:not(.on) .lever-dot{background:#ffb000;box-shadow:0 0 7px #ffb000;animation:invite 1.6s ease-in-out infinite}
+@keyframes invite{0%,100%{opacity:.3}50%{opacity:1}}
+.power-switch.on .lever-dot{background:var(--phosphor);box-shadow:0 0 7px var(--phosphor);animation:none}
+.power-switch.on .switch-lever{bottom:10px}
+.service-btn{display:block;width:27px;height:27px;margin:13px auto 0;border-radius:50%;border:1px solid #333;cursor:pointer;position:relative;touch-action:manipulation;
+background:radial-gradient(circle at 35% 30%,#2e2e2e,#161616 60%,#0d0d0d);box-shadow:inset 0 1px 1px rgba(255,255,255,.06),0 2px 4px rgba(0,0,0,.6)}
+.service-btn::after{content:'';position:absolute;top:50%;left:50%;width:6px;height:6px;transform:translate(-50%,-50%);border-radius:50%;background:#333;transition:background .2s,box-shadow .2s}
+.service-btn::before{content:'';position:absolute;top:18%;left:22%;width:34%;height:22%;border-radius:50%;
+background:linear-gradient(135deg,rgba(255,255,255,.1),transparent 70%);transform:rotate(-18deg);pointer-events:none}
+.service-btn.armed::after{background:rgba(var(--phosphor-rgb),.55);box-shadow:0 0 6px rgba(var(--phosphor-rgb),.5)}
+.service-btn:active{transform:translateY(1px)}
+.service-btn.deny{border-color:#ff5555;box-shadow:0 0 10px rgba(255,60,60,.8)}
+.service-btn.deny::after{background:#ff5555}
+.modal-overlay{position:absolute;inset:0;z-index:80;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.55)}
+.modal-overlay[hidden]{display:none}
+.modal{width:min(92%,460px);background:rgba(2,14,7,.96);border:2px solid var(--phosphor);
+box-shadow:0 0 18px rgba(var(--phosphor-rgb),.35),inset 0 0 30px rgba(var(--phosphor-rgb),.06);
+padding:22px 24px;font-family:'Anonymous Pro',monospace;color:var(--phosphor);text-shadow:0 0 6px rgba(var(--phosphor-rgb),.6);position:relative}
+.modal::before{content:'';position:absolute;inset:0;pointer-events:none;
+background:repeating-linear-gradient(to bottom,rgba(0,0,0,0) 0px,rgba(0,0,0,0) 2px,rgba(0,0,0,.16) 3px,rgba(0,0,0,.16) 4px)}
+.modal.shake{animation:shake .3s}
+@keyframes shake{0%,100%{transform:none}25%{transform:translateX(-8px)}50%{transform:translateX(6px)}75%{transform:translateX(-4px)}}
+.modal.master{background:rgba(10,2,18,.97);border-color:var(--master);color:#d9b8ff;
+box-shadow:0 0 22px rgba(var(--master-rgb),.45),inset 0 0 30px rgba(var(--master-rgb),.08);text-shadow:0 0 6px rgba(var(--master-rgb),.7)}
+.modal-title{text-align:center;border-bottom:1px solid rgba(var(--phosphor-rgb),.4);padding-bottom:10px;margin-bottom:14px;letter-spacing:1px;font-size:15px}
+.modal.master .modal-title{border-color:rgba(var(--master-rgb),.45)}
+.modal-row{margin:6px 0;font-size:14px}
+.modal label{display:block;margin-top:14px;font-size:14px}
+#admin-pass,#master-pass{display:block;width:100%;margin-top:6px;padding:9px 10px;font-family:inherit;font-size:16px;letter-spacing:2px;outline:none;caret-color:var(--phosphor);
+background:rgba(var(--phosphor-rgb),.05);border:1px solid rgba(var(--phosphor-rgb),.5);color:var(--phosphor);text-shadow:inherit}
+#master-pass{caret-color:var(--master);background:rgba(var(--master-rgb),.06);border-color:rgba(var(--master-rgb),.55);color:#e2c8ff}
+#admin-pass:focus{border-color:var(--phosphor);box-shadow:0 0 10px rgba(var(--phosphor-rgb),.3)}
+#master-pass:focus{border-color:var(--master);box-shadow:0 0 12px rgba(var(--master-rgb),.4)}
+.modal-error{min-height:18px;margin-top:8px;font-size:13px;color:#ff6b6b;text-shadow:0 0 6px rgba(255,60,60,.5)}
+.modal-actions{display:flex;gap:10px;margin-top:14px}
+.modal-actions button{flex:1;font-family:inherit;font-size:13px;letter-spacing:1px;padding:9px 0;cursor:pointer;touch-action:manipulation;
+color:var(--phosphor);background:rgba(var(--phosphor-rgb),.08);border:1px solid rgba(var(--phosphor-rgb),.5);text-shadow:inherit}
+.modal-actions button:hover{background:rgba(var(--phosphor-rgb),.2)}
+.modal.master .modal-actions button{color:#e2c8ff;background:rgba(var(--master-rgb),.1);border-color:rgba(var(--master-rgb),.55)}
+.admin-console{--ac:var(--phosphor);--ac-rgb:var(--phosphor-rgb);position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:40;
+width:min(94%,760px);max-height:88%;display:flex;flex-direction:column;background:rgba(1,12,6,.97);
+border:2px solid var(--ac);box-shadow:0 0 22px rgba(var(--ac-rgb),.35);
+font-family:'Anonymous Pro',monospace;color:var(--ac);text-shadow:0 0 5px rgba(var(--ac-rgb),.5);font-size:clamp(11px,1.1vw,13px)}
+.admin-console.master{--ac:var(--master);--ac-rgb:var(--master-rgb);background:rgba(9,2,16,.97)}
+.admin-console[hidden]{display:none}
+.ac-head{display:flex;justify-content:space-between;align-items:center;padding:8px 12px;border-bottom:1px solid rgba(var(--ac-rgb),.4);letter-spacing:1px;font-weight:bold}
+.ac-head button{font-family:inherit;background:none;border:1px solid rgba(var(--ac-rgb),.5);color:var(--ac);width:26px;height:26px;cursor:pointer;text-shadow:inherit}
+.ac-tabs{display:flex;flex-wrap:wrap;border-bottom:1px solid rgba(var(--ac-rgb),.4)}
+.ac-tabs button{flex:1 1 auto;font-family:inherit;font-size:inherit;letter-spacing:.5px;padding:8px 6px;cursor:pointer;touch-action:manipulation;
+background:rgba(var(--ac-rgb),.03);color:rgba(var(--ac-rgb),.65);border:none;border-right:1px solid rgba(var(--ac-rgb),.25);text-shadow:inherit}
+.ac-tabs button.active{background:rgba(var(--ac-rgb),.16);color:var(--ac);font-weight:bold}
+.ac-body{padding:12px;overflow-y:auto;overscroll-behavior:contain}
+.ac-body::-webkit-scrollbar{width:6px}
+.ac-body::-webkit-scrollbar-thumb{background:rgba(var(--ac-rgb),.3)}
+.ac-row{display:flex;flex-wrap:wrap;align-items:center;gap:6px;padding:8px;margin-bottom:6px;border:1px solid rgba(var(--ac-rgb),.25);background:rgba(var(--ac-rgb),.03)}
+.ac-name{font-weight:bold;letter-spacing:1px;min-width:110px}
+.ac-meta{opacity:.75}
+.ac-actions{display:flex;flex-wrap:wrap;gap:5px;margin-left:auto}
+.ac-btn{font-family:inherit;font-size:inherit;padding:4px 9px;cursor:pointer;touch-action:manipulation;
+color:var(--ac);background:rgba(var(--ac-rgb),.08);border:1px solid rgba(var(--ac-rgb),.45);text-shadow:inherit}
+.ac-btn:hover{background:rgba(var(--ac-rgb),.2)}
+.ac-btn.danger{color:#ff6b6b;border-color:rgba(255,80,80,.6);background:rgba(255,60,60,.07);text-shadow:0 0 5px rgba(255,60,60,.5)}
+.ac-btn.danger:hover{background:rgba(255,60,60,.2)}
+.ac-input{font-family:inherit;font-size:inherit;padding:4px 8px;min-width:120px;outline:none;caret-color:var(--ac);
+background:rgba(var(--ac-rgb),.05);border:1px solid rgba(var(--ac-rgb),.5);color:var(--ac);text-shadow:inherit}
+.ac-ta{width:100%;min-height:130px;resize:vertical;font-family:inherit;font-size:inherit;line-height:1.5;padding:6px 8px;outline:none;caret-color:var(--ac);
+background:rgba(var(--ac-rgb),.05);border:1px solid rgba(var(--ac-rgb),.5);color:var(--ac);text-shadow:inherit}
+.ac-note{opacity:.7;padding:8px 2px;line-height:1.5}
+.ac-block{border:1px solid rgba(var(--ac-rgb),.25);padding:10px;margin-bottom:8px}
+.ac-block h4{margin:0 0 8px;letter-spacing:1px;opacity:.85;font-weight:bold}
+.ac-field{display:block;width:100%;text-align:left;font-family:inherit;font-size:inherit;background:none;border:none;
+border-bottom:1px dashed rgba(var(--ac-rgb),.3);color:var(--ac);padding:5px 2px;cursor:pointer;text-shadow:inherit;line-height:1.5;word-break:break-word}
+.ac-field:hover{background:rgba(var(--ac-rgb),.09)}
+.ac-field .fl{opacity:.75}
+.ac-back-row{display:flex;gap:8px;margin-top:10px}
+.touchbar{position:absolute;left:50%;transform:translateX(-50%);bottom:clamp(8px,2vh,16px);display:none;flex-wrap:wrap;justify-content:center;gap:6px;
+max-width:calc(100% - 24px);padding:6px;background:rgba(0,0,0,.65);border:1px solid rgba(var(--phosphor-rgb),.3);border-radius:10px;
+box-shadow:0 0 12px rgba(var(--phosphor-rgb),.1);z-index:5}
+.touchbar button{font-family:'Anonymous Pro',monospace;font-size:12px;min-width:38px;padding:8px 12px;cursor:pointer;touch-action:manipulation;user-select:none;-webkit-user-select:none;
+color:rgba(var(--phosphor-rgb),.9);background:rgba(var(--phosphor-rgb),.07);border:1px solid rgba(var(--phosphor-rgb),.4);border-radius:6px;text-shadow:0 0 5px rgba(var(--phosphor-rgb),.5)}
+.touchbar button:active{background:rgba(var(--phosphor-rgb),.28);box-shadow:0 0 10px rgba(var(--phosphor-rgb),.4)}
+#mobile-input{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:2px;height:2px;opacity:0;border:0;padding:0;
+background:transparent;color:transparent;caret-color:transparent;font-size:16px;z-index:-1}
+body.touch .screen{padding-bottom:clamp(68px,12vh,96px);user-select:none;-webkit-user-select:none}
+body.touch .sound-hint{bottom:clamp(74px,14vh,102px)}
+@media (max-width:700px){
+.bezel{width:calc(100vw - 8px);height:calc(100vh - 8px);height:calc(100dvh - 8px);border-radius:16px;padding:14px 10px}
+#terminal{font-size:clamp(11.5px,3.4vw,14px)}
+.screen{padding:16px 14px}
+.clock{top:10px;right:12px;font-size:9px}
+.controls{left:14px;bottom:6px;gap:16px}
+.switch-track{width:26px;height:46px}
+.service-btn{width:24px;height:24px;margin-top:10px}
+.leds{right:16px;bottom:9px;gap:12px}
+.camera{top:2px;right:82px;width:15px;height:15px}
+.vault{width:clamp(50px,12vw,64px);height:clamp(40px,9.6vw,52px)}
+.admin-console{max-height:92%}}
+@media (max-width:380px){.touchbar button{min-width:30px;font-size:11px;padding:7px 8px}.ac-actions{margin-left:0}}
+@media (orientation:landscape) and (max-height:500px){
+#terminal{font-size:12px}.screen{padding:12px 16px}
+body.touch .screen{padding-bottom:62px}.clock{top:8px;right:12px;font-size:9px}}
+</style>
+</head>
+<body>
+<div class="bezel" id="bezel">
+    <div class="crt off" id="crt">
+        <div class="screen" id="screen">
+            <div class="clock" id="clock"></div>
+            <pre id="terminal"><span id="text-done"></span><span id="text-live"></span><span class="cursor"></span></pre>
+        </div>
+        <div class="glass-sheen"></div><div class="glass-edge"></div>
+        <div class="noise"></div><div class="scanlines"></div><div class="beam"></div>
+        <div class="vignette"></div><div class="flicker"></div>
+
+        <div class="admin-console" id="admin-console" hidden>
+            <div class="ac-head"><span id="ac-title">PLAGUE.INC // КОНСОЛЬ ОИДЛ</span>
+                <button type="button" id="admin-close">✕</button></div>
+            <div class="ac-tabs" id="ac-tabs"></div>
+            <div class="ac-body" id="ac-body"></div>
+        </div>
+
+        <div class="touchbar" id="touchbar"></div>
+        <div class="skip-hint" id="skip-hint">ESC - ПРОПУСК ДИАГНОСТИКИ</div>
+        <div class="sound-hint" id="sound-hint">ПИТАНИЕ ОТКЛЮЧЕНО</div>
+
+        <div class="modal-overlay" id="admin-modal" hidden>
+            <form class="modal" id="admin-form" autocomplete="off">
+                <div class="modal-title">СЕРВИСНЫЙ ДОСТУП PLAGUE.INC</div>
+                <div class="modal-row">ОПЕРАТОР: АДМИНИСТРАТОР</div>
+                <label>ПАРОЛЬ: <input type="password" id="admin-pass" autocomplete="off" spellcheck="false" enterkeyhint="go"></label>
+                <div class="modal-error" id="admin-error"></div>
+                <div class="modal-actions"><button type="submit">ВХОД</button>
+                    <button type="button" id="admin-cancel">ОТМЕНА</button></div>
+            </form>
+        </div>
+
+        <div class="modal-overlay" id="master-modal" hidden>
+            <form class="modal master" id="master-form" autocomplete="off">
+                <div class="modal-title">МАСТЕР-ДОСТУП // PLAGUE.INC</div>
+                <div class="modal-row">КАРТА: MASTER KEY // УРОВЕНЬ: СОЗДАТЕЛЬ</div>
+                <label>КОД АКТИВАЦИИ: <input type="password" id="master-pass" autocomplete="off" spellcheck="false" enterkeyhint="go"></label>
+                <div class="modal-error" id="master-error"></div>
+                <div class="modal-actions"><button type="submit">ПОДТВЕРДИТЬ</button>
+                    <button type="button" id="master-cancel">ОТМЕНА</button></div>
+            </form>
+        </div>
+    </div>
+
+    <div class="vault" id="vault">
+        <div class="vault-slot" id="vault-slot">
+            <div class="slot-cut"></div><div class="slot-led" id="slot-led"></div>
+            <div class="card-stuck" id="card-stuck" hidden>
+                <div class="chip"></div><div class="stripe"></div>
+                <div class="mk1">MASTER KEY</div><div class="mk2">PLAGUE.INC</div>
+            </div>
+        </div>
+        <div class="vault-cover" id="vault-cover">
+            <div class="vc-wear"></div>
+            <span class="vc-label">PDX-12</span>
+        </div>
+    </div>
+
+    <div class="camera" id="camera"><div class="cam-led" id="cam-led"></div></div>
+
+    <div class="controls">
+        <div class="power-switch" id="power-switch" role="switch" aria-checked="false" aria-label="Питание" tabindex="0">
+            <div class="switch-track"><div class="switch-lever"><div class="lever-stick"></div>
+            <div class="lever-cap"><div class="lever-dot"></div></div></div></div>
+            <div class="switch-label">ПИТАНИЕ</div>
+        </div>
+        <div><button type="button" class="service-btn" id="service-btn" aria-label="Сервисный доступ"></button>
+            <div class="switch-label">СЕРВИС</div></div>
+    </div>
+
+    <div class="brand">PLAGUE.INC</div>
+    <div class="leds">
+        <span class="led-wrap"><span class="led" id="led-power"></span><span class="led-label">СЕТЬ</span></span>
+        <span class="led-wrap"><span class="led" id="led-act"></span><span class="led-label">ОБМЕН</span></span>
+    </div>
+</div>
+
+<div class="mcard" id="mcard" hidden>
+    <div class="chip"></div><div class="stripe"></div>
+    <div class="mk1">MASTER KEY</div><div class="mk2">PLAGUE.INC</div>
+</div>
+
+<input type="text" id="mobile-input" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" tabindex="-1" aria-hidden="true">
+
+<script>
+'use strict';
+/* ============ PLAGUE.INC // ТЕРМИНАЛ ОИДЛ v7.7.1 ============ */
+window.addEventListener('error',function(e){
+    var el=document.getElementById('sound-hint');
+    if(el){el.textContent='!! ОШИБКА СКРИПТА: '+(e.message||'НЕИЗВЕСТНАЯ')+' — ФАЙЛ СКОПИРОВАН НЕ ПОЛНОСТЬЮ?';
+    el.style.color='#ff6b6b';el.style.opacity='1';el.style.animation='none';}});
+
+const DB_CONFIG={databaseURL:''};/* <<< ВАША БАЗА Firebase (databaseURL) */
+const LORE_YEAR=2287;
+
+/* ==================== ЗВУК ==================== */
+const Sound=(()=>{let ctx=null,master=null,enabled=false,ambience=[],ambienceRunning=false;
+function noiseSource(d,loop=false){const b=ctx.createBuffer(1,Math.floor(ctx.sampleRate*d),ctx.sampleRate);
+const a=b.getChannelData(0);for(let i=0;i<a.length;i++)a[i]=Math.random()*2-1;
+const s=ctx.createBufferSource();s.buffer=b;s.loop=loop;return s;}
+function startHum(){if(ambienceRunning||!ctx)return;ambienceRunning=true;const t=ctx.currentTime;
+const f=ctx.createBiquadFilter();f.type='lowpass';f.frequency.value=220;
+const hg=ctx.createGain();hg.gain.setValueAtTime(0,t);hg.gain.linearRampToValueAtTime(.04,t+2.5);
+const oscs=[50,100,150].map((fr,i)=>{const o=ctx.createOscillator();o.type='sine';o.frequency.value=fr;
+const g=ctx.createGain();g.gain.value=1/(i+1);o.connect(g);g.connect(f);o.start();return o;});
+f.connect(hg);hg.connect(master);
+const hiss=noiseSource(2,true),hf=ctx.createBiquadFilter();hf.type='highpass';hf.frequency.value=6500;
+const hgn=ctx.createGain();hgn.gain.value=.006;hiss.connect(hf);hf.connect(hgn);hgn.connect(master);hiss.start();
+ambience=[{gain:hg,nodes:oscs},{gain:hgn,nodes:[hiss]}];}
+function stopAmbience(){if(!ambienceRunning||!ctx)return;ambienceRunning=false;const now=ctx.currentTime;
+ambience.forEach(({gain,nodes})=>{try{gain.gain.cancelScheduledValues(now);
+gain.gain.setValueAtTime(gain.gain.value,now);gain.gain.linearRampToValueAtTime(.0001,now+.3);}catch{}
+nodes.forEach(n=>setTimeout(()=>{try{n.stop()}catch{}try{n.disconnect()}catch{}},350));});ambience=[];}
+function burst(dur,freq,q,vol){if(!enabled)return;const t=ctx.currentTime;
+const s=noiseSource(dur),f=ctx.createBiquadFilter();f.type='bandpass';f.frequency.value=freq;f.Q.value=q;
+const g=ctx.createGain();g.gain.setValueAtTime(vol,t);g.gain.exponentialRampToValueAtTime(.001,t+dur);
+s.connect(f);f.connect(g);g.connect(master);s.start(t);s.stop(t+dur+.01);}
+function tone(type,f0,f1,dur,vol){if(!enabled)return;const t=ctx.currentTime;
+const o=ctx.createOscillator();o.type=type;o.frequency.setValueAtTime(f0,t);
+if(f1)o.frequency.exponentialRampToValueAtTime(f1,t+dur);
+const g=ctx.createGain();g.gain.setValueAtTime(vol,t);g.gain.exponentialRampToValueAtTime(.001,t+dur);
+o.connect(g);g.connect(master);o.start(t);o.stop(t+dur+.02);}
+return{get enabled(){return enabled},
+init(){if(!ctx){ctx=new(window.AudioContext||window.webkitAudioContext)();master=ctx.createGain();
+master.gain.value=.4;master.connect(ctx.destination);}enabled=true;},
+ambienceOn:()=>startHum(),ambienceOff:stopAmbience,
+keyClick(){burst(.05,1700+Math.random()*1400,9,.5)},
+tick(){burst(.03,2500+Math.random()*900,10,.18)},
+clunk(){burst(.06,480+Math.random()*120,7,.32)},
+thunk(){tone('sine',70,28,.22,.5);burst(.12,150,1,.35)},
+caseBezel(){tone('sine',95,60,.09,.16);burst(.05,240,1.4,.14)},
+caseCover(){tone('sine',210,140,.06,.14);burst(.04,900,2,.12)},
+glassTap(){if(!enabled)return;const t=ctx.currentTime;
+[1720,2580,3900].forEach((f,i)=>{const o=ctx.createOscillator();o.type='sine';
+o.frequency.setValueAtTime(f,t);o.frequency.exponentialRampToValueAtTime(f*.94,t+.25);
+const g=ctx.createGain();g.gain.setValueAtTime(.055/(i+1),t);
+g.gain.exponentialRampToValueAtTime(.0001,t+.22+i*.04);
+o.connect(g);g.connect(master);o.start(t);o.stop(t+.3);});
+burst(.05,4200,6,.05);},
+navBlip(){burst(.025,2900,9,.14)},
+liftHum(d=2.6){if(!enabled)return;tone('sawtooth',48,64,d,.05);tone('sine',96,120,d,.03);
+const t=ctx.currentTime;const n=noiseSource(.4);const f=ctx.createBiquadFilter();f.type='lowpass';f.frequency.value=300;
+const g=ctx.createGain();g.gain.setValueAtTime(.08,t);g.gain.exponentialRampToValueAtTime(.001,t+.4);
+n.connect(f);f.connect(g);g.connect(master);n.start(t);},
+steam(){burst(.6,900,1.5,.18);setTimeout(()=>burst(.4,700,1.5,.12),250);},
+alarmTone(){if(!enabled)return;tone('square',440,440,.18,.06);setTimeout(()=>tone('square',330,330,.18,.06),220);},
+whine(d=1.4){if(!enabled)return;const t=ctx.currentTime;const o=ctx.createOscillator();o.type='sawtooth';
+o.frequency.setValueAtTime(60,t);o.frequency.exponentialRampToValueAtTime(760,t+d*.85);
+const f=ctx.createBiquadFilter();f.type='bandpass';f.Q.value=3;f.frequency.setValueAtTime(240,t);
+f.frequency.exponentialRampToValueAtTime(1300,t+d*.85);
+const g=ctx.createGain();g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(.022,t+.3);
+g.gain.exponentialRampToValueAtTime(.0001,t+d);o.connect(f);f.connect(g);g.connect(master);o.start(t);o.stop(t+d+.05);},
+powerDown(){tone('sawtooth',180,30,.45,.12);
+if(!enabled)return;const t=ctx.currentTime;const n=noiseSource(.25),f=ctx.createBiquadFilter();
+f.type='bandpass';f.frequency.setValueAtTime(3000,t);f.frequency.exponentialRampToValueAtTime(300,t+.3);f.Q.value=.8;
+const g=ctx.createGain();g.gain.setValueAtTime(.16,t);g.gain.exponentialRampToValueAtTime(.0001,t+.25);
+n.connect(f);f.connect(g);g.connect(master);n.start(t);},
+error(){tone('square',140,85,.3,.09)},
+crackle(){burst(.1,700+Math.random()*500,1.2,.2)},
+camClick(){burst(.03,3200,8,.14)},
+scanner(){tone('sine',380,1300,.5,.05)},
+vaultSqueak(d=2.3){if(!enabled)return;const t=ctx.currentTime;
+const n=noiseSource(d+.2,true),f=ctx.createBiquadFilter();f.type='bandpass';f.Q.value=2.2;
+f.frequency.setValueAtTime(650,t);f.frequency.linearRampToValueAtTime(980,t+d*.35);
+f.frequency.linearRampToValueAtTime(520,t+d*.7);f.frequency.linearRampToValueAtTime(880,t+d);
+const g=ctx.createGain();g.gain.setValueAtTime(.0001,t);
+[0,.06,.12,.2,.27,.4,.5,.62,.75,.85,.97].forEach((k,i)=>g.gain.linearRampToValueAtTime(i%2?.0005:.075*(1-k*.4),t+k*d));
+g.gain.linearRampToValueAtTime(.0001,t+d);
+n.connect(f);f.connect(g);g.connect(master);n.start(t);n.stop(t+d+.05);tone('square',52,40,d,.018);},
+cardDrop(){burst(.07,900,2,.4);setTimeout(()=>burst(.05,420,4,.3),90);},
+cardInsert(){if(!enabled)return;const t=ctx.currentTime;const n=noiseSource(.16),f=ctx.createBiquadFilter();
+f.type='bandpass';f.frequency.setValueAtTime(2400,t);f.frequency.exponentialRampToValueAtTime(300,t+.15);f.Q.value=2;
+const g=ctx.createGain();g.gain.setValueAtTime(.35,t);g.gain.exponentialRampToValueAtTime(.001,t+.16);
+n.connect(f);f.connect(g);g.connect(master);n.start(t);n.stop(t+.17);setTimeout(()=>burst(.06,380,6,.35),150);},
+beep(freq=780,dur=.09,vol=.1){tone('square',freq,null,dur,vol)},
+chord(){if(!enabled)return;[523,659,784,1047].forEach((f,i)=>setTimeout(()=>this.beep(f,.11,.08),i*110));},
+chordPurple(){if(!enabled)return;[440,554,659,880].forEach((f,i)=>setTimeout(()=>this.beep(f,.13,.09),i*120));},
+fanfare(){if(!enabled)return;[392,523,659,784,1047].forEach((f,i)=>setTimeout(()=>this.beep(f,.12,.09),i*130));}
+};})();
+
+/* ==================== DB ==================== */
+const DB=(()=>{const LOCAL_KEY='oidl_db_v1',OLD_KEY='oidl_users_v2';
+let cloud=!!DB_CONFIG.databaseURL;
+let snapshot={users:{},notes:{},mail:{},chat:{},dm:{},log:{},content:{},stock:{},sdocs:{},stable:null,master:null,service:null};
+const listeners=[];
+function loadLocal(){try{return JSON.parse(localStorage.getItem(LOCAL_KEY))}catch{return null}}
+function saveLocal(){try{localStorage.setItem(LOCAL_KEY,JSON.stringify(snapshot))}catch{}}
+function emit(){listeners.forEach(f=>{try{f(snapshot)}catch{}})}
+function empty(){return{users:{},notes:{},mail:{},chat:{},dm:{},log:{},content:{},stock:{},sdocs:{},stable:null,master:null,service:null}}
+function defStable(){return{door:'ЗАКРЫТО',doorLock:false,lift:'ВОЕННОЕ ПОДРАЗДЕЛЕНИЕ',power:'РЕАКТОР',
+locks:{'ЖИЛАЯ ЗОНА':false,'ЛАБОРАТОРИЯ':false,'МЕД ОТСЕК':false,'СКЛАД':false,'ЗОНА СОДЕРЖАНИЯ':false,'ШЛЮЗ':false},
+filters:100,alarm:false};}
+if(!cloud){const s=loadLocal();
+if(s)snapshot=Object.assign(empty(),s);
+else{try{const old=JSON.parse(localStorage.getItem(OLD_KEY)||'null');
+if(old&&Object.keys(old).length)snapshot.users=old;}catch{}}
+if(!snapshot.stable)snapshot.stable=defStable();
+if(snapshot.stable.lift&&['БАЗА','ПОВЕРХНОСТЬ','НИЖНИЕ УРОВНИ'].includes(snapshot.stable.lift))
+snapshot.stable.lift='ВОЕННОЕ ПОДРАЗДЕЛЕНИЕ';
+saveLocal();
+window.addEventListener('storage',e=>{if(e.key===LOCAL_KEY){const s2=loadLocal();if(s2){snapshot=s2;if(!snapshot.stable)snapshot.stable=defStable();emit();}}});}
+const url=p=>DB_CONFIG.databaseURL+p;
+return{get cloud(){return cloud},get data(){return snapshot},on(f){listeners.push(f)},
+async init(){if(!cloud){emit();return;}
+try{const r=await fetch(url('/oidl.json'));const j=await r.json();
+snapshot=Object.assign(empty(),j||{});
+if(!snapshot.stable)snapshot.stable=defStable();
+const local=loadLocal();
+if(Object.keys(snapshot.users||{}).length===0&&local&&local.users&&Object.keys(local.users).length){
+snapshot.users=local.users;
+await fetch(url('/oidl/users.json'),{method:'PUT',body:JSON.stringify(local.users)});}}
+catch(e){cloud=false;const s=loadLocal();if(s)snapshot=Object.assign(empty(),s);
+if(!snapshot.stable)snapshot.stable=defStable();emit();return;}
+emit();
+try{const es=new EventSource(url('/oidl.json'));
+es.onmessage=ev=>{try{const msg=JSON.parse(ev.data);
+if(msg.path==='/'){snapshot=Object.assign(empty(),msg.data||{});
+if(!snapshot.stable)snapshot.stable=defStable();}
+else{const parts=msg.path.split('/').filter(Boolean);
+if(msg.data===null){if(parts.length===1)delete snapshot[parts[0]];
+else if(parts.length===2&&snapshot[parts[0]])delete snapshot[parts[0]][parts[1]];}
+else if(parts.length===1)snapshot[parts[0]]=msg.data;
+else if(parts.length===2){if(!snapshot[parts[0]])snapshot[parts[0]]={};snapshot[parts[0]][parts[1]]=msg.data;}}
+if(!snapshot.stable)snapshot.stable=defStable();
+emit();}catch{}};}catch(e){}},
+async putUsers(users){snapshot.users=users;emit();
+if(cloud){try{await fetch(url('/oidl/users.json'),{method:'PUT',body:JSON.stringify(users)})}catch{}}else saveLocal();},
+async putNode(path,obj){snapshot[path]=obj;emit();
+if(cloud){try{await fetch(url('/oidl/'+path+'.json'),{method:'PUT',body:JSON.stringify(obj)})}catch{}}else saveLocal();},
+async putAll(obj){snapshot=Object.assign(empty(),obj);
+if(!snapshot.stable)snapshot.stable=defStable();emit();
+if(cloud){try{await fetch(url('/oidl.json'),{method:'PUT',body:JSON.stringify(snapshot)})}catch{}}else saveLocal();},
+async addItem(path,obj,pruneTo){const k=Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+if(!snapshot[path])snapshot[path]={};snapshot[path][k]=obj;
+if(pruneTo){const ids=Object.keys(snapshot[path]).sort();
+while(ids.length>pruneTo){const old=ids.shift();delete snapshot[path][old];
+if(cloud){try{fetch(url('/oidl/'+path+'/'+old+'.json'),{method:'PUT',body:'null'})}catch{}}}}
+emit();
+if(cloud){try{await fetch(url('/oidl/'+path+'/'+k+'.json'),{method:'PUT',body:JSON.stringify(obj)})}catch{}}else saveLocal();return k;},
+async deleteItem(path,id){if(snapshot[path])delete snapshot[path][id];emit();
+if(cloud){try{await fetch(url('/oidl/'+path+'/'+id+'.json'),{method:'PUT',body:'null'})}catch{}}else saveLocal();},
+async patchStable(ch){snapshot.stable=Object.assign({},snapshot.stable||defStable(),ch);emit();
+if(cloud){try{await fetch(url('/oidl/stable.json'),{method:'PATCH',body:JSON.stringify(ch)})}catch{}}else saveLocal();}};})();
+
+const loadUsers=()=>DB.data.users||{};
+const saveUsers=u=>DB.putUsers(u);
+const stableData=()=>DB.data.stable||{door:'ЗАКРЫТО',doorLock:false,lift:'ВОЕННОЕ ПОДРАЗДЕЛЕНИЕ',power:'РЕАКТОР',locks:{},filters:100,alarm:false};
+function getLockUntil(){try{return Number(localStorage.getItem('oidl_lock_v1'))||0}catch{return 0}}
+function setLockUntil(ts){try{localStorage.setItem('oidl_lock_v1',String(ts))}catch{}}
+function clearLock(){try{localStorage.removeItem('oidl_lock_v1')}catch{}}
+function hashPass(str){let h=5381;const s='OIDL::TERMLINK::'+str+'::PLAGUE.INC';
+for(let i=0;i<s.length;i++)h=(((h<<5)+h)+s.charCodeAt(i))>>>0;return h.toString(16).padStart(8,'0');}
+function loreDate(){const d=new Date();const p=n=>String(n).padStart(2,'0');
+return p(d.getDate())+'.'+p(d.getMonth()+1)+'.'+LORE_YEAR;}
+function daysSinceBase(){const base=new Date(2287,9,23);const now=new Date();
+return Math.max(1,Math.floor((new Date(now.getFullYear(),now.getMonth(),now.getDate())-base)/86400000)+1);}
+function fmtDate(iso){if(!iso)return'НЕИЗВЕСТНО';const d=new Date(iso);const p=n=>String(n).padStart(2,'0');
+return p(d.getDate())+'.'+p(d.getMonth()+1)+'.'+d.getFullYear()+' '+p(d.getHours())+':'+p(d.getMinutes());}
+function fmtDT(ts){const d=new Date(ts);const p=n=>String(n).padStart(2,'0');
+return p(d.getDate())+'.'+p(d.getMonth()+1)+' '+p(d.getHours())+':'+p(d.getMinutes());}
+function fmtTime(ts){const d=new Date(ts);const p=n=>String(n).padStart(2,'0');return p(d.getHours())+':'+p(d.getMinutes());}
+const padR=(s,n)=>s.length>=n?s:s+' '.repeat(n-s.length);
+const padD=(s,n)=>s.length>=n?s:s+'.'.repeat(n-s.length);
+function logEvent(what,who){DB.addItem('log',{ts:Date.now(),who:who||currentUser||'СИСТЕМА',what},80).catch(()=>{});}
+function seeded(str){let h=0;
+for(let i=0;i<str.length;i++)h=(((h<<5)+h)+str.charCodeAt(i))>>>0;
+return h>>>0;}
+function seededPct(str,min,max){return min+(seeded(str)%(max-min+1));}
+
+/* ==================== ЭВОЛЮЦИЯ СИСТЕМ ==================== */
+function sysValueOnDay(name,day){
+let v=seededPct('BASE'+name,78,94);
+for(let i=1;i<=day;i++){
+const r=seeded('SYS'+name+'|D'+i)%100;
+if(r<18)v-=seededPct('DEC'+name+'|D'+i,1,6);
+else if(r<46)v+=seededPct('INC'+name+'|D'+i,1,5);
+v=Math.max(52,Math.min(99,v));}
+return v;}
+function sysToday(name){return sysValueOnDay(name,daysSinceBase());}
+function sysYesterday(name){return sysValueOnDay(name,daysSinceBase()-1);}
+
+/* ==================== ДОПУСКА ==================== */
+function clearanceLabel(c){c=c||2;
+if(c>=7)return'ПРОИЗВОДИТЕЛЬ';
+if(c===6)return'СМОТРИТЕЛЬ';
+return'УР.'+c;}
+function isOverseer(u){return (u&&u.clearance||0)>=6;}
+
+/* ==================== ШИФР СЕЙФА ==================== */
+function xorCipher(text,pass){let h=parseInt(hashPass(pass),16);
+const out=[];for(let i=0;i<text.length;i++){h=(((h<<5)+h)+i+1)>>>0;
+out.push(text.charCodeAt(i)^((h>>>13)&255));}return out;}
+function xorDecipher(arr,pass){let h=parseInt(hashPass(pass),16);
+let s='';for(let i=0;i<arr.length;i++){h=(((h<<5)+h)+i+1)>>>0;
+s+=String.fromCharCode(arr[i]^((h>>>13)&255))||'';}return s;}
+
+/* ==================== ОТДЕЛЫ ==================== */
+const DEPT_GROUPS=[
+{key:'ВОЕННЫЙ',name:'ВОЕННОЕ ПОДРАЗДЕЛЕНИЕ',words:['ВОЕН','БОЕВ','ШТУРМ','БОЕЦ','БОЙЦ','РАЗВЕД','ПАТРУЛ','БОЕВАЯ ЕДИНИЦА','БОЕВИК']},
+{key:'НАУЧНЫЙ',name:'НАУЧНЫЙ ОТДЕЛ',words:['НАУЧ','ИССЛЕД','УЧЁН','УЧЕН','УЧЁНЫЙ','УЧЕНЫЙ']},
+{key:'МЕДИЦИНСКИЙ',name:'МЕДИЦИНСКИЙ ОТДЕЛ',words:['МЕДИЦ','ВРАЧ','ЛЕКАР','ФЕЛЬД','МЕДИК','ДОКТОР']},
+{key:'ИНЖЕНЕРНЫЙ',name:'ИНЖЕНЕРНЫЙ ОТДЕЛ',words:['ИНЖЕНЕР','СНАБЖ','ТЕХНИК','МЕХАН','ИНЖ']}];
+function resolveGroup(t){if(!t)return null;let s=String(t).toUpperCase();
+if(s[0]==='@')s=s.slice(1);
+for(const g of DEPT_GROUPS){if(g.words.some(w=>s.includes(w)))return g.key;}
+return null;}
+const DEPTS=DEPT_GROUPS.map(g=>g.key);
+
+/* ==================== ЗВАНИЯ/XP ==================== */
+const RANKS=[['НОВОБРАНЕЦ',0],['ПАТРУЛЬНЫЙ',50],['СКАУТ',150],['ИССЛЕДОВАТЕЛЬ',350],['ВЕТЕРАН',700],['ХРАНИТЕЛЬ ДОЛИНЫ',1200]];
+function rankOf(xp){let r=RANKS[0];for(const x of RANKS)if(xp>=(x[1]))r=x;return r;}
+function nextRank(xp){for(const x of RANKS)if(x[1]>xp)return x;return null;}
+function xpBar(xp){const cur=rankOf(xp),nxt=nextRank(xp);
+if(!nxt)return'';
+const from=cur[1],to=nxt[1];
+const k=Math.min(1,(xp-from)/(to-from));
+const N=10,fill=Math.round(k*N);
+return'['+'▓'.repeat(fill)+'░'.repeat(N-fill)+'] '+Math.round(k*100)+'%';}
+async function addXP(nick,amount,ignoreLimit){
+const users=loadUsers();const u=users[nick];if(!u)return;
+const today=new Date().toISOString().slice(0,10);
+if(!ignoreLimit){
+if(u.xpDay!==today){u.xpDay=today;u.xpToday=0;}
+if((u.xpToday||0)>=60)return;}
+const oldRank=rankOf(u.xp||0)[0];
+u.xp=(u.xp||0)+amount;
+if(!ignoreLimit)u.xpToday=(u.xpToday||0)+amount;
+const newRank=rankOf(u.xp)[0];
+users[nick]=u;await saveUsers(users);
+if(newRank!==oldRank){logEvent('новое звание: '+newRank+' ('+nick+')');Sound.fanfare();}}
+
+/* ==================== АНКЕТА/МЕД ==================== */
+const PROFILE_FIELDS=[
+{key:'name',q:'ИМЯ/ПРОЗВИЩЕ',max:40,req:true},
+{key:'gender',q:'ПОЛ (М/Ж/ДРУГОЕ)',max:10},
+{key:'birth',q:'ДАТА РОЖДЕНИЯ (ДД.ММ. + ВОЗРАСТ)',max:24,hint:'ПРИМЕР: 14.03. + 24 ГОДА'},
+{key:'race',q:'РАСА',max:30},
+{key:'role',q:'ДОЛЖНОСТЬ (ОСНОВНАЯ РОЛЬ В КЛАНЕ)',max:40},
+{key:'height',q:'РОСТ, СМ',max:6},
+{key:'weight',q:'ВЕС, КГ',max:6},
+{key:'features',q:'ОТЛИЧИТЕЛЬНЫЕ ЧЕРТЫ (ШРАМЫ, АНОМАЛИИ, ИМПЛАНТЫ)',max:140},
+{key:'department',q:'ОТДЕЛ (ЦИФРА ИЛИ СЛОВОМ): 1-ИНЖЕНЕР 2-МЕДИК 3-БОЕВАЯ ЕДИНИЦА 4-УЧЁНЫЙ',max:60,dept:true},
+{key:'skills',q:'НАВЫКИ: 3 КЛЮЧЕВЫХ УМЕНИЯ + УРОВЕНЬ',max:200},
+{key:'mentor',q:'НАСТАВНИК (ЕСЛИ ИМЕЕТСЯ)',max:40},
+{key:'history',q:'КРАТКАЯ ИСТОРИЯ (ПРОИСХОЖДЕНИЕ, СОБЫТИЯ, ПРИЧИНА ВСТУПЛЕНИЯ)',max:400},
+{key:'character',q:'ХАРАКТЕР (КАЧЕСТВА, ПРИНЦИПЫ)',max:200},
+{key:'fears',q:'ФОБИИ/СЛАБОСТИ (ЧТО ВЛИЯЕТ НА РЕШЕНИЯ)',max:160},
+{key:'habits',q:'ВРЕДНЫЕ ПРИВЫЧКИ',max:120},
+{key:'chronic',q:'ХРОНИЧЕСКИЕ БОЛЕЗНИ (ЕСЛИ ИМЕЮТСЯ)',max:120},
+{key:'allergies',q:'АЛЛЕРГИИ/НЕПЕРЕНОСИМОСТИ',max:120},
+{key:'hobby',q:'ХОББИ',max:100},
+{key:'goals',q:'ЛИЧНЫЕ ЦЕЛИ',max:160}];
+const MED_FIELDS=[
+{key:'blood',q:'ГРУППА КРОВИ/РЕЗУС (НАПР. A(II) RH+)',max:14},
+{key:'dose',q:'НАКОПЛЕННАЯ ДОЗА РАДИАЦИИ, БЭР',max:10},
+{key:'rad',q:'ТЕКУЩИЙ ФОН ОРГАНИЗМА, МБЭР/Ч',max:10},
+{key:'rad_hist',q:'ЛУЧЕВАЯ ИСТОРИЯ (ОБЛУЧЕНИЯ, ЛЕЧЕНИЕ)',max:140},
+{key:'checkup',q:'ПОСЛЕДНИЙ МЕДОСМОТР (ДД.ММ.ГГГГ)',max:10},
+{key:'vacs',q:'ПРИВИВКИ/ИММУНИЗАЦИИ',max:120},
+{key:'stim',q:'РЕАКЦИЯ НА СТИМПАКИ/ПРЕПАРАТЫ',max:80},
+{key:'limits',q:'ОГРАНИЧЕНИЯ ПО НАГРУЗКЕ/ДОПУСКИ',max:120},
+{key:'category',q:'КАТЕГОРИЯ ГОДНОСТИ (А/Б/В + ПОЯСНЕНИЕ)',max:40},
+{key:'psych',q:'ЗАКЛЮЧЕНИЕ ПСИХОЛОГА ОИДЛ',max:140},
+{key:'medic_notes',q:'ОСОБЫЕ ОТМЕТКИ МЕДИКА',max:160}];
+const ALL_FIELDS=[...PROFILE_FIELDS.map(f=>({...f,block:1})),...MED_FIELDS.map(f=>({...f,block:2}))];
+function normalizeDept(v){if(!v)return'-';const s=String(v).trim().toUpperCase();
+if(s==='1')return'ИНЖЕНЕР';
+if(s==='2')return'МЕДИК';
+if(s==='3')return'БОЕВАЯ ЕДИНИЦА';
+if(s==='4')return'УЧЁНЫЙ';
+const g=resolveGroup(s);
+return g||v;}
+
+function formatProfile(u){const p=u.profile||{};const v=k=>p[k]||'-';
+const medals=Object.values(u.medals||{}).map(m=>m.name);
+const rk=rankOf(u.xp||0)[0];
+return[
+'+=============== ДОСЬЕ ОПЕРАТОРА ===============+','ОСНОВНЫЕ ДАННЫЕ',
+' ˖ Имя: '+v('name'),' ˖ Пол: '+v('gender'),' ˖ Дата рождения: '+v('birth'),' ˖ Раса: '+v('race'),
+' ˖ Должность: '+v('role'),' ˖ Физические параметры:',
+' •| Рост: '+v('height')+' см',' •| Вес: '+v('weight')+' кг',' •| Отличительные черты: '+v('features'),
+'ПРОФЕССИОНАЛЬНЫЕ ДАННЫЕ',' •| Отдел: '+v('department'),' •| Навыки: '+v('skills'),
+' •| Наставник: '+v('mentor'),'ЛИЧНОСТЬ И БИОГРАФИЯ',' •| Краткая история: '+v('history'),
+' •| Характер: '+v('character'),' •| Фобии/Слабости: '+v('fears'),'ОСОБЫЕ ОТМЕТКИ',
+' •| Вредные привычки: '+v('habits'),' •| Хронические болезни: '+v('chronic'),
+' •| Аллергии/Непереносимости: '+v('allergies'),'ДОПОЛНИТЕЛЬНО',' •| Хобби: '+v('hobby'),
+' •| Личные цели: '+v('goals'),
+'СЛУЖЕБНОЕ',
+' ˖ Звание: '+rk+' (XP: '+(u.xp||0)+')',
+' •| Знаки отличия: '+(medals.length?medals.join(', '):'-'),
+'+===============================================+'];}
+function formatMedCard(nick,u){const p=u.profile||{};const m=u.medical||{};
+const g=(o,k)=>(o&&o[k])||'-';return[
+'+============ МЕДИЦИНСКАЯ КАРТА ОИДЛ ============+',
+'I. ПАСПОРТНАЯ ЧАСТЬ',' Оператор ....... '+nick,' Имя ............ '+g(p,'name'),
+' Пол / Раса ..... '+g(p,'gender')+' / '+g(p,'race'),' Возраст ........ '+g(p,'birth'),
+'II. АНТРОПОМЕТРИЯ И КРОВЬ',' Рост / Вес ..... '+g(p,'height')+' СМ / '+g(p,'weight')+' КГ',' Группа крови ... '+g(m,'blood'),
+'III. РАДИАЦИОННЫЙ ПРОФИЛЬ',' Накоплено ...... '+g(m,'dose')+' БЭР',' Текущий фон .... '+g(m,'rad')+' МБЭР/Ч',' Луч. история ... '+g(m,'rad_hist'),
+'IV. СОСТОЯНИЕ И ОГРАНИЧЕНИЯ',' Хроническое .... '+g(p,'chronic'),' Аллергии ....... '+g(p,'allergies'),
+' Ограничения .... '+g(m,'limits'),' Годность ........ '+g(m,'category'),
+'V. ПРОФИЛАКТИКА И ПРЕПАРАТЫ',' Медосмотр ...... '+g(m,'checkup'),' Прививки ....... '+g(m,'vacs'),' Стимпаки ....... '+g(m,'stim'),
+'VI. ОТМЕТКИ МЕДИКА',' Психолог ....... '+g(m,'psych'),' Отметки ........ '+g(m,'medic_notes'),
+'+================================================+'];}
+
+/* ==================== ПОЧТА ==================== */
+const deptOf=u=>((u&&u.profile&&u.profile.department)||'');
+function isMailFor(m,nick,users){
+if(m.to===nick)return true;
+if(m.to&&m.to[0]==='@'){
+const u=users[nick];if(!u)return false;
+return resolveGroup(deptOf(u))===resolveGroup(m.to);}
+return false;}
+function inboxFor(nick){const users=loadUsers();const mail=DB.data.mail||{};
+return Object.entries(mail).map(([id,m])=>({id,...m})).filter(m=>isMailFor(m,nick,users)).sort((a,b)=>b.ts-a.ts);}
+
+/* ==================== МЕНЮ ==================== */
+const MENU=[
+{t:'НАУЧНЫЕ ДОКУМЕНТАЦИИ',d:'АРХИВ + СОЗДАНИЕ',type:'docs'},
+{t:'МЕДИЦИНСКИЕ КАРТЫ',d:'СОСТАВ // МЕДБЛОК',type:'med'},
+{t:'ЖУРНАЛ ЭКСПЕДИЦИЙ',d:'ОТЧЁТЫ ГРУПП',type:'static',items:[
+{name:'ЗАПИСЬ 12: РАЗВАЛИНЫ ФЕРМЫ КЛОУЗА',lvl:1,lines:['СОСТАВ: 4 ОПЕРАТОРА. ВРЕМЯ: 6 ЧАСОВ.','ОБНАРУЖЕН ЦЕЛЫЙ ПОГРЕБ. ИЗЪЯТО: 12 БАНКОВ, ФИЛЬТР ДЛЯ ВОДЫ, КОМПАС.','ИНЦИДЕНТ: ОСИНОЕ ГНЕЗДО В ПОГРЕБЕ. ПОСТРАДАВШИХ НЕТ.']},
+{name:'ЗАПИСЬ 13: ЮЖНЫЙ ХРЕБЕТ',lvl:1,lines:['СОСТАВ: 3 ОПЕРАТОРА. ОБХОД ПЕРИМЕТРА ВЫПОЛНЕН, 6 МАЯКОВ.','НА СЕВЕРНОМ СКЛОНЕ СЛЕДЫ НЕИЗВЕСТНОГО СУЩЕСТВА. ПАТРУЛЯМ: ХОДИТЬ ПАРАМИ, СТВОЛЫ ЗАРЕЖЕНЫ.']},
+{name:'ЗАПИСЬ 14: ПОДСТУПЫ К ЗОНЕ СВЕЧЕНИЯ',lvl:3,lines:['ДОСТИГНУТА ОТМЕТКА 200 М. ДАЛЬШЕ ДОЗИМЕТРЫ ЗАШКАЛИЛИ.','У КРАЯ ЗОНЫ СЛЕДЫ КОПАТЕЛЬНЫХ РАБОТ. КТО-ТО КОПАЁТ К ЗОНЕ. ИЛИ ИЗ ЗОНЫ. ВЕДЁМ НАБЛЮДЕНИЕ.']}]},
+{t:'ЗАПИСИ УЧАСТНИКОВ',d:'СВОБОДНЫЙ АРХИВ',type:'notes'},
+{t:'ПОЧТА ОИДЛ',d:'ЛИЧНАЯ И ПО ОТДЕЛАМ',type:'mail'},
+{t:'ОБЩИЙ ЭФИР',d:'ЧАТ ОИДЛ',type:'chat'},
+{t:'ЛИЧНЫЕ СООБЩЕНИЯ',d:'ДИАЛОГИ 1-НА-1',type:'dm'},
+{t:'СВЯЗЬ И ЧАСТОТЫ',d:'КАНАЛЫ, КОДЫ',type:'static',items:[
+{name:'КАНАЛ 1: ОБЩИЙ ОИДЛ',lvl:1,lines:['ЧАСТОТА ..... 142.8 МГЦ','ПОЗЫВНЫЕ: БАЗА «ГНЕЗДО», ПАТРУЛЬ «СТРИЖ», МЕДИКИ «ЛЮТНИК», РАЗВЕДКА «ТЕНЬ».','ВЫХОД В ЭФИР: НАЗВАТЬ ПОЗЫВНОЙ, ЖДАТЬ ПОДТВЕРЖДЕНИЯ «ГНЕЗДА».']},
+{name:'КАНАЛ 2: АВАРИЙНЫЙ',lvl:1,lines:['ЧАСТОТА ..... 149.3 МГЦ. ТОЛЬКО ДЛЯ ЧП.','СИГНАЛ БЕДСТВИЯ: ТРИ КЛИКА, ПАУЗА, ТРИ КЛИКА.','КОД ЭВАКУАЦИИ — «РОЗОВЫЕ ОБЛАКА НА ЮГЕ».']},
+{name:'ПРОТОКОЛ «МАЯК»: КОДОВЫЕ ФРАЗЫ',lvl:2,lines:['«ДОЖДЬ ИДЁТ» ............ ВСЁ ЧИСТО.','«ДОЖДЬ С ГРЯЗЬЮ» ........ ЗА МНОЙ ХВОСТ.','«УРОЖАЙ СОЗРЕЛ» ......... ГРУППА ВОЗВРАЩАЕТСЯ.','«ТУМАН ПЛОТНЫЙ» ......... НЕ ВЫХОДИТЕ ИЗ БАЗЫ.']}]},
+{t:'АНКЕТА ОПЕРАТОРА',d:'ДОСЬЕ, МЕД, СЕЙФ, ОПОВЕЩ.',type:'profile'},
+{t:'ИНВЕНТАРЬ',d:'СНАРЯЖЕНИЕ И СКЛАД',type:'inv'}];
+const STABLE_SECTIONS=[
+{key:'A',t:'АНАЛИЗ СИСТЕМ',d:'ДИАГНОСТИКА'},
+{key:'B',t:'ГЕРМОДВЕРЬ',d:'ОТКР/ЗАКР/БЛОК',ovOnly:true},
+{key:'C',t:'ЛИФТ СТОЙЛА',d:'ЭТАЖИ 1-4 (ВСЕМ)'},
+{key:'D',t:'ЗАМКИ СЕКЦИЙ',d:'БЛОКИРОВКА',ovOnly:true},
+{key:'E',t:'ЭНЕРГОСИСТЕМА',d:'РЕАКТОР/РЕЗЕРВ',ovOnly:true},
+{key:'F',t:'ФИЛЬТРАЦИЯ ВОЗДУХА',d:'ЦИКЛ ОЧИСТКИ',ovOnly:true},
+{key:'H',t:'ТРЕВОГА',d:'ВКЛ/ВЫКЛ (ВСЕ ВИДЯТ)',ovOnly:true}];
+const LIFT_FLOORS=[
+{n:1,t:'ВОЕННОЕ ПОДРАЗДЕЛЕНИЕ'},
+{n:2,t:'НАУЧНЫЙ ЭТАЖ'},
+{n:3,t:'МЕДИЦИНСКИЙ ОТДЕЛ'},
+{n:4,t:'ИНЖЕНЕРНО-ТЕХНИЧЕСКИЙ ОТДЕЛ'}];
+const getStaticItems=i=>(DB.data.content&&DB.data.content[i])||MENU[i].items;
+const NOTE_TYPES=[{c:'ОБЪ',n:'ОБЪЯВЛЕНИЕ'},{c:'ОТЧ',n:'ОТЧЁТ'},{c:'ДНЕВ',n:'ДНЕВНИК'},{c:'ИНФ',n:'ДРУГОЕ'}];
+const DOC_CATS=[{c:'МТ',n:'МУТАНТ'},{c:'АН',n:'АНОМАЛИЯ'},{c:'ТГ',n:'ТЕХНОГЕН'},{c:'ПР',n:'ПРОЧЕЕ'}];
+
+/* ==================== DOM ==================== */
+const $=id=>document.getElementById(id);
+const crtEl=$('crt'),screenEl=$('screen'),termEl=$('terminal'),doneEl=$('text-done'),liveEl=$('text-live'),
+hintEl=$('sound-hint'),skipHintEl=$('skip-hint'),clockEl=$('clock'),ledPower=$('led-power'),ledAct=$('led-act'),
+mobileInput=$('mobile-input'),touchbarEl=$('touchbar'),powerSwitchEl=$('power-switch'),serviceBtnEl=$('service-btn'),
+adminModalEl=$('admin-modal'),adminFormEl=$('admin-form'),adminPassEl=$('admin-pass'),adminErrorEl=$('admin-error'),
+adminCancelEl=$('admin-cancel'),adminConsoleEl=$('admin-console'),acBodyEl=$('ac-body'),adminCloseEl=$('admin-close'),
+acTabsEl=$('ac-tabs'),acTitleEl=$('ac-title'),
+camEl=$('camera'),camLed=$('cam-led'),vaultEl=$('vault'),vaultCoverEl=$('vault-cover'),
+vaultSlotEl=$('vault-slot'),slotLed=$('slot-led'),mcardEl=$('mcard'),cardStuckEl=$('card-stuck'),
+masterModalEl=$('master-modal'),masterFormEl=$('master-form'),masterPassEl=$('master-pass'),
+masterErrorEl=$('master-error'),masterCancelEl=$('master-cancel');
+
+const isTouch=window.matchMedia('(pointer: coarse)').matches||'ontouchstart' in window;
+if(isTouch){document.body.classList.add('touch');skipHintEl.style.display='none';}
+const DEFAULT_HINT=isTouch?'ПИТАНИЕ ОТКЛЮЧЕНО — ВКЛЮЧИТЕ ТУМБЛЕР НА КОРПУСЕ':'ПИТАНИЕ ОТКЛЮЧЕНО — ПЕРЕВЕДИТЕ ТУМБЛЕР ПИТАНИЯ';
+function setHint(t){if(!t){hintEl.style.opacity='0';return;}hintEl.textContent=t;hintEl.style.animation=isTouch?'none':'';hintEl.style.opacity='1';}
+setHint(DEFAULT_HINT);
+
+/* ==================== ПИТАНИЕ ==================== */
+let powerOn=false,lockTimer=null,denyTimer=null;
+class PowerOff extends Error{}
+const POWER_OFF=new PowerOff();
+const ensurePower=()=>{if(!powerOn)throw POWER_OFF;};
+const safe=fn=>Promise.resolve().then(fn).catch(e=>{if(!(e instanceof PowerOff))console.error(e);});
+function resetSessionVars(){state='boot';bootDone=false;skipBoot=false;skipWasPressed=false;busy=false;
+currentUser=null;passBuffer='';passFirst='';regNick='';attemptsLeft=MAX_ATTEMPTS;
+fieldIdx=0;profileData={};medData={};medicalOnly=false;sectionIdx=0;currentMailIdx=-1;
+dmOther=null;chatBuf='';ml=null;notesArm=false;noteType=null;mailCompose=null;
+invMode='mine';invAddName='';lastIncoming=Date.now();safeKey=null;stableSection=null;docCatIdx=0;docNewCat=null;
+selGrid=null;selR=0;selC=0;}
+function powerOnSequence(){powerOn=false;powerOn=true;clearInterval(lockTimer);
+exitConsole(true);masterModeOn=false;
+resetSessionVars();clearScreen();closeAdminModal();closeMasterModal();
+Sound.init();Sound.ambienceOn();
+setTimeout(()=>Sound.thunk(),60);setTimeout(()=>Sound.whine(),220);
+crtEl.classList.remove('off','dying');void crtEl.offsetWidth;
+crtEl.classList.add('igniting');setTimeout(()=>crtEl.classList.remove('igniting'),3300);
+ledPower.classList.add('on');serviceBtnEl.classList.add('armed');
+powerSwitchEl.classList.add('on');powerSwitchEl.setAttribute('aria-checked','true');
+if(!isTouch)skipHintEl.style.opacity='1';
+setHint(null);renderTouchbar();boot();}
+function powerOffSequence(){powerOn=false;busy=false;state='off';clearInterval(lockTimer);
+if(masterModeOn)masterModeOn=false;
+if(cardState==='slot')ejectFromSlot(true);
+Sound.ambienceOff();Sound.powerDown();
+crtEl.classList.remove('igniting');crtEl.classList.add('dying');
+setTimeout(()=>{crtEl.classList.remove('dying');crtEl.classList.add('off');},480);
+ledPower.classList.remove('on');ledAct.classList.remove('on','err','violet');
+serviceBtnEl.classList.remove('armed');
+powerSwitchEl.classList.remove('on');powerSwitchEl.setAttribute('aria-checked','false');
+skipHintEl.style.opacity='0';exitConsole(true);closeAdminModal();closeMasterModal();
+setHint(DEFAULT_HINT);renderTouchbar();}
+const togglePower=()=>powerOn?powerOffSequence():powerOnSequence();
+powerSwitchEl.addEventListener('click',togglePower);
+powerSwitchEl.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();togglePower();}});
+let ledTimer;
+function pulseLED(){if(!powerOn||consoleMode)return;ledAct.classList.add('on');
+clearTimeout(ledTimer);ledTimer=setTimeout(()=>ledAct.classList.remove('on'),130);}
+function updClock(){const d=new Date();const p=n=>String(n).padStart(2,'0');
+clockEl.textContent=loreDate()+' | '+p(d.getHours())+':'+p(d.getMinutes());}
+updClock();setInterval(updClock,15000);
+function doGlitch(){crtEl.classList.add('glitch');Sound.crackle();
+setTimeout(()=>crtEl.classList.remove('glitch'),160+Math.random()*160);
+if(Math.random()<.4){termEl.classList.add('roll');setTimeout(()=>termEl.classList.remove('roll'),480);}}
+(function glitchLoop(){setTimeout(()=>{
+if(powerOn&&!document.hidden&&!crtEl.classList.contains('glitch')){
+if(stableData().alarm){ledAct.classList.add('err');setTimeout(()=>ledAct.classList.remove('err'),900);}
+doGlitch();}
+glitchLoop();},5000+Math.random()*8000);})();
+
+/* ==================== ДВИЖОК ==================== */
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+let state='off',bootDone=false,skipBoot=false,skipWasPressed=false,busy=false;
+const scrollDown=()=>{screenEl.scrollTop=screenEl.scrollHeight;};
+const commit=(t='')=>{doneEl.textContent+=t+'\n';liveEl.textContent='';scrollDown();};
+const clearScreen=()=>{doneEl.textContent='';liveEl.textContent='';};
+const p=ms=>async()=>{await sleep(skipBoot?0:ms);ensurePower();};
+const pr=text=>async()=>{ensurePower();liveEl.textContent=text;commit(text);await sleep(skipBoot?0:90);};
+const empty=()=>async()=>{ensurePower();commit('');await sleep(skipBoot?0:60);};
+const t=(text,min=12,rand=26)=>async()=>{for(let i=0;i<text.length;i++){ensurePower();
+if(skipBoot){commit(text.slice(i));return;}
+liveEl.textContent+=text[i];if(text[i]!==' ')Sound.keyClick();
+pulseLED();scrollDown();await sleep(skipBoot?0:min+Math.random()*rand);}
+Sound.clunk();commit(text);await sleep(skipBoot?0:120);};
+const bar=(label,dur=1600)=>async()=>{const CELLS=24;const start=performance.now();
+await new Promise(res=>{function frame(){if(!powerOn){res();return;}
+const k=skipBoot?1:Math.min(1,(performance.now()-start)/dur);
+const filled=Math.round(k*CELLS);
+liveEl.textContent=label+': ['+'█'.repeat(filled)+'░'.repeat(CELLS-filled)+'] '+Math.round(k*100)+'%';
+scrollDown();pulseLED();if(!skipBoot&&Math.random()<.5)Sound.tick();
+if(k<1)requestAnimationFrame(frame);else{Sound.clunk();commit(liveEl.textContent);res();}}
+requestAnimationFrame(frame);});ensurePower();};
+const count=(prefix,to,suffix,dur=1500)=>async()=>{const start=performance.now();
+await new Promise(res=>{function frame(){if(!powerOn){res();return;}
+const k=skipBoot?1:Math.min(1,(performance.now()-start)/dur);
+const eased=Math.round(to*(1-Math.pow(1-k,2)));
+liveEl.textContent=prefix+eased+suffix;scrollDown();pulseLED();
+if(k<1)requestAnimationFrame(frame);else{Sound.clunk();commit(liveEl.textContent);res();}}
+requestAnimationFrame(frame);});ensurePower();await sleep(skipBoot?0:150);};
+const fx=(soft=false)=>async()=>{ensurePower();soft?Sound.crackle():Sound.error();doGlitch();
+await sleep(skipBoot?0:(soft?250:650));};
+async function printLines(lines,speed=30){busy=true;
+try{for(const line of lines){ensurePower();
+if(line===''){commit('');await sleep(speed);continue;}
+Sound.tick();pulseLED();commit(line);await sleep(speed+Math.random()*40);}
+}finally{busy=false;}}
+function printFast(lines){for(const l of lines)commit(l);}
+
+/* ==================== ВВОД ==================== */
+const INPUT_STATES={
+'menu-select':{prompt:'',mask:false,max:0},
+'pass':{prompt:'ПАРОЛЬ: ',mask:true,max:32},
+'reg-nick':{prompt:'ПОЗЫВНОЙ: ',mask:false,max:16},
+'reg-pass':{prompt:'ПАРОЛЬ: ',mask:true,max:32},
+'reg-pass2':{prompt:'ПОВТОРИТЕ ПАРОЛЬ: ',mask:true,max:32},
+'profile':{prompt:'',mask:false,max:400},
+'mainmenu':{prompt:'РАЗДЕЛ: ',mask:false,max:2},
+'section':{prompt:'ДОКУМЕНТ: ',mask:false,max:2},
+'docsmenu':{prompt:'ДЕЙСТВИЕ №: ',mask:false,max:1},
+'doc-cat':{prompt:'КАТЕГОРИЯ (1-4): ',mask:false,max:1},
+'docs-list':{prompt:'ДОКУМЕНТ №: ',mask:false,max:2},
+'doc-title':{prompt:'НАЗВАНИЕ: ',mask:false,max:60},
+'medlist':{prompt:'КАРТА №: ',mask:false,max:2},
+'notesmenu':{prompt:'ДЕЙСТВИЕ №: ',mask:false,max:1},
+'notes-list':{prompt:'ЗАПИСЬ №: ',mask:false,max:2},
+'note-type':{prompt:'ТИП (1-4): ',mask:false,max:1},
+'note-title':{prompt:'ЗАГОЛОВОК: ',mask:false,max:60},
+'mailmenu':{prompt:'ДЕЙСТВИЕ №: ',mask:false,max:1},
+'mail-list':{prompt:'ПИСЬМО №: ',mask:false,max:2},
+'mail-read':{prompt:'КОМАНДА (A-ОТВЕТ / У-УДАЛИТЬ): ',mask:false,max:1},
+'mail-to':{prompt:'КОМУ (НИК/@ОТДЕЛ): ',mask:false,max:20},
+'mail-subj':{prompt:'ТЕМА: ',mask:false,max:60},
+'dmlist':{prompt:'СОБЕСЕДНИК №: ',mask:false,max:2},
+'dm-card':{prompt:'ENTER - НАЧАТЬ ДИАЛОГ: ',mask:false,max:0},
+'profilemenu':{prompt:'ДЕЙСТВИЕ №: ',mask:false,max:1},
+'invmenu':{prompt:'ДЕЙСТВИЕ №: ',mask:false,max:1},
+'invmine':{prompt:'№ ИЗ РЮКЗАКА: ',mask:false,max:2},
+'invstock':{prompt:'№ НА СКЛАДЕ: ',mask:false,max:2},
+'inv-add':{prompt:'НАЗВАНИЕ: ',mask:false,max:40},
+'inv-qty':{prompt:'КОЛ-ВО: ',mask:false,max:5},
+'stable':{prompt:'КОМАНДА №: ',mask:false,max:2},
+'safe-pass':{prompt:'ПАРОЛЬ СЕЙФА: ',mask:true,max:32},
+'safe-new':{prompt:'НОВЫЙ ПАРОЛЬ СЕЙФА: ',mask:true,max:32},
+'safe-new2':{prompt:'ПОВТОРИТЕ ПАРОЛЬ СЕЙФА: ',mask:true,max:32},
+'safe-old':{prompt:'ТЕКУЩИЙ ПАРОЛЬ СЕЙФА: ',mask:true,max:32},
+'safe-chg':{prompt:'НОВЫЙ ПАРОЛЬ СЕЙФА: ',mask:true,max:32},
+'safe-chg2':{prompt:'ПОВТОРИТЕ НОВЫЙ ПАРОЛЬ: ',mask:true,max:32}};
+const ML_STATES=['note-edit','mail-edit','safe-edit','doc-edit'];
+const CHAT_STATES=['chat','dm-chat'];
+const MAX_ATTEMPTS=4,LOCK_SECONDS=60;
+const NICK_RE=/^[\p{L}\p{N}_-]{2,16}$/u;
+let currentUser=null,passBuffer='',passFirst='',regNick='',attemptsLeft=MAX_ATTEMPTS;
+let fieldIdx=0,profileData={},medData={},medicalOnly=false,profilePrompt='';
+let sectionIdx=0,currentMailIdx=-1,dmOther=null,chatBuf='';
+let ml=null,notesArm=false,noteType=null,mailCompose=null;
+let invMode='mine',invAddName='',lastIncoming=Date.now();
+let safeKey=null,stableSection=null,docCatIdx=0,docNewCat=null;
+let stableBusy=false;
+let selGrid=null,selR=0,selC=0;
+function setState(s){state=s;renderTouchbar();}
+function currentPrompt(){
+if(state==='profile')return profilePrompt;
+if(ML_STATES.includes(state))return'> ';
+if(state==='notes-list')return notesArm?'УДАЛИТЬ №: ':INPUT_STATES['notes-list'].prompt;
+const c=INPUT_STATES[state];return c?c.prompt:'';}
+function redraw(){
+if(ML_STATES.includes(state)&&ml){liveEl.textContent=ml.lines.map(l=>'> '+l).join('\n')
++(ml.lines.length?'\n':'')+'> '+ml.buf;scrollDown();return;}
+if(CHAT_STATES.includes(state)){liveEl.textContent=(state==='chat'?'СООБЩЕНИЕ: ':'ВЫ: ')+chatBuf;scrollDown();return;}
+if(state==='menu-select'){liveEl.textContent='';return;}
+const c=INPUT_STATES[state];if(!c)return;
+liveEl.textContent=currentPrompt()+(c.mask?'█'.repeat(passBuffer.length):passBuffer);scrollDown();}
+function inputChar(ch){
+if(busy||stableBusy)return;
+if(ML_STATES.includes(state)){if(!ml)return;
+const total=ml.lines.join('\n').length+ml.buf.length;
+if(total<ml.maxLen&&ml.buf.length<120){ml.buf+=ch;redraw();}return;}
+if(CHAT_STATES.includes(state)){if(chatBuf.length<200){chatBuf+=ch;redraw();}return;}
+const c=INPUT_STATES[state];if(!c)return;
+const max=(state==='profile')
+?(ALL_FIELDS[fieldIdx]?ALL_FIELDS[fieldIdx].max:400)
+:c.max;
+if(passBuffer.length>=max)return;
+passBuffer+=ch;redraw();}
+function inputBack(){if(busy)return;
+if(ML_STATES.includes(state)&&ml){if(ml.buf)ml.buf=ml.buf.slice(0,-1);
+else if(ml.lines.length)ml.buf=ml.lines.pop();redraw();return;}
+if(CHAT_STATES.includes(state)){chatBuf=chatBuf.slice(0,-1);redraw();return;}
+if(!INPUT_STATES[state])return;passBuffer=passBuffer.slice(0,-1);redraw();}
+const BACK_MAP={section:'menu',medlist:'menu',notesmenu:'menu','notes-list':'notesmenu',
+'note-type':'notesmenu','note-title':'notesmenu',mailmenu:'menu','mail-list':'mailmenu',
+'mail-read':'mail-list','mail-to':'mailmenu','mail-subj':'mailmenu',dmlist:'menu',profilemenu:'menu',
+invmenu:'menu',invmine:'invmenu',invstock:'invmenu','inv-add':'invmenu','inv-qty':'invmenu',
+docsmenu:'menu','doc-cat':'docsmenu','docs-list':'docsmenu','doc-title':'docsmenu'};
+function inputEscape(){
+if(busy||stableBusy)return;
+if(state==='waitprint')return;
+Sound.beep(500,.07);
+if(ML_STATES.includes(state)){
+if(state==='note-edit')return openNotesMenu();
+if(state==='mail-edit')return openMailMenu();
+if(state==='safe-edit'){ml=null;safeKey=null;return openProfileMenu();}
+if(state==='doc-edit'){ml=null;docNewCat=null;return openDocsMenu();}}
+if(CHAT_STATES.includes(state))return openMainMenu();
+if(state==='profile')return deferProfile();
+if(state==='dm-card'){passBuffer='';return openDMList();}
+if(state==='stable'){passBuffer='';stableSection=null;return openMainMenu();}
+if(state==='safe-pass'||state==='safe-new'||state==='safe-new2'
+||state==='safe-old'||state==='safe-chg'||state==='safe-chg2'){
+passBuffer='';passFirst='';return openProfileMenu();}
+if(state==='mainmenu')return;
+const b=BACK_MAP[state];
+if(b==='menu')return openMainMenu();
+if(b==='notesmenu')return openNotesMenu();
+if(b==='mailmenu')return openMailMenu();
+if(b==='mail-list')return openMailList();
+if(b==='notes-list')return openNotesList();
+if(b==='invmenu')return openInvMenu();
+if(b==='docsmenu')return openDocsMenu();
+if(b)return openMainMenu();
+startAuth();}
+async function inputEnter(){if(busy||stableBusy)return;
+if(ML_STATES.includes(state))return mlEnter();
+if(CHAT_STATES.includes(state))return sendChatDispatch();
+if(!INPUT_STATES[state])return;
+switch(state){
+case'menu-select':return menuSelectConfirm();
+case'mainmenu':return mainMenuEnter();
+case'section':return sectionEnter();
+case'docsmenu':return docsMenuEnter();
+case'doc-cat':return docCatEnter();
+case'docs-list':return docsListEnter();
+case'medlist':return medEnter();
+case'notesmenu':return notesMenuEnter();
+case'notes-list':return notesListEnter();
+case'note-type':return noteTypeEnter();
+case'mailmenu':return mailMenuEnter();
+case'mail-list':return mailListEnter();
+case'mail-read':return mailReadEnter();
+case'dmlist':return dmListEnter();
+case'dm-card':return openDMFromCard();
+case'profilemenu':return profileMenuEnter();
+case'invmenu':return invMenuEnter();
+case'invmine':return invMineEnter();
+case'invstock':return invStockEnter();
+case'stable':return stableCmdEnter();
+case'pass':await checkPassword();break;
+case'reg-nick':await submitNick();break;
+case'reg-pass':await submitPass();break;
+case'reg-pass2':await submitPass2();break;
+case'profile':await submitField();break;
+case'note-title':await startNoteEditor();break;
+case'doc-title':await startDocEditor();break;
+case'mail-to':await mailToNext();break;
+case'mail-subj':await startMailEditor();break;
+case'inv-add':await invAddNext();break;
+case'inv-qty':await invAddSave();break;
+case'safe-pass':await safePassEnter();break;
+case'safe-new':await safeNewEnter();break;
+case'safe-new2':await safeNew2Enter();break;
+case'safe-old':await safeOldEnter();break;
+case'safe-chg':await safeChgEnter();break;
+case'safe-chg2':await safeChg2Enter();break;}}
+
+function badInput(){Sound.beep(300,.06);passBuffer='';redraw();}
+function num(k){const n=Number(k);return Number.isInteger(n)?n:-1;}
+function stableKeyOf(ch){const map={'A':'A','Ф':'A','B':'B','И':'B','C':'C','С':'C',
+'D':'D','В':'D','E':'E','У':'E','F':'F','А':'F','H':'H','Р':'H'};
+return map[ch.toUpperCase()]||null;}
+
+/* ==================== ВЫБОР ОПЕРАТОРА (v7.7.1: полная перерисовка) ==================== */
+function buildSelGrid(){
+const users=loadUsers();
+const cols=DEPT_GROUPS.map(g=>({g,names:[]}));
+const guests=[];
+Object.keys(users).sort().forEach(nick=>{
+const u=users[nick];
+const dep=u.profile?normalizeDept(u.profile.department||''):'';
+const grp=u.profile?resolveGroup(dep):null;
+let placed=false;
+cols.forEach(c=>{if(!placed&&c.g.key===grp){c.names.push(nick);placed=true;}});
+if(!placed)guests.push(nick);});
+return{cols,guests};}
+function selNameAt(r,c){
+if(!selGrid)return null;
+if(r<selGrid.cols.length)return selGrid.cols[r].names[c]||null;
+if(r===selGrid.cols.length)return selGrid.guests[c]||null;
+return null;}
+function selCellRender(name,sel){
+const w=13;
+const nm=padR(name.slice(0,w-2),w-2);
+return sel?('>'+nm):(' '+nm);}
+/* v7.7.1: экран выбора рисуется ЦЕЛИКОМ при каждом движении */
+async function renderSelGrid(){
+if(!selGrid)return;
+const CW=15;
+const lines=[];
+lines.push('+================================================+');
+lines.push('|   PLAGUE.INC - СИСТЕМА КОНТРОЛЯ ДОСТУПА        |');
+lines.push('|      ТЕРМИНАЛ ОИДЛ // ВЫБОР ОПЕРАТОРА          |');
+lines.push('+================================================+');
+lines.push('');
+lines.push(' '+(DEPT_GROUPS.map(g=>padR(g.name,CW)).join('| ')));
+lines.push(' '+(DEPT_GROUPS.map(()=>'-'.repeat(CW)).join('| ')));
+const maxRows=Math.max(2,...selGrid.cols.map(c=>c.names.length));
+for(let r=0;r<maxRows;r++){
+let row=' ';
+DEPT_GROUPS.forEach((g,ci)=>{
+const name=selGrid.cols[ci].names[r];
+row+=selCellRender(name||'· · ·',!!name&&r===selR&&ci===selC);
+if(ci<DEPT_GROUPS.length-1)row+='| ';});
+lines.push(row);}
+if(selGrid.guests.length){
+lines.push(' '+'-'.repeat(CW*4+9));
+lines.push(' '+padR('ГОСТИ (БЕЗ ОТДЕЛА)',CW*4+9));
+let row=' ';
+selGrid.guests.slice(0,12).forEach((name,ci)=>{
+row+=selCellRender(name,selR===selGrid.cols.length&&ci===selC);});
+lines.push(row);}
+lines.push('');
+lines.push(' WASD/СТРЕЛКИ - ПЕРЕМЕЩЕНИЕ СТРЕЛКИ ►');
+lines.push(' ENTER - ВЫБРАТЬ ОПЕРАТОРА | [N] - РЕГИСТРАЦИЯ');
+clearScreen();
+for(const line of lines)commit(line);
+liveEl.textContent='';}
+function menuSelectMove(dr,dc){
+if(!selGrid)return;
+let r=selR,c=selC;
+for(let step=0;step<30;step++){
+r+=dr;c+=dc;
+if(r<0||c<0||r>selGrid.cols.length||c>=12)break;
+if(selNameAt(r,c)){selR=r;selC=c;Sound.navBlip();
+safe(renderSelGrid);return;}}
+Sound.beep(400,.04);}
+function menuSelectConfirm(){
+const name=selNameAt(selR,selC);
+if(!name){Sound.beep(400,.05);return;}
+Sound.beep(700,.07);
+return void safe(()=>selectUser(name));}
+async function startAuth(){setState('menu');currentUser=null;passBuffer='';safeKey=null;clearScreen();
+const lockUntil=getLockUntil();
+if(Date.now()<lockUntil)return lockTerminal(lockUntil);
+selGrid=buildSelGrid();
+/* v7.7.1: старт на первом существующем операторе (колонка за колонкой) */
+selR=0;selC=0;
+(function pickFirst(){
+for(let c=0;c<selGrid.cols.length;c++){
+if(selGrid.cols[c].names.length){selR=0;selC=c;return;}}
+if(selGrid.guests.length){selR=selGrid.cols.length;selC=0;}})();
+const users=loadUsers();const names=Object.keys(users);
+if(!names.length){
+await printLines(['+================================================+','|   PLAGUE.INC - СИСТЕМА КОНТРОЛЯ ДОСТУПА        |','|      ТЕРМИНАЛ ОИДЛ // ВЫБОР ОПЕРАТОРА          |','+================================================+','',
+'ЗАРЕГИСТРИРОВАННЫЕ ОПЕРАТОРЫ НЕ НАЙДЕНЫ.','ТРЕБУЕТСЯ ПЕРВИЧНАЯ РЕГИСТРАЦИЯ.',''],36);
+await sleep(400);return startRegistration();}
+setState('waitprint');
+await renderSelGrid();
+setState('menu-select');passBuffer='';liveEl.textContent='';}
+async function selectUser(name){
+setState('waitprint');currentUser=name;passBuffer='';attemptsLeft=MAX_ATTEMPTS;
+clearScreen();
+await printLines(['СКАНИРОВАНИЕ СЕТЧАТКИ...'],16);
+const pct=(97.2+Math.random()*2.6).toFixed(1);
+const N=16;
+for(let i=0;i<=N;i++){ensurePower();
+liveEl.textContent='СЕТЧАТКА: ['+'▓'.repeat(i)+'░'.repeat(N-i)+'] '+Math.round(i/N*100)+'%';
+scrollDown();Sound.tick();pulseLED();await sleep(45);}
+Sound.scanner();
+commit('СЕТЧАТКА: ['+'▓'.repeat(N)+'] СОВПАДЕНИЕ '+pct+'%');
+commit('ОПЕРАТОР ПОДТВЕРЖДЁН.');
+commit('');
+await printLines(['ОПЕРАТОР: '+name,'ВВЕДИТЕ ПАРОЛЬ. ПОПЫТОК: '+'▓'.repeat(attemptsLeft)+' ('+attemptsLeft+')','']);
+setState('pass');passBuffer='';redraw();}
+async function checkPassword(){
+const users=loadUsers();const user=users[currentUser];
+if(user&&user.hash===hashPass(passBuffer)){logEvent('вход в систему');return grantAccess(currentUser);}
+attemptsLeft--;Sound.error();doGlitch();
+if(attemptsLeft<=0){logEvent('блокировка: 4 неверных пароля');return lockTerminal();}
+passBuffer='';
+await printLines(['НЕВЕРНЫЙ ПАРОЛЬ. ОСТАЛОСЬ ПОПЫТОК: '+'▓'.repeat(attemptsLeft)+' ('+attemptsLeft+')']);
+redraw();}
+async function lockTerminal(customUntil){setState('locked');passBuffer='';
+const until=customUntil||(Date.now()+LOCK_SECONDS*1000);setLockUntil(until);
+Sound.error();doGlitch();
+ledAct.classList.add('err');setTimeout(()=>ledAct.classList.remove('err'),3200);
+clearScreen();
+await printLines(['+========================================+','|             !!! ВНИМАНИЕ !!!           |','+========================================+','',
+'НЕВЕРНЫЙ ПАРОЛЬ ВВЕДЁН '+MAX_ATTEMPTS+' РАЗ ПОДРЯД.','ТЕРМИНАЛ ЗАБЛОКИРОВАН СИСТЕМОЙ БЕЗОПАСНОСТИ.','СОБЫТИЕ ЗАНЕСЕНО В ЖУРНАЛ ОИДЛ.',''],50);
+function tick(){if(!powerOn){clearInterval(lockTimer);return;}
+const left=Math.max(0,Math.ceil((until-Date.now())/1000));
+liveEl.textContent='РАЗБЛОКИРОВКА ЧЕРЕЗ: '+left+' СЕК';scrollDown();
+if(left<=0){clearInterval(lockTimer);safe(startAuth);}}
+tick();clearInterval(lockTimer);lockTimer=setInterval(tick,1000);}
+async function startRegistration(){setState('reg-nick');passBuffer='';clearScreen();
+await printLines(['+========================================+','|     РЕГИСТРАЦИЯ НОВОГО ОПЕРАТОРА       |','+========================================+','',
+'ПОЗЫВНОЙ: 2-16 СИМВОЛОВ, БУКВЫ/ЦИФРЫ/_/-','ПАРОЛЬ:   МИНИМУМ 4 СИМВОЛА',
+isTouch?'КНОПКИ: ⌫ СТЕРЕТЬ, ВВОД, ESC ОТМЕНА':'ESC - ОТМЕНА','']);
+redraw();}
+async function submitNick(){const nick=passBuffer.trim();
+if(!NICK_RE.test(nick)){Sound.error();passBuffer='';
+await printLines(['ОШИБКА: ПОЗЫВНОЙ ДОЛЖЕН СОДЕРЖАТЬ 2-16 СИМВОЛОВ (БУКВЫ, ЦИФРЫ, _, -)']);redraw();return;}
+const users=loadUsers();
+if(Object.keys(users).some(k=>k.toUpperCase()===nick.toUpperCase())){
+Sound.error();doGlitch();passBuffer='';
+await printLines(['ОШИБКА: ТАКОЙ ОПЕРАТОР УЖЕ ЗАРЕГИСТРИРОВАН.']);redraw();return;}
+regNick=nick;passBuffer='';setState('reg-pass');
+await printLines(['ОПЕРАТОР "'+nick+'" СВОБОДЕН.','']);redraw();}
+async function submitPass(){if(passBuffer.length<4){Sound.error();passBuffer='';
+await printLines(['ОШИБКА: ПАРОЛЬ КОРОЧЕ 4 СИМВОЛОВ.']);redraw();return;}
+passFirst=passBuffer;passBuffer='';setState('reg-pass2');commit('');redraw();}
+async function submitPass2(){if(passBuffer!==passFirst){Sound.error();doGlitch();passBuffer='';passFirst='';
+setState('reg-pass');await printLines(['ОШИБКА: ПАРОЛИ НЕ СОВПАДАЮТ. НАЧНИТЕ ЗАНОВО.']);redraw();return;}
+const users=loadUsers();
+users[regNick]={hash:hashPass(passBuffer),created:new Date().toISOString(),last:null,clearance:2,profile:null,medical:null,medals:{},inventory:{},xp:0};
+await saveUsers(users);
+const masked='█'.repeat(passFirst.length);
+passBuffer='';commit('ПОВТОРИТЕ ПАРОЛЬ: '+masked);
+busy=true;liveEl.textContent='СОЗДАНИЕ ЗАПИСИ ОПЕРАТОРА...';scrollDown();
+Sound.beep(600,.06);pulseLED();await sleep(700);ensurePower();
+Sound.clunk();commit('ЗАПИСЬ ВНЕСЕНА В РЕЕСТР ОИДЛ .......... ОК');
+await sleep(400);busy=false;
+logEvent('регистрация оператора '+regNick);
+return grantAccess(regNick,true);}
+function birthdaysToday(){const users=loadUsers();const d=new Date();
+const dd=String(d.getDate()).padStart(2,'0'),mm=String(d.getMonth()+1).padStart(2,'0');
+return Object.keys(users).filter(n=>{const b=users[n].profile&&users[n].profile.birth;
+if(!b)return false;const m=b.match(/^(\d{1,2})\.(\d{1,2})/);
+return m&&m[1].padStart(2,'0')===dd&&m[2].padStart(2,'0')===mm;});}
+async function grantAccess(name,isNew=false){setState('waitprint');
+currentUser=name;passBuffer='';
+const users=loadUsers();const user=users[name]||{};
+const lastText=isNew?'ПЕРВЫЙ ВХОД - ЗАПИСЬ СОЗДАНА':fmtDate(user.last);
+users[name]={...user,last:new Date().toISOString()};await saveUsers(users);
+Sound.chord();clearScreen();
+const medalCount=Object.keys(user.medals||{}).length;
+const lines=['+------------------------------------+','|          ДОСТУП РАЗРЕШЁН           |','+------------------------------------+','',
+'ОПЕРАТОР ......... '+name,'ДОПУСК ........... '+clearanceLabel(user.clearance||2),
+'ЗВАНИЕ ........... '+rankOf(user.xp||0)[0]+' (XP: '+(user.xp||0)+')',
+'ПОСЛЕДНИЙ ВХОД ... '+lastText];
+if(medalCount)lines.push('МЕДАЛЕЙ .......... '+medalCount);
+if(isNew)lines.push('ЗАПИСЬ ОПЕРАТОРА ВНЕСЕНА В РЕЕСТР ОИДЛ.');
+const bd=birthdaysToday();
+if(bd.length)lines.push('','★ СЕГОДНЯ ДЕНЬ РОЖДЕНИЯ У: '+bd.join(', ')+'!');
+if(stableData().alarm)lines.push('','!!! РЕЖИМ ТРЕВОГИ СТОЙЛА АКТИВЕН !!!');
+await printLines(lines,40);
+await sleep(300);ensurePower();
+addXP(name,2,false);
+lastIncoming=Date.now();
+if(!user.profile){await printLines(['','! НЕТ ДАННЫХ АНКЕТЫ УЧАСТНИКА КЛАНА.','! АНКЕТА + МЕДИЦИНСКИЙ БЛОК ОБЯЗАТЕЛЬНЫ.','! ПУСТОЙ ОТВЕТ = ПРОЧЕРК. ESC - ОТЛОЖИТЬ.','']);
+return startProfile(false);}
+openMainMenu();}
+
+/* ==================== ГЛАВНОЕ МЕНЮ ==================== */
+function unreadMailCount(){if(!currentUser)return 0;
+const users=loadUsers();const me=users[currentUser]||{};
+const readTs=me.mailRead||0;
+return inboxFor(currentUser).filter(m=>m.ts>readTs).length;}
+async function openMainMenu(){setState('waitprint');passBuffer='';clearScreen();
+const u=(loadUsers()[currentUser])||{};
+const unread=unreadMailCount();
+const xp=u.xp||0;const rk=rankOf(xp);const nxt=nextRank(xp);
+const ov=isOverseer(u);
+const st=stableData();
+const W=50;
+const wide=window.innerWidth>=860;
+const lines=[];
+const head1='    ГЛАВНЫЙ ТЕРМИНАЛ ОИДЛ // ОСНОВНАЯ ВЕТКА     ';
+const head2=ov?'   СТОЙЛО 37 // ПУЛЬТ СМОТРИТЕЛЯ   ':'';
+if(ov&&wide){
+lines.push('+'+'='.repeat(W)+'+'+'='.repeat(25)+'+');
+lines.push('|'+head1+'|'+padR(head2,25)+'|');
+lines.push('+'+'='.repeat(W)+'+'+'='.repeat(25)+'+');
+}else{
+lines.push('+'+'='.repeat(W)+'+');
+lines.push('|'+head1+'|');
+lines.push('+'+'='.repeat(W)+'+');}
+lines.push('');
+lines.push(' ОПЕРАТОР: '+padD(currentUser,20)+' ЗВАНИЕ: '+padR(rk[0],18));
+lines.push(' ДОПУСК: '+padR(clearanceLabel(u.clearance||2),14)+' | XP: '+padR(String(xp),5)+(nxt?' ДО '+nxt[0]+': '+xpBar(xp):' МАКСИМУМ'));
+lines.push(' СЕАНС: '+loreDate()+' | ЭФИР: '+(DB.cloud?'СЕТЬ ОИДЛ':'ЛОКАЛЬНЫЙ РЕЖИМ'));
+if(masterModeOn)lines.push(' ★ МАСТЕР-СЕАНС АКТИВЕН (КАРТА В СЛОТЕ)');
+lines.push('');
+for(let i=0;i<MENU.length;i++){
+let row='  ['+(i+1)+'] '+padD(MENU[i].t,26)+' '+MENU[i].d+' ';
+if(ov&&wide){
+const s=STABLE_SECTIONS[i];
+row='|'+padR(row,W-1)+'|'+(s?(' ['+s.key+'] '+padR(s.t,15)+' '):' '.repeat(24))+'|';
+}else row='|'+padR(row,W-1)+'|';
+lines.push(row);}
+if(ov&&wide){
+for(let i=MENU.length;i<STABLE_SECTIONS.length;i++){
+const s=STABLE_SECTIONS[i];
+lines.push('|'+' '.repeat(W-1)+'| ['+s.key+'] '+padR(s.t,15)+' |');}}
+if(ov&&wide){lines.push('+'+'-'.repeat(W)+'+'+'-'.repeat(25)+'+');
+lines.push('|'+padR(' ЦИФРА - ОСНОВНОЙ РАЗДЕЛ.',W-1)+'|'+padR(' БУКВА - ПУЛЬТ + ENTER.',24)+'|');
+lines.push('+'+'-'.repeat(W)+'+'+'-'.repeat(25)+'+');}
+else lines.push('+'+'-'.repeat(W)+'+');
+if(ov&&!wide){
+lines.push('');
+lines.push('+========== СТОЙЛО 37 // ПУЛЬТ СМОТРИТЕЛЯ ==========+');
+STABLE_SECTIONS.forEach(s=>lines.push('  ['+s.key+'] '+padD(s.t,26)+' '+s.d));
+lines.push('+---------------------------------------------------+');}
+if(ov){
+lines.push('');
+lines.push(' ДВЕРЬ: '+padR(st.door+(st.doorLock?' (БЛОК)':''),20)+' ЛИФТ: '+padR(st.lift,30));
+if(st.alarm)lines.push(' !!! ТРЕВОГА СТОЙЛА АКТИВНА !!!');}
+lines.push('');
+const bd=birthdaysToday().filter(x=>x!==currentUser);
+if(bd.length)lines.push(' ★ ДЕНЬ РОЖДЕНИЯ У: '+bd.join(', ')+'!');
+if(unread>0)lines.push('  ! НОВЫХ ПИСЕМ: '+unread+' (РАЗДЕЛ 5)');
+if(st.alarm)lines.push('  !!! ТРЕВОГА! ВСЕМ ОПЕРАТОРАМ БЫТЬ ГОТОВЫ !!!');
+lines.push('','  [0] ЗАВЕРШИТЬ СЕАНС','','  ЦИФРА - НАБЕРИТЕ И НАЖМИТЕ ENTER.');
+lines.push(ov?'  БУКВА (A-H) - ПУЛЬТ СТОЙЛА И ENTER.':'  [C] - ЛИФТ СТОЙЛА (ДОСТУПЕН ВСЕМ).');
+await printLines(lines,20);
+setState('mainmenu');passBuffer='';redraw();}
+function mainMenuEnter(){const k=passBuffer.trim();passBuffer='';
+if(!k){redraw();return;}
+if(k==='0')return void safe(doLogout);
+const n=num(k);
+if(n>=1&&n<=MENU.length){Sound.beep(700,.07);return void routeSection(n-1);}
+const sk=stableKeyOf(k);
+if(sk){const u=(loadUsers()[currentUser])||{};
+const sec=STABLE_SECTIONS.find(s=>s.key===sk);
+if(sec.ovOnly&&!isOverseer(u)){Sound.error();doGlitch();
+logEvent('попытка доступа к пульту стойла: '+sec.t);
+return void safe(async()=>{await printLines(['','РАЗДЕЛ "'+sec.t+'" ТРЕБУЕТ ДОПУСКА',
+'СМОТРИТЕЛЬ (6) ИЛИ ПРОИЗВОДИТЕЛЬ (7).','','ПОПЫТКА ЗАНЕСЕНА В ЖУРНАЛ.','(ЛИФТ [C] ДОСТУПЕН ВСЕМ ОПЕРАТОРАМ)'],30);redraw();});}
+Sound.beep(700,.07);return void safe(()=>openStableSection(sk));}
+badInput();redraw();}
+function routeSection(i){const s=MENU[i];
+switch(s.type){
+case'static':return void safe(()=>openStaticSection(i));
+case'docs':return void safe(openDocsMenu);
+case'med':return void safe(openMedList);
+case'notes':return void safe(openNotesMenu);
+case'mail':return void safe(openMailMenu);
+case'chat':return void safe(openChat);
+case'dm':return void safe(openDMList);
+case'profile':return void safe(openProfileMenu);
+case'inv':return void safe(openInvMenu);}}
+async function openStaticSection(i){setState('waitprint');passBuffer='';sectionIdx=i;clearScreen();
+const s=MENU[i];const items=getStaticItems(i);
+await printLines(['+================================================+','| '+padR(s.t+' // '+s.d,46)+'|','+================================================+','',
+...items.map((d,j)=>'  ['+(j+1)+'] '+padD(d.name,40)+((d.lvl||1)>1?' (УР.'+d.lvl+')':'')),
+'','  ЦИФРА - НАБЕРИТЕ И НАЖМИТЕ ENTER. ESC - НАЗАД.'],24);
+setState('section');passBuffer='';redraw();}
+async function openDoc(j){
+const s=MENU[sectionIdx];
+const items=s.type==='static'?getStaticItems(sectionIdx):(s.items||[]);
+const d=items[j];if(!d)return;
+const u=(loadUsers()[currentUser])||{};
+if((d.lvl||1)>(u.clearance||2)){
+Sound.error();doGlitch();
+logEvent('попытка открыть документ УР.'+d.lvl+' (допуск '+u.clearance+')');
+await printLines(['','+------------ ДОСТУП ОГРАНИЧЕН ------------+','',
+'ТРЕБУЕТСЯ УРОВЕНЬ '+d.lvl+'. ВАШ ДОПУСК: '+clearanceLabel(u.clearance||2)+'.',
+'ПОПЫТКА ПРОНИКНОВЕНИЯ ЗАНЕСЕНА В ЖУРНАЛ.','']);
+redraw();return;}
+busy=true;Sound.beep(880,.06);
+commit('');commit('+---- '+d.name+' ----+');commit('');
+for(const line of d.lines){ensurePower();commit(line);Sound.tick();pulseLED();await sleep(24);}
+commit('');commit('+--------- КОНЕЦ ЗАПИСИ ---------+');busy=false;redraw();}
+
+/* ==================== НАУЧНЫЕ ДОКУМЕНТЫ ==================== */
+function sdocsAll(){const docs=DB.data.sdocs||{};
+return Object.entries(docs).map(([id,d])=>({id,...d}));}
+function docCatsList(){const all=sdocsAll();
+return DOC_CATS.map((cat,i)=>{const arr=all.filter(d=>d.cat===cat.c).sort((a,b)=>(a.num||0)-(b.num||0));
+return{...cat,i,arr};});}
+async function openDocsMenu(){setState('waitprint');passBuffer='';clearScreen();
+const cats=docCatsList();
+await printLines(['+================================================+','|  НАУЧНЫЕ ДОКУМЕНТАЦИИ // АРХИВ + СОЗДАНИЕ       |','+================================================+','',
+' КЛАССИФИКАЦИЯ И НУМЕРАЦИЯ АВТОМАТИЧЕСКИЕ.','',
+...cats.map(c=>'  ['+(c.i+1)+'] '+padD(c.n,14)+' ДОК-ОВ: '+c.arr.length),
+'  [5] СОЗДАТЬ ДОКУМЕНТ (ДОПУСК 3+)','',
+'  ЦИФРА + ENTER. ESC - НАЗАД В МЕНЮ.'],22);
+setState('docsmenu');passBuffer='';redraw();}
+function docsMenuEnter(){const k=passBuffer.trim();passBuffer='';
+if(k==='5'){const u=(loadUsers()[currentUser])||{};
+if((u.clearance||2)<3){Sound.error();
+return void safe(async()=>{await printLines(['','СОЗДАНИЕ ДОКУМЕНТОВ ТРЕБУЕТ ДОПУСК 3+.','ВАШ ДОПУСК: '+clearanceLabel(u.clearance||2)+'.','ОБРАТИТЕСЬ К АДМИНИСТРАТОРУ ОИДЛ.'],30);redraw();});}
+Sound.beep(700,.06);return void safe(startDocCat);}
+const n=num(k);
+if(n>=1&&n<=4)return void safe(()=>openDocsCatList(n-1));
+badInput();redraw();}
+async function startDocCat(){setState('doc-cat');passBuffer='';
+await printLines(['КАТЕГОРИЯ НОВОГО ДОКУМЕНТА (ЦИФРА + ENTER):','  [1] МУТАНТ (МТ)','  [2] АНОМАЛИЯ (АН)','  [3] ТЕХНОГЕН (ТГ)','  [4] ПРОЧЕЕ (ПР)'],20);redraw();}
+function docCatEnter(){const k=passBuffer.trim();passBuffer='';
+const n=num(k);
+if(n>=1&&n<=4){Sound.beep(700,.06);return void safe(()=>startDocTitle(n-1));}
+badInput();redraw();}
+async function openDocsCatList(ci){setState('waitprint');passBuffer='';docCatIdx=ci;clearScreen();
+const cat=docCatsList()[ci];
+await printLines(['+------------------------------------------------+','| КАТЕГОРИЯ: '+cat.n+' ('+cat.c+') // ДОКУМЕНТОВ: '+cat.arr.length,'+------------------------------------------------+','',
+...(cat.arr.length?cat.arr.map((d,j)=>'  ['+(j+1)+'] '+padD(cat.c+'-'+(d.num||1),8)+' '+padD((d.title||'').slice(0,28),30)+' '+d.author)
+:['  В ЭТОЙ КАТЕГОРИИ ПОКА ПУСТО.']),'',
+'  ЦИФРА + ENTER - ЧИТАТЬ. ESC - НАЗАД.'],22);
+setState('docs-list');passBuffer='';redraw();}
+function docsListEnter(){const k=passBuffer.trim();passBuffer='';
+const cat=docCatsList()[docCatIdx];
+const n=num(k);
+if(n>=1&&n<=cat.arr.length)return void safe(()=>printSciDoc(cat.arr[n-1]));
+badInput();redraw();}
+async function printSciDoc(d){busy=true;Sound.beep(880,.06);
+const cat=DOC_CATS.find(c=>c.c===d.cat)||{c:'ПР'};
+const lines=['','+---- '+cat.c+'-'+(d.num||1)+': '+(d.title||'')+' ----+',
+'АВТОР: '+d.author+' | '+fmtDT(d.ts),'',
+...(d.text||'').split('\n'),'','+----------------------------+'];
+commit('');
+for(const line of lines){ensurePower();commit(line);Sound.tick();pulseLED();await sleep(20);}
+busy=false;redraw();}
+async function startDocTitle(ci){docNewCat=DOC_CATS[ci];
+setState('doc-title');passBuffer='';
+await printLines(['КАТЕГОРИЯ: '+docNewCat.n+'. НАЗВАНИЕ ДОКУМЕНТА:'],20);redraw();}
+async function startDocEditor(){const title=passBuffer.trim();
+if(!title){Sound.error();await printLines(['НАЗВАНИЕ НЕ МОЖЕТ БЫТЬ ПУСТЫМ.']);redraw();return;}
+ml={lines:[],buf:'',maxLen:2500,maxLines:50,title};setState('doc-edit');
+commit('');commit('ТЕКСТ ДОКУМЕНТА. КАЖДАЯ СТРОКА + ENTER.');
+commit('ТОЧКА (.) ИЛИ «ГОТОВО» - ОПУБЛИКОВАТЬ. ESC - ОТМЕНА.');commit('');
+redraw();}
+
+/* ==================== МЕДКАРТЫ ==================== */
+async function openMedList(){setState('waitprint');passBuffer='';clearScreen();
+const users=loadUsers();
+const names=Object.keys(users).filter(x=>users[x].profile).sort();
+await printLines(['+================================================+','|         МЕДИЦИНСКИЕ КАРТЫ // СОСТАВ            |','+================================================+','',
+...(names.length?names.map((x,i)=>'  ['+(i+1)+'] '+padD(x,24)+(users[x].medical?'МЕДБЛОК: ЕСТЬ':'МЕДБЛОК: —'))
+:['  КАРТ НЕТ: У ОПЕРАТОРОВ НЕ ЗАПОЛНЕНЫ АНКЕТЫ.']),'',
+'  ЦИФРА + ENTER - ОТКРЫТЬ. ESC - НАЗАД.'],24);
+setState('medlist');passBuffer='';redraw();}
+function medEnter(){const k=passBuffer.trim();passBuffer='';
+if(!k){redraw();return;}
+const users=loadUsers();
+const names=Object.keys(users).filter(x=>users[x].profile).sort();
+const n=num(k);
+if(n>=1&&n<=names.length)return void safe(()=>printMedCard(names[n-1]));
+badInput();redraw();}
+async function printMedCard(nick){
+const users=loadUsers();const u=users[nick];
+if(!u||!u.profile)return;
+busy=true;Sound.beep(880,.06);
+const lines=['',...formatMedCard(nick,u)];
+commit('');
+for(const line of lines){ensurePower();commit(line);Sound.tick();pulseLED();await sleep(22);}
+busy=false;redraw();}
+
+/* ==================== ЗАПИСИ ==================== */
+function notesList(){const notes=DB.data.notes||{};
+return Object.entries(notes).map(([id,x])=>({id,...x})).sort((a,b)=>b.ts-a.ts);}
+async function openNotesMenu(){setState('waitprint');passBuffer='';notesArm=false;clearScreen();
+const cnt=notesList().length;
+await printLines(['+================================================+','|      ЗАПИСИ УЧАСТНИКОВ // СВОБОДНЫЙ АРХИВ      |','+================================================+','',
+' ПИШИТЕ КАК УДОБНО - ТЕРМИНАЛ ОФОРМИТ САМ.','',
+'  [1] ПРОСМОТР ЗАПИСЕЙ ('+cnt+')','  [2] СОЗДАТЬ ЗАПИСЬ','',
+'  ЦИФРА + ENTER. ESC - НАЗАД В МЕНЮ.'],24);
+setState('notesmenu');passBuffer='';redraw();}
+function notesMenuEnter(){const k=passBuffer.trim();passBuffer='';
+if(k==='1')return void safe(openNotesList);
+if(k==='2')return void safe(startNoteType);
+badInput();redraw();}
+async function startNoteType(){setState('note-type');passBuffer='';
+await printLines(['ТИП ЗАПИСИ (ЦИФРА + ENTER):','  [1] ОБЪЯВЛЕНИЕ','  [2] ОТЧЁТ','  [3] ДНЕВНИК','  [4] ДРУГОЕ'],20);redraw();}
+function noteTypeEnter(){const k=passBuffer.trim();passBuffer='';
+const n=num(k);
+if(n>=1&&n<=4){noteType=NOTE_TYPES[n-1];Sound.beep(700,.06);return void safe(startNoteTitle);}
+badInput();redraw();}
+async function openNotesList(){setState('waitprint');passBuffer='';clearScreen();
+const list=notesList();
+await printLines(['+------------------------------------------------+','| ЗАПИСИ УЧАСТНИКОВ ('+list.length+') - НОВЫЕ СВЕРХУ','+------------------------------------------------+','',
+...(list.length?list.map((x,i)=>'  ['+(i+1)+'] ['+padR(x.type||'ИНФ',4)+'] '+padD((x.title||'(БЕЗ НАЗВАНИЯ)').slice(0,22),24)+' '+x.author+' // '+fmtDT(x.ts))
+:['  ЗАПИСЕЙ ПОКА НЕТ. СОЗДАЙТЕ ПЕРВУЮ!']),'',
+(isAdminActive()?'[У] РЕЖИМ УДАЛЕНИЯ. ':'')+'ЦИФРА + ENTER - ЧИТАТЬ. ESC - НАЗАД.'],22);
+setState('notes-list');passBuffer='';redraw();}
+function notesListEnter(){const k=passBuffer.trim();passBuffer='';
+if(!k){redraw();return;}
+const list=notesList();const n=num(k);
+if(n<1||n>list.length){badInput();redraw();return;}
+if(notesArm&&isAdminActive()){notesArm=false;
+const note=list[n-1];
+DB.deleteItem('notes',note.id).then(()=>{
+logEvent('удалена запись "'+(note.title||'')+'"',consoleMode==='master'?'МАСТЕР':'АДМИН');
+Sound.crackle();openNotesList();});return;}
+safe(()=>printNote(list[n-1]));}
+async function printNote(note){busy=true;Sound.beep(880,.06);
+const lines=['','+---- ['+(note.type||'ИНФ')+'] '+(note.title||'(БЕЗ НАЗВАНИЯ)')+' ----+',
+'АВТОР: '+note.author+' | '+fmtDT(note.ts),'',
+...(note.text||'').split('\n'),'','+----------------------------+'];
+commit('');
+for(const line of lines){ensurePower();commit(line);Sound.tick();pulseLED();await sleep(20);}
+busy=false;redraw();}
+async function startNoteTitle(){if(!noteType)noteType=NOTE_TYPES[3];
+setState('note-title');passBuffer='';
+await printLines(['ТИП: '+noteType.n+'. ЗАГОЛОВОК:'],20);redraw();}
+async function startNoteEditor(){const title=passBuffer.trim();
+if(!title){Sound.error();await printLines(['ЗАГОЛОВОК НЕ МОЖЕТ БЫТЬ ПУСТЫМ.']);redraw();return;}
+ml={lines:[],buf:'',maxLen:3000,maxLines:60,title};setState('note-edit');
+commit('');commit('ТЕКСТ ЗАПИСИ. КАЖДАЯ СТРОКА + ENTER.');
+commit('ТОЧКА (.) ИЛИ «ГОТОВО» - ОПУБЛИКОВАТЬ. ESC - ОТМЕНА.');commit('');
+redraw();}
+async function mlEnter(){if(!ml)return;
+const line=ml.buf;
+if(line==='.')return finishML();
+if(ml.lines.length>=ml.maxLines)return finishML();
+ml.lines.push(line);ml.buf='';Sound.keyClick();redraw();}
+async function finishML(){if(!ml)return;
+const text=ml.lines.join('\n').trim();const st=state;
+if(st==='note-edit'){const title=ml.title,nt=noteType||NOTE_TYPES[3];ml=null;
+busy=true;liveEl.textContent='ВНЕСЕНИЕ ЗАПИСИ В АРХИВ...';scrollDown();
+Sound.beep(600,.06);await sleep(500);ensurePower();
+await DB.addItem('notes',{author:currentUser,type:nt.c,title,text:text||'-',ts:Date.now()});
+logEvent('создана запись "'+title+'"');
+Sound.clunk();commit('ЗАПИСЬ СОХРАНЕНА .......... ОК');busy=false;
+addXP(currentUser,10,false);
+await sleep(300);openNotesList();
+}else if(st==='mail-edit'){const{to,subj}=ml.meta;ml=null;
+busy=true;liveEl.textContent='ОТПРАВКА ПИСЬМА...';scrollDown();
+Sound.beep(600,.06);await sleep(500);ensurePower();
+await DB.addItem('mail',{from:currentUser,to,subj,text:text||'-',ts:Date.now()});
+logEvent('письмо отправлено: '+to);
+Sound.clunk();commit('ПИСЬМО ОТПРАВЛЕНО ........ ОК');busy=false;
+addXP(currentUser,5,false);
+await sleep(300);openMailMenu();
+}else if(st==='doc-edit'){const title=ml.title,cat=docNewCat;ml=null;
+busy=true;liveEl.textContent='РЕГИСТРАЦИЯ ДОКУМЕНТА В АРХИВЕ...';scrollDown();
+Sound.beep(600,.06);await sleep(500);ensurePower();
+const docs=DB.data.sdocs||{};
+const nextNum=1+Object.values(docs).filter(d=>d.cat===cat.c)
+.reduce((mx,d)=>Math.max(mx,d.num||0),0);
+await DB.addItem('sdocs',{author:currentUser,cat:cat.c,num:nextNum,title,text:text||'-',ts:Date.now()});
+logEvent('создан документ '+cat.c+'-'+nextNum+': '+title);
+Sound.clunk();commit('ДОКУМЕНТ '+cat.c+'-'+nextNum+' ЗАРЕГИСТРИРОВАН. ОК');busy=false;
+addXP(currentUser,10,false);
+await sleep(300);openDocsMenu();
+}else if(st==='safe-edit'){
+ml=null;
+if(!safeKey){openProfileMenu();return;}
+busy=true;liveEl.textContent='ШИФРОВАНИЕ И ЗАПИРАНИЕ СЕЙФА...';scrollDown();
+Sound.beep(600,.06);await sleep(500);ensurePower();
+const users=loadUsers();
+users[currentUser].safe={p:users[currentUser].safe.p,d:xorCipher(text||'',safeKey)};
+await saveUsers(users);
+safeKey=null;
+Sound.clunk();commit('СЕЙФ ЗАПЕРТ. СОДЕРЖИМОЕ СОХРАНЕНО.');busy=false;
+await sleep(300);openProfileMenu();}}
+
+/* ==================== ПОЧТА ==================== */
+async function openMailMenu(){setState('waitprint');passBuffer='';clearScreen();
+const unread=unreadMailCount();
+await printLines(['+================================================+','|            ПОЧТА ОИДЛ // УЗЕЛ СВЯЗИ            |','+================================================+','',
+'  [1] ВХОДЯЩИЕ ('+inboxFor(currentUser).length+')'+(unread?' - НОВЫХ: '+unread:''),
+'  [2] НАПИСАТЬ ПИСЬМО','',' АДРЕСАЦИЯ: НИК ОПЕРАТОРА ИЛИ @ОТДЕЛ:',
+'   '+DEPTS.map(d=>'@'+d).join(' '),'',
+'  ЦИФРА + ENTER. ESC - НАЗАД В МЕНЮ.'],22);
+setState('mailmenu');passBuffer='';redraw();}
+function mailMenuEnter(){const k=passBuffer.trim();passBuffer='';
+if(k==='1')return void safe(openMailList);
+if(k==='2')return void safe(startMailTo);
+badInput();redraw();}
+async function openMailList(){setState('waitprint');passBuffer='';clearScreen();
+const users=loadUsers();const me=users[currentUser]||{};
+const readTs=me.mailRead||0;
+const inbox=inboxFor(currentUser);
+const unread=inbox.filter(m=>m.ts>readTs).length;
+const lines=['+------------------------------------------------+','| ВХОДЯЩИЕ ('+inbox.length+')'+(unread?' - НОВЫХ: '+unread:''),'+------------------------------------------------+',''];
+if(inbox.length)inbox.slice(0,9).forEach((m,i)=>{
+lines.push('  ['+(i+1)+'] '+padD((m.to[0]==='@'?m.to+' ':'')+'ОТ '+m.from,20)+padD((m.subj||'(БЕЗ ТЕМЫ)').slice(0,18),20)+' '+fmtDT(m.ts));});
+else lines.push('  ПИСЕМ НЕТ.');
+lines.push('','  ЦИФРА + ENTER - ЧИТАТЬ. ESC - НАЗАД.');
+await printLines(lines,22);
+users[currentUser]={...me,mailRead:Date.now()};await saveUsers(users);
+setState('mail-list');passBuffer='';redraw();}
+function mailListEnter(){const k=passBuffer.trim();passBuffer='';
+if(!k){redraw();return;}
+const inbox=inboxFor(currentUser);const n=num(k);
+if(n>=1&&n<=Math.min(9,inbox.length)){currentMailIdx=n-1;
+return void safe(()=>printMail(inbox[currentMailIdx]));}
+badInput();redraw();}
+async function printMail(m){busy=true;Sound.beep(880,.06);
+const lines=['','+-------------------- ПИСЬМО --------------------+',
+'ОТ:   '+m.from,'КОМУ: '+(m.to[0]==='@'?m.to+' (ОТДЕЛ)':m.to),
+'ТЕМА: '+(m.subj||'(БЕЗ ТЕМЫ)'),'ДАТА: '+fmtDT(m.ts),'',
+...(m.text||'').split('\n'),'',
+'[A] ОТВЕТИТЬ | [У] УДАЛИТЬ СВОЁ | ESC - К СПИСКУ',
+'ВВЕДИТЕ БУКВУ И НАЖМИТЕ ENTER.'];
+commit('');
+for(const line of lines){ensurePower();commit(line);Sound.tick();pulseLED();await sleep(20);}
+busy=false;setState('mail-read');passBuffer='';redraw();}
+function mailReadEnter(){const k=passBuffer.trim().toLowerCase();passBuffer='';
+if(k==='a'||k==='ф'||k==='f')return void safe(replyMail);
+if(k==='у'||k==='y')return void safe(deleteOwnMail);
+redraw();}
+async function deleteOwnMail(){if(state!=='mail-read'||busy)return;
+const inbox=inboxFor(currentUser);const m=inbox[currentMailIdx];
+if(!m)return;
+const users=loadUsers();
+if(m.from!==currentUser&&!isMailFor(m,currentUser,users)){Sound.error();return;}
+await DB.deleteItem('mail',m.id);
+logEvent('удалено письмо от '+m.from);
+Sound.crackle();openMailList();}
+async function replyMail(){if(state!=='mail-read'||busy)return;
+const inbox=inboxFor(currentUser);const m=inbox[currentMailIdx];
+if(!m)return;
+await startCompose(m.from,m.subj?'RE: '+m.subj:'');}
+async function startMailTo(){setState('mail-to');passBuffer='';
+await printLines(['АДРЕСАТ: НИК ИЛИ @ОТДЕЛ.',
+'ОТДЕЛЫ: '+DEPTS.join(', ')],20);redraw();}
+async function mailToNext(){const to=passBuffer.trim();const users=loadUsers();
+if(to[0]==='@'){
+const g=resolveGroup(to);
+if(!g){Sound.error();passBuffer='';
+await printLines(['НЕИЗВЕСТНЫЙ ОТДЕЛ. ДОСТУПНЫ:',''+DEPTS.join(', ')]);redraw();return;}
+return startCompose('@'+g,'');}
+const key=Object.keys(users).find(k=>k.toUpperCase()===to.toUpperCase());
+if(!key){Sound.error();passBuffer='';
+await printLines(['ОПЕРАТОР "'+to+'" НЕ НАЙДЕН В РЕЕСТРЕ.']);redraw();return;}
+await startCompose(key,'');}
+async function startCompose(to,subj){mailCompose={to,subj:subj||''};
+if(subj)return startMailEditor();
+setState('mail-subj');passBuffer='';
+await printLines(['ТЕМА ПИСЬМА:'],20);redraw();}
+async function startMailEditor(){const subj=(mailCompose&&mailCompose.subj)||passBuffer.trim();
+if(!subj){Sound.error();await printLines(['ТЕМА НЕ МОЖЕТ БЫТЬ ПУСТОЙ.']);redraw();return;}
+ml={lines:[],buf:'',maxLen:1200,maxLines:25,title:subj,meta:{to:mailCompose.to,subj}};
+setState('mail-edit');
+commit('');commit('ТЕКСТ ПИСЬМА. КАЖДАЯ СТРОКА + ENTER.');
+commit('ТОЧКА (.) ИЛИ «ГОТОВО» - ОТПРАВИТЬ. ESC - ОТМЕНА.');commit('');
+redraw();}
+
+/* ==================== ЧАТ / ЛС ==================== */
+const CHAT_MAX=14;
+async function openChat(){setState('waitprint');passBuffer='';clearScreen();
+await printLines(['ПОДКЛЮЧЕНИЕ К ОБЩЕМУ ЭФИРУ...'],20);
+chatBuf='';setState('chat');renderChat();}
+function renderChat(){if(state!=='chat'||busy)return;
+clearScreen();
+const chat=DB.data.chat||{};
+const msgs=Object.values(chat).sort((a,b)=>a.ts-b.ts).slice(-CHAT_MAX);
+printFast(['+------------- ОБЩИЙ ЭФИР ОИДЛ -------------+',
+' РЕЖИМ: '+(DB.cloud?'СЕТЬ (ОБЩИЙ) ':'ЛОКАЛЬНО (ДЕМО)')+' | ПОКАЗАНЫ ПОСЛЕДНИЕ '+CHAT_MAX,
+' ОЧИСТКА ЭФИРА: КОМАНДА ОЧ ИЛИ КНОПКА.',
+'+-------------------------------------------+','',
+...(msgs.length?msgs.map(m=>padR(fmtTime(m.ts),7)+' '+m.author+': '+(m.text||''))
+:[' (ЭФИР ПУСТ - СКАЖИТЕ ПЕРВОЕ СЛОВО)']),'',
+'+-------------------------------------------+']);
+redraw();}
+async function sendChat(){
+const text=chatBuf.trim();if(!text)return;
+if(text.toUpperCase()==='ОЧ'||text.toUpperCase()==='OC'){chatBuf='';return clearChat();}
+chatBuf='';
+await DB.addItem('chat',{author:currentUser,text,ts:Date.now()},60);
+addXP(currentUser,1,false);
+renderChat();}
+async function clearChat(){
+busy=true;liveEl.textContent='ОЧИСТКА ЭФИРА...';scrollDown();
+Sound.beep(600,.06);await sleep(500);ensurePower();
+if(DB.cloud){try{await fetch(DB_CONFIG.databaseURL+'/oidl/chat.json',{method:'PUT',body:'null'});}catch{}}
+DB.data.chat={};
+logEvent('эфир очищен');
+Sound.crackle();
+commit('ЭФИР ОЧИЩЕН. ЧИСТО.');
+busy=false;
+await sleep(200);
+chatBuf='';renderChat();}
+async function openDMList(){setState('waitprint');passBuffer='';clearScreen();
+const users=loadUsers();
+const names=Object.keys(users).filter(x=>x!==currentUser).sort();
+await printLines(['+================================================+','|           ЛИЧНЫЕ СООБЩЕНИЯ // ОИДЛ             |','+================================================+','',
+...(names.length?names.map((x,i)=>'  ['+(i+1)+'] '+padD(x,26)+(users[x].profile?(users[x].profile.role||''):''))
+:['  ДРУГИХ ОПЕРАТОРОВ ПОКА НЕТ.']),'',
+'  ЦИФРА + ENTER - ВИЗИТКА И ДИАЛОГ. ESC - НАЗАД.'],22);
+setState('dmlist');passBuffer='';redraw();}
+function dmListEnter(){const k=passBuffer.trim();passBuffer='';
+if(!k){redraw();return;}
+const users=loadUsers();
+const names=Object.keys(users).filter(x=>x!==currentUser).sort();
+const n=num(k);
+if(n>=1&&n<=names.length){Sound.beep(700,.06);dmOther=names[n-1];chatBuf='';
+return void safe(()=>showDmCard(dmOther));}
+badInput();redraw();}
+async function showDmCard(nick){
+const users=loadUsers();const u=users[nick]||{};
+const pf=u.profile||{};
+const rk=rankOf(u.xp||0)[0];
+const medals=Object.values(u.medals||{});
+const lines=['','+============ ВИЗИТКА ОПЕРАТОРА =============+',
+' ПОЗЫВНОЙ ....... '+nick,
+' ИМЯ ............ '+(pf.name||'-'),
+' ДОЛЖНОСТЬ ...... '+(pf.role||'-'),
+' ОТДЕЛ .......... '+(pf.department||'-'),
+' ЗВАНИЕ ......... '+rk+' (XP: '+(u.xp||0)+')',
+' ДОПУСК ......... '+clearanceLabel(u.clearance||2),
+' МЕДАЛИ ......... '+(medals.length?medals.map(m=>m.name).join(', '):'-'),
+' В КЛАНЕ С ...... '+fmtDate(u.created),
+' ПОСЛЕДНИЙ ВХОД . '+fmtDate(u.last),
+'+============================================+','',
+' ENTER - НАЧАТЬ ДИАЛОГ | ESC - НАЗАД К СПИСКУ'];
+await printLines(lines,22);
+setState('dm-card');passBuffer='';redraw();}
+function openDMFromCard(){
+if(!dmOther)return openDMList();
+setState('dm-chat');chatBuf='';renderDM();}
+function dmHistory(){const dm=DB.data.dm||{};
+return Object.values(dm)
+.filter(m=>(m.from===currentUser&&m.to===dmOther)||(m.from===dmOther&&m.to===currentUser))
+.sort((a,b)=>a.ts-b.ts).slice(-CHAT_MAX);}
+function renderDM(){if(state!=='dm-chat'||busy)return;
+clearScreen();
+const hist=dmHistory();
+printFast(['+---------- ДИАЛОГ С: '+padR(dmOther+' ----------',22)+'+',
+' РЕЖИМ: '+(DB.cloud?'СЕТЬ':'ЛОКАЛЬНО (ДЕМО)'),'+-------------------------------------------+','',
+...(hist.length?hist.map(m=>padR(fmtTime(m.ts),7)+(m.from===currentUser?'ВЫ: ':dmOther+': ')+(m.text||''))
+:[' (СООБЩЕНИЙ ЕЩЁ НЕТ)']),'',
+'+-------------------------------------------+']);
+redraw();}
+async function sendDM(){
+const text=chatBuf.trim();if(!text)return;
+chatBuf='';
+await DB.addItem('dm',{from:currentUser,to:dmOther,text,ts:Date.now()},200);
+addXP(currentUser,1,false);
+renderDM();}
+function sendChatDispatch(){
+if(state==='chat')return sendChat();
+if(state==='dm-chat')return sendDM();}
+
+/* ==================== АНКЕТА ==================== */
+function startProfile(onlyMedical){medicalOnly=onlyMedical;
+fieldIdx=onlyMedical?PROFILE_FIELDS.length:0;
+profileData={};medData={};passBuffer='';
+setState('profile');askField();}
+function askField(){const f=ALL_FIELDS[fieldIdx];
+if(!f)return finishProfile();
+if(f.block===2&&(fieldIdx===0||ALL_FIELDS[fieldIdx-1].block===1)){
+commit('');commit('====== БЛОК 2: МЕДИЦИНСКИЕ ДАННЫЕ ======');
+commit('(ВИДЕН ТОЛЬКО В МЕДИЦИНСКИХ КАРТАХ)');commit('');}
+Sound.tick();pulseLED();
+commit('['+(fieldIdx+1)+'/'+ALL_FIELDS.length+'] '+(f.block===2?'МЕД-':'')+f.q);
+if(f.hint)commit('   ('+f.hint+')');
+if(f.dept)commit('   (1-ИНЖЕНЕР, 2-МЕДИК, 3-БОЕВАЯ ЕДИНИЦА, 4-УЧЁНЫЙ)');
+profilePrompt='ОТВЕТ: ';passBuffer='';redraw();}
+async function submitField(){const f=ALL_FIELDS[fieldIdx];const val=passBuffer.trim();
+if(f.req&&!val){Sound.error();await printLines(['! ЭТО ПОЛЕ ОБЯЗАТЕЛЬНО ДЛЯ ЗАПОЛНЕНИЯ.']);passBuffer='';redraw();return;}
+if(f.block===1)profileData[f.key]=f.dept?normalizeDept(val||'-'):(val||'-');
+else medData[f.key]=val||'-';
+passBuffer='';commit('ОТВЕТ: '+(f.block===1?profileData[f.key]:(val||'-')));
+fieldIdx++;
+if(fieldIdx>=ALL_FIELDS.length)return finishProfile();
+Sound.tick();askField();}
+async function finishProfile(){
+const users=loadUsers();const user=users[currentUser]||{};
+if(!medicalOnly)user.profile={...profileData};
+user.medical={...medData};
+users[currentUser]=user;await saveUsers(users);
+setState('waitprint');busy=true;
+liveEl.textContent='ВНЕСЕНИЕ ДАННЫХ В АРХИВ ОИДЛ...';scrollDown();
+Sound.beep(600,.06);pulseLED();await sleep(800);ensurePower();
+Sound.clunk();commit('ДАННЫЕ ПРИНЯТЫ .......... ОК');commit('');
+if(!medicalOnly){await printLines(formatProfile(user),20);addXP(currentUser,20,true);}
+Sound.chord();
+await printLines(['','ЗАПИСЬ ЗАРЕГИСТРИРОВАНА, '+currentUser+'.'],40);
+busy=false;openMainMenu();}
+function deferProfile(){commit('ОТВЕТ: < ОТМЕНА >');
+safe(async()=>{await printLines(['АНКЕТА ОТЛОЖЕНА ОПЕРАТОРОМ.','ТЕРМИНАЛ ПРЕДЛОЖИТ ЗАПОЛНИТЬ ЕЁ ПРИ СЛЕДУЮЩЕМ ВХОДЕ.'],40);openMainMenu();});}
+async function openProfileMenu(){setState('waitprint');passBuffer='';clearScreen();
+const u=loadUsers()[currentUser]||{};
+const notifyState=u.notify!==false&&('Notification' in window)&&Notification.permission==='granted';
+const lines=['+================================================+','|            АНКЕТА ОПЕРАТОРА // ДОСЬЕ           |','+================================================+','',
+'  [1] ПОКАЗАТЬ АНКЕТУ',
+u.medical?'  [2] ОБНОВИТЬ МЕДИЦИНСКИЙ БЛОК':'  [2] ЗАПОЛНИТЬ МЕДИЦИНСКИЙ БЛОК',
+'  [3] ОПОВЕЩЕНИЯ: '+(notifyState?'ВКЛЮЧЕНЫ':'ВЫКЛЮЧЕНЫ'),
+u.safe?'  [4] ОТКРЫТЬ ЛИЧНЫЙ СЕЙФ':'  [4] СОЗДАТЬ ЛИЧНЫЙ СЕЙФ'];
+if(u.safe)lines.push('  [5] СМЕНИТЬ ПАРОЛЬ СЕЙФА');
+lines.push('','  ЦИФРА + ENTER. ESC - НАЗАД В МЕНЮ.');
+await printLines(lines,24);
+setState('profilemenu');passBuffer='';redraw();}
+function profileMenuEnter(){const k=passBuffer.trim();passBuffer='';
+if(k==='1')return void safe(async()=>{const u=loadUsers()[currentUser]||{};
+if(!u.profile){await printLines(['АНКЕТА НЕ ЗАПОЛНЕНА.'],30);return;}
+await printLines(formatProfile(u),20);});
+if(k==='2')return void safe(async()=>{await printLines(['МЕДИЦИНСКИЙ БЛОК. ПУСТОЙ ОТВЕТ = ПРОЧЕРК.'],30);startProfile(true);});
+if(k==='3')return void safe(toggleNotifications);
+if(k==='4')return void safe(async()=>{
+const u=(loadUsers()[currentUser])||{};
+if(u.safe){setState('safe-pass');passBuffer='';
+await printLines(['ЛИЧНЫЙ СЕЙФ. ВВЕДИТЕ ПАРОЛЬ СЕЙФА.'],20);redraw();}
+else{setState('safe-new');passBuffer='';
+await printLines(['СОЗДАНИЕ ЛИЧНОГО СЕЙФА.','ПАРОЛЬ СЕЙФА (>=4). ВНИМАНИЕ: ВОССТАНОВИТЬ НЕВОЗМОЖНО!'],20);redraw();}});
+if(k==='5')return void safe(async()=>{
+const u=(loadUsers()[currentUser])||{};
+if(!u.safe){badInput();redraw();return;}
+setState('safe-old');passBuffer='';
+await printLines(['СМЕНА ПАРОЛЯ СЕЙФА. ТЕКУЩИЙ ПАРОЛЬ:'],20);redraw();});
+badInput();redraw();}
+async function toggleNotifications(){
+if(!('Notification' in window)){await printLines(['БРАУЗЕР НЕ ПОДДЕРЖИВАЕТ ОПОВЕЩЕНИЯ.'],30);return;}
+let perm=Notification.permission;
+if(perm==='default'){try{perm=await Notification.requestPermission();}catch{}}
+const users=loadUsers();
+if(perm==='granted'){
+users[currentUser]={...users[currentUser],notify:true};await saveUsers(users);
+await printLines(['ОПОВЕЩЕНИЯ ВКЛЮЧЕНЫ.','ПИСЬМА И ЛС БУДУТ ПРИХОДИТЬ ДАЖЕ В ФОНОВОЙ ВКЛАДКЕ.','(ПОЛНОЦЕННО - В СЕТЕВОМ РЕЖИМЕ)'],30);
+}else{
+users[currentUser]={...users[currentUser],notify:false};await saveUsers(users);
+await printLines(['ОПОВЕЩЕНИЯ ВЫКЛЮЧЕНЫ (РАЗРЕШЕНИЕ НЕ ВЫДАНО).'],30);}}
+
+/* ==================== ЛИЧНЫЙ СЕЙФ ==================== */
+async function safePassEnter(){
+const users=loadUsers();const u=users[currentUser]||{};
+if(u.safe&&hashPass(passBuffer)===u.safe.p){
+safeKey=passBuffer;passBuffer='';
+await printLines(['ПАРОЛЬ ПРИНЯТ.'],20);
+openSafeEditor();
+}else{Sound.error();doGlitch();passBuffer='';
+await printLines(['НЕВЕРНЫЙ ПАРОЛЬ СЕЙФА.']);redraw();}}
+async function safeNewEnter(){
+if(passBuffer.length<4){Sound.error();passBuffer='';
+await printLines(['ПАРОЛЬ СЕЙФА КОРОЧЕ 4 СИМВОЛОВ.']);redraw();return;}
+passFirst=passBuffer;passBuffer='';setState('safe-new2');
+commit('');redraw();}
+async function safeNew2Enter(){
+if(passBuffer!==passFirst){Sound.error();passBuffer='';passFirst='';
+setState('safe-new');
+await printLines(['ПАРОЛИ НЕ СОВПАДАЮТ. НАЧНИТЕ ЗАНОВО.']);redraw();return;}
+const users=loadUsers();
+users[currentUser].safe={p:hashPass(passBuffer),d:[]};
+await saveUsers(users);
+safeKey=passBuffer;passBuffer='';passFirst='';
+commit('СЕЙФ СОЗДАН И ЗАПЕРТ.');
+await sleep(300);
+openSafeEditor();}
+async function safeOldEnter(){
+const users=loadUsers();const u=users[currentUser]||{};
+if(u.safe&&hashPass(passBuffer)===u.safe.p){
+safeKey=passBuffer;passBuffer='';
+setState('safe-chg');
+await printLines(['ПАРОЛЬ ПРИНЯТ. НОВЫЙ ПАРОЛЬ СЕЙФА (>=4):'],20);redraw();
+}else{Sound.error();doGlitch();passBuffer='';
+await printLines(['НЕВЕРНЫЙ ПАРОЛЬ СЕЙФА.']);redraw();}}
+async function safeChgEnter(){
+if(passBuffer.length<4){Sound.error();passBuffer='';
+await printLines(['ПАРОЛЬ СЕЙФА КОРОЧЕ 4 СИМВОЛОВ.']);redraw();return;}
+passFirst=passBuffer;passBuffer='';setState('safe-chg2');
+commit('');redraw();}
+async function safeChg2Enter(){
+if(passBuffer!==passFirst){Sound.error();passBuffer='';passFirst='';
+setState('safe-chg');
+await printLines(['ПАРОЛИ НЕ СОВПАДАЮТ. НАЧНИТЕ ЗАНОВО.']);redraw();return;}
+const users=loadUsers();const u=users[currentUser];
+const oldData=(u.safe&&Array.isArray(u.safe.d))?xorDecipher(u.safe.d,safeKey):'';
+u.safe={p:hashPass(passBuffer),d:xorCipher(oldData,passBuffer)};
+await saveUsers(users);
+safeKey=null;passBuffer='';passFirst='';
+Sound.clunk();
+await printLines(['ПАРОЛЬ СЕЙФА ИЗМЕНЁН. ДАННЫЕ ПЕРЕШИФРОВАНЫ.'],20);
+openProfileMenu();}
+async function openSafeEditor(){
+const users=loadUsers();const u=users[currentUser]||{};
+let text='';
+if(u.safe&&Array.isArray(u.safe.d))text=xorDecipher(u.safe.d,safeKey);
+ml={lines:text?text.split('\n'):[],buf:'',maxLen:2000,maxLines:50,title:''};
+setState('safe-edit');
+commit('');commit('+---------- ЛИЧНЫЙ СЕЙФ ----------+');
+commit(' ВИДЕН ТОЛЬКО ВАМ. ШИФРУЕТСЯ ПАРОЛЕМ СЕЙФА.');
+commit(' КАЖДАЯ СТРОКА + ENTER.');
+commit(' ТОЧКА (.) ИЛИ «ГОТОВО» - ЗАПЕРЕТЬ СЕЙФ.');
+commit(' ESC - ВЫЙТИ БЕЗ СОХРАНЕНИЯ.');
+commit('+--------------------------------+');commit('');
+redraw();}
+
+/* ==================== ИНВЕНТАРЬ ==================== */
+async function openInvMenu(){setState('waitprint');passBuffer='';clearScreen();
+const u=(loadUsers()[currentUser])||{};
+const mine=Object.keys(u.inventory||{}).length;
+const stock=Object.keys(DB.data.stock||{}).length;
+await printLines(['+================================================+','|         ИНВЕНТАРЬ // СНАРЯЖЕНИЕ И СКЛАД        |','+================================================+','',
+'  [1] МОЁ СНАРЯЖЕНИЕ ('+mine+')','  [2] ОБЩИЙ СКЛАД ('+stock+')',
+'  [3] ДОБАВИТЬ СЕБЕ','  [4] СДАТЬ НА СКЛАД','',
+'  ЦИФРА + ENTER. ESC - НАЗАД В МЕНЮ.'],24);
+setState('invmenu');passBuffer='';redraw();}
+function invMenuEnter(){const k=passBuffer.trim();passBuffer='';
+if(k==='1')return void safe(openInvMine);
+if(k==='2')return void safe(openInvStock);
+if(k==='3')return void safe(()=>startInvAdd('mine'));
+if(k==='4')return void safe(()=>startInvAdd('stock'));
+badInput();redraw();}
+async function openInvMine(){setState('waitprint');passBuffer='';clearScreen();
+const u=(loadUsers()[currentUser])||{};
+const items=Object.entries(u.inventory||{});
+await printLines(['+------------------------------------------------+','| МОЁ СНАРЯЖЕНИЕ ('+items.length+')','+------------------------------------------------+','',
+...(items.length?items.map((e,i)=>'  ['+(i+1)+'] '+padD(e[1].name,28)+' x'+e[1].qty)
+:['  РЮКЗАК ПУСТ. ДОБАВЬТЕ ЧТО-НИБУДЬ.']),'',
+'  ЦИФРА + ENTER - УБРАТЬ ИЗ СПИСКА. ESC - НАЗАД.'],22);
+setState('invmine');passBuffer='';redraw();}
+function invMineEnter(){const k=passBuffer.trim();passBuffer='';
+if(!k){redraw();return;}
+const u=(loadUsers()[currentUser])||{};
+const items=Object.entries(u.inventory||{});
+const n=num(k);
+if(n>=1&&n<=items.length){const[delId]=items[n-1];
+return void safe(async()=>{const uu=loadUsers();
+if(uu[currentUser].inventory)delete uu[currentUser].inventory[delId];
+await saveUsers(uu);Sound.clunk();openInvMine();});}
+badInput();redraw();}
+async function openInvStock(){setState('waitprint');passBuffer='';clearScreen();
+const stock=Object.entries(DB.data.stock||{});
+await printLines(['+------------------------------------------------+','| ОБЩИЙ СКЛАД ОИДЛ ('+stock.length+')','+------------------------------------------------+','',
+...(stock.length?stock.map((e,i)=>'  ['+(i+1)+'] '+padD(e[1].name,28)+' x'+e[1].qty
++' '+(e[1].taken?(e[1].taken===currentUser?'(ВЗЯТО ВАМИ)':'(У: '+e[1].taken+')'):'(СВОБОДНО)'))
+:['  СКЛАД ПУСТ.']),'',
+'  ЦИФРА + ENTER - ВЗЯТЬ/ВЕРНУТЬ. ESC - НАЗАД.'],22);
+setState('invstock');passBuffer='';redraw();}
+function invStockEnter(){const k=passBuffer.trim();passBuffer='';
+if(!k){redraw();return;}
+const stock=Object.entries(DB.data.stock||{});
+const n=num(k);
+if(n>=1&&n<=stock.length){const[id]=stock[n-1];
+return void safe(async()=>{const stockData={...(DB.data.stock||{})};
+const pos=stockData[id];if(!pos)return;
+if(pos.taken===currentUser){pos.taken=null;Sound.clunk();}
+else if(!pos.taken){pos.taken=currentUser;Sound.beep(700,.07);}
+else{Sound.error();return;}
+await DB.putNode('stock',stockData);openInvStock();});}
+badInput();redraw();}
+async function startInvAdd(mode){invMode=mode;
+setState('inv-add');passBuffer='';
+await printLines([mode==='mine'?'НОВЫЙ ПРЕДМЕТ В РЮКЗАК. НАЗВАНИЕ:':'НОВАЯ ПОЗИЦИЯ НА СКЛАД. НАЗВАНИЕ:'],20);redraw();}
+async function invAddNext(){const name=passBuffer.trim();
+if(!name){Sound.error();await printLines(['НАЗВАНИЕ НЕ МОЖЕТ БЫТЬ ПУСТЫМ.']);redraw();return;}
+invAddName=name;passBuffer='';setState('inv-qty');
+await printLines(['КОЛИЧЕСТВО (ЧИСЛО):'],20);redraw();}
+async function invAddSave(){const qty=parseInt(passBuffer,10);
+if(!Number.isInteger(qty)||qty<1||qty>999){Sound.error();passBuffer='';
+await printLines(['ВВЕДИТЕ ЧИСЛО 1-999.']);redraw();return;}
+passBuffer='';
+busy=true;
+if(invMode==='mine'){
+const uu=loadUsers();
+if(!uu[currentUser].inventory)uu[currentUser].inventory={};
+uu[currentUser].inventory[Date.now().toString(36)]={name:invAddName,qty};
+await saveUsers(uu);
+commit('В РЮКЗАК ДОБАВЛЕНО: '+invAddName+' x'+qty);
+}else{
+await DB.addItem('stock',{name:invAddName,qty,taken:null});
+logEvent('склад: '+invAddName+' x'+qty);
+commit('НА СКЛАД СДАНО: '+invAddName+' x'+qty);}
+Sound.clunk();busy=false;
+await sleep(300);
+openInvMine();}
+
+/* ==================== ВЫХОД ==================== */
+async function doLogout(){const name=currentUser;
+await printLines(['','СЕАНС ЗАВЕРШЁН. ДО ВСТРЕЧИ, '+name+'.'],40);
+currentUser=null;safeKey=null;startAuth();}
+
+/* ==================== ПУЛЬТ СТОЙЛА ==================== */
+const STABLE_SYSTEMS=[
+'ЯДЕРНЫЙ РЕАКТОР','ЭНЕРГОСЕТЬ СЕКЦИЙ','РЕЗЕРВНЫЕ БАТАРЕИ','ОЧИСТКА И ПОДАЧА ВОДЫ',
+'ЗАПАСЫ ПИТЬЕВОЙ ВОДЫ','ФИЛЬТРАЦИЯ ВОЗДУХА','ГИДРОПОНИЧЕСКАЯ ФЕРМА','ГЕРМЕТИЧНОСТЬ КОРПУСА',
+'ПРИВОД ГЕРМОДВЕРИ','ЛИФТОВЫЙ МЕХАНИЗМ','РАДИАЦИОННЫЙ КОНТУР','ДАЛЬНЯЯ СВЯЗЬ',
+'ЦЕНТРАЛЬНЫЙ КОМПЬЮТЕР','СИСТЕМА НАБЛЮДЕНИЯ','ОСВЕЩЕНИЕ СЕКЦИЙ','КЛИМАТ-КОНТУР',
+'УТИЛИЗАЦИЯ ОТХОДОВ','МЕДИЦИНСКИЙ ОТСЕК','АВАРИЙНЫЕ ЗАПАСЫ','СКЛАДСКАЯ ЛОГИСТИКА',
+'ТРЕВОЖНАЯ СИСТЕМА','АРХИВ И ДОКУМЕНТООБОРОТ'];
+async function sysCheck(nm){
+const dur=600+seededPct(nm+'D',300,700);
+const start=performance.now();
+await new Promise(res=>{function f(){if(!powerOn){res();return;}
+const kk=Math.min(1,(performance.now()-start)/dur);
+const filled=Math.round(kk*18);
+liveEl.textContent=' '+padR(nm,24)+' ['+'▓'.repeat(filled)+'░'.repeat(18-filled)+'] '+Math.round(kk*100)+'%';
+scrollDown();pulseLED();if(Math.random()<.4)Sound.tick();
+if(kk<1)requestAnimationFrame(f);else res();}
+requestAnimationFrame(f);});
+ensurePower();
+let v,prev;
+if(nm==='ФИЛЬТРАЦИЯ ВОЗДУХА'){v=stableData().filters;prev=v;}
+else{v=sysToday(nm);prev=sysYesterday(nm);}
+const d=v-prev;
+let trend='';
+if(d>0)trend=' (↑ было '+prev+')';
+else if(d<0)trend=' (↓ было '+prev+')';
+else trend=' (стабильно)';
+const verdict=v>=85?'НОРМА':v>=72?'ВНИМАНИЕ':'СБОЙ';
+commit(' '+padR(nm,24)+' ['+'▓'.repeat(18)+'] '+v+'%  '+verdict+trend);
+Sound.clunk();await sleep(120);
+return{nm,v,verdict,trend};}
+async function stableDiag(){
+if(stableBusy)return;
+stableBusy=true;
+try{
+commit(' ПОЛНАЯ ДИАГНОСТИКА СТОЙЛА 37.');
+commit(' СИСТЕМ К ПРОВЕРКЕ: '+STABLE_SYSTEMS.length+'. ЭТО ЗАЙМЁТ ВРЕМЯ.');
+commit(' ДАТА: '+loreDate()+' (ПОКАЗАТЕЛИ СУТОЧНЫЕ)');
+commit('');
+const res=[];
+for(const nm of STABLE_SYSTEMS){
+ensurePower();
+res.push(await sysCheck(nm));}
+ensurePower();
+commit('');
+commit(' ============ СВОДКА ДИАГНОСТИКИ ============');
+const okN=res.filter(r=>r.verdict==='НОРМА').length;
+const warnN=res.filter(r=>r.verdict==='ВНИМАНИЕ').length;
+const errN=res.filter(r=>r.verdict==='СБОЙ').length;
+commit(' НОРМА: '+okN+' | ВНИМАНИЕ: '+warnN+' | СБОЙ: '+errN);
+const worst=res.slice().sort((a,b)=>a.v-b.v)[0];
+if(worst&&worst.verdict!=='НОРМА')
+commit(' ТРЕБУЕТ ВНИМАНИЯ: '+worst.nm+' ('+worst.v+'%)'+worst.trend);
+if(stableData().power!=='РЕАКТОР')
+commit(' ПРИМЕЧАНИЕ: ПИТАНИЕ ОТ РЕЗЕРВА - РЕАКТОР В РЕЖИМЕ ОЖИДАНИЯ.');
+commit(' ИТОГ: '+(errN?'НЕМЕДЛЕННЫЙ РЕМОНТ! СОЗЫВАЙТЕ ИНЖЕНЕРНЫЙ ОТДЕЛ.'
+:warnN?'ПЛАНОВОЕ ОБСЛУЖИВАНИЕ РЕКОМЕНДОВАНО.'
+:'СТОЙЛО 37 СТАБИЛЬНО. СЛАВА СТАБИЛЬНОСТИ.'));
+commit('');
+await printLines(['  ESC - НАЗАД В МЕНЮ.'],20);
+setState('stable');redraw();
+}catch(e){if(!(e instanceof PowerOff))throw e;}
+finally{stableBusy=false;}}
+async function openStableSection(key){
+stableSection=key;
+setState('waitprint');passBuffer='';clearScreen();
+const sec=STABLE_SECTIONS.find(s=>s.key===key);
+await printLines(['+================================================+','| '+padR('СТОЙЛО 37 // '+sec.t+' // '+sec.d,46)+'|','+================================================+',''],22);
+if(key==='A')return void await stableDiag();
+if(key==='B')return void await stableDoor();
+if(key==='C')return void await stableLift();
+if(key==='D')return void await stableLocks();
+if(key==='E')return void await stablePower();
+if(key==='F')return void await stableFilters();
+if(key==='H')return void await stableAlarm();
+openMainMenu();}
+async function stableDoor(){
+const st=stableData();
+await printLines([' СОСТОЯНИЕ ГЕРМОДВЕРИ: '+st.door+(st.doorLock?' [ЗАБЛОКИРОВАНА]':''),
+' ПРИВОД: ГИДРАВЛИКА // ПРОТИВОВЕСЫ // ПАР','','  [1] ОТКРЫТЬ ДВЕРЬ (ПОЛНАЯ ПРОЦЕДУРА)',
+'  [2] ЗАКРЫТЬ ДВЕРЬ (ПОЛНАЯ ПРОЦЕДУРА)','  [3] '+(st.doorLock?'СНЯТЬ БЛОКИРОВКУ':'ЗАБЛОКИРОВАТЬ ДВЕРЬ'),'',
+'  ЦИФРА + ENTER. ESC - НАЗАД.'],22);
+setState('stable');redraw();}
+async function stableLift(){
+const st=stableData();
+await printLines([' ЛИФТ СТОЙЛА // ПАССАЖИРСКИЙ // ДОСТУПЕН ВСЕМ','',
+' КАБИНА СЕЙЧАС: '+st.lift,'',' ЭТАЖИ СТОЙЛА:','',
+...LIFT_FLOORS.map(f=>'  ['+f.n+'] '+padD(f.t,34)+(st.lift===f.t?'< ВЫ ЗДЕСЬ':'')),
+'','  ВВЕДИТЕ НОМЕР ЭТАЖА И НАЖМИТЕ ENTER.','  ESC - НАЗАД.'],22);
+setState('stable');redraw();}
+async function stableLocks(){
+const st=stableData();
+const locks=st.locks||{};
+await printLines([' ЗАМКИ СЕКЦИЙ СТОЙЛА. ЦИФРА + ENTER - ПЕРЕКЛЮЧИТЬ.','',''
+,...Object.keys(locks).map((nm,i)=>'  ['+(i+1)+'] '+padD(nm,22)+(locks[nm]?'ЗАБЛОКИРОВАНО':'ОТКРЫТО')),
+'','  ESC - НАЗАД.'],22);
+setState('stable');redraw();}
+async function stablePower(){
+const st=stableData();
+const load=seededPct('НАГР',40,85);
+await printLines([' ИСТОЧНИК: '+st.power,' НАГРУЗКА: '+load+'%',
+st.power==='РЕАКТОР'?' РЕАКТОР: РАБОТАЕТ. ОБОЛОЧКА ЦЕЛА.':' РЕЗЕРВНЫЕ БАТАРЕИ! ЭКОНОМИЯ ЭНЕРГИИ.','','',
+'  [1] ПЕРЕКЛЮЧИТЬ НА РЕЗЕРВНЫЕ БАТАРЕИ','  [2] ВЕРНУТЬСЯ НА РЕАКТОР','',
+'  ЦИФРА + ENTER. ESC - НАЗАД.'],22);
+setState('stable');redraw();}
+async function stableFilters(){
+const st=stableData();
+await printLines([' РЕСУРС ФИЛЬТРОВ ВОЗДУХА: '+st.filters+'%',
+st.filters<70?' РЕКОМЕНДАЦИЯ: ЗАПУСТИТЕ ПОЛНЫЙ ЦИКЛ ОЧИСТКИ (4 ФАЗЫ).':'','',
+'  [1] ЗАПУСТИТЬ ПОЛНЫЙ ЦИКЛ ОЧИСТКИ','','  ЦИФРА + ENTER. ESC - НАЗАД.'],22);
+setState('stable');redraw();}
+async function stableAlarm(){
+const st=stableData();
+await printLines([' РЕЖИМ ТРЕВОГИ СТОЙЛА: '+(st.alarm?'ВКЛЮЧЁН':'ВЫКЛЮЧЕН'),
+' При тревоге ВСЕ операторы видят сигнал',' в главном меню терминала.','','',
+'  [1] ВКЛЮЧИТЬ ТРЕВОГУ','  [2] ВЫКЛЮЧИТЬ ТРЕВОГУ','',
+'  ЦИФРА + ENTER. ESC - НАЗАД.'],22);
+setState('stable');redraw();}
+async function stableCmdEnter(){const k=passBuffer.trim();passBuffer='';
+if(stableBusy)return;
+const st=stableData();
+stableBusy=true;
+try{
+if(stableSection==='B'){
+if(k==='1'){
+if(st.door==='ОТКРЫТО'){Sound.error();await printLines(['ДВЕРЬ УЖЕ ОТКРЫТА.'],20);return void redraw();}
+if(st.doorLock){Sound.error();await printLines(['ДВЕРЬ ЗАБЛОКИРОВАНА. СНАЧАЛА СНЯМИТЕ БЛОКИРОВКУ [3].'],20);return void redraw();}
+await printLines(['','=== ПРОЦЕДУРА ОТКРЫТИЯ ГЕРМОДВЕРИ ===',''],20);
+await printLines(['ШАГ 1/6: ПРОВЕРКА ЗАСОВОВ И БЛОКИРОВКИ...'],22);
+await sleep(2600);ensurePower();
+Sound.clunk();
+commit(' ЗАСОВЫ: РАБОТАЮТ. МЕХАНИЗМ ГОТОВ.');
+await printLines(['ШАГ 2/6: НАКАЧКА ДАВЛЕНИЯ В ГИДРОКОНТУР...'],22);
+await bar('ГИДРАВЛИКА',5200);ensurePower();
+Sound.clunk();
+await printLines(['ШАГ 3/6: ПАРОВОЙ КЛАПАН. СБРОС ИЗБЫТОЧНОГО ДАВЛЕНИЯ...'],22);
+Sound.steam();await sleep(3200);ensurePower();
+Sound.steam();await sleep(1200);ensurePower();
+commit(' ДАВЛЕНИЕ В НОРМЕ. УПЛОТНИТЕЛИ ОСВОБОЖДЕНЫ.');
+await printLines(['ШАГ 4/6: РАЗБЛОКИРОВКА ПРОТИВОВЕСОВ...'],22);
+await bar('ПРОТИВОВЕСЫ',4200);ensurePower();
+doGlitch();
+await printLines(['','!!! ВНИМАНИЕ !!! СТВОРКИ РАСХОДЯТСЯ.','ПОКИНУТЕ ЗОНУ ПОРТАЛА!'],24);
+Sound.vaultSqueak(7);
+await bar('РАСКРЫТИЕ СТВОРОК',7000);ensurePower();
+await printLines(['ШАГ 5/6: КОНТРОЛЬ ГЕРМЕТИЧНОСТИ ПОРТАЛА...'],22);
+await bar('КОНТРОЛЬ',2800);ensurePower();
+await printLines(['ШАГ 6/6: ФИКСАЦИЯ СТВОРОК В ОТКРЫТОМ ПОЛОЖЕНИИ...'],22);
+await sleep(2200);ensurePower();
+await DB.patchStable({door:'ОТКРЫТО'});
+logEvent('СТОЙЛО: гермодверь ОТКРЫТА (полная процедура)');
+Sound.clunk();
+await printLines(['','ДВЕРЬ ОТКРЫТА.','','ВНЕШНЯЯ СРЕДА: ФОН '+seededPct('ФОН',0,2)+' МЗВ/Ч.',
+'ТЕМПЕРАТУРА: '+seededPct('ТЕМП',4,24)+' C.','НЕ ЗАБЫВАЙТЕ ПРО КОСТЮМЫ ЗАЩИТЫ.'],22);
+return void redraw();}
+if(k==='2'){
+if(st.door==='ЗАКРЫТО'){Sound.error();await printLines(['ДВЕРЬ УЖЕ ЗАКРЫТА.'],20);return void redraw();}
+await printLines(['','=== ПРОЦЕДУРА ЗАКРЫТИЯ ГЕРМОДВЕРИ ===',''],20);
+await printLines(['ШАГ 1/6: ВТЯГИВАНИЕ СТВОРОК В ПОРТАЛ...'],22);
+Sound.vaultSqueak(5.5);
+await bar('СТВОРКИ',5500);ensurePower();
+await printLines(['ШАГ 2/6: ВЫРАВНИВАНИЕ СТВОРОК ПО НАПРАВЛЯЮЩИМ...'],22);
+await bar('ВЫРАВНИВАНИЕ',3600);ensurePower();
+await printLines(['ШАГ 3/6: ВРЕЗКА МЕХАНИЧЕСКИХ ЗАМКОВ...'],22);
+await sleep(2600);ensurePower();
+Sound.clunk();setTimeout(()=>Sound.clunk(),350);
+setTimeout(()=>Sound.clunk(),700);
+commit(' ЗАМКИ: ВРЕЗАНЫ. КОНТАКТ ПО КОНТУРУ.');
+await printLines(['ШАГ 4/6: ГЕРМЕТИЗАЦИЯ УПЛОТНИТЕЛЕЙ...'],22);
+doGlitch();
+await bar('УПЛОТНИТЕЛИ',4400);ensurePower();
+Sound.steam();
+commit(' УПЛОТНИТЕЛИ НАДУТЫ. ДАВЛЕНИЕ УДЕРЖИВАЕТСЯ.');
+await printLines(['ШАГ 5/6: ВЫРАВНИВАНИЕ ДАВЛЕНИЯ В ГИДРОКОНТУРЕ...'],22);
+await bar('ГИДРОКОНТУР',3800);ensurePower();
+await printLines(['ШАГ 6/6: КОНТРОЛЬНЫЙ ТЕСТ ГЕРМЕТИЧНОСТИ...'],22);
+await bar('ТЕСТ',3000);ensurePower();
+await DB.patchStable({door:'ЗАКРЫТО'});
+logEvent('СТОЙЛО: гермодверь ЗАКРЫТА (полная процедура)');
+Sound.clunk();
+await printLines(['УПЛОТНИТЕЛИ ВСТАВЛЕНЫ. СТВОРКИ ОБЖАТЫ.','','ЗАКРЫТИЕ ЗАВЕРШЕНО. ДВЕРЬ ЗАКРЫТА.','СТОЙЛО 37 СНОВА ЗАПЕРТО. СТАБИЛЬНОСТЬ СОХРАНЕНА.'],22);
+return void redraw();}
+if(k==='3'){
+const nv=!st.doorLock;
+await DB.patchStable({doorLock:nv});
+logEvent('СТОЙЛО: блокировка двери '+(nv?'ВКЛЮЧЕНА':'СНЯТА'));
+Sound.clunk();
+await printLines(['БЛОКИРОВКА ДВЕРИ: '+(nv?'ВКЛЮЧЕНА. МЕХАНИЧЕСКИЕ ЗАСОВЫ ВВЕДЕНЫ.':'СНЯТА.')],22);
+return void redraw();}
+badInput();redraw();return;}
+if(stableSection==='C'){
+const n=num(k);
+const fl=LIFT_FLOORS.find(f=>f.n===n);
+if(!fl){badInput();redraw();return;}
+if(fl.t===st.lift){Sound.error();await printLines(['КАБИНА УЖЕ НА ЭТАЖЕ: '+fl.t],20);return void redraw();}
+await printLines(['','КАБИНА ОТПРАВЛЯЕТСЯ С '+st.lift,'ПРИБЫТИЕ: '+fl.t],20);
+Sound.liftHum(2.8);
+await bar('ЛИФТ // ЭТАЖ '+fl.n,2400);ensurePower();
+await DB.patchStable({lift:fl.t});
+logEvent('СТОЙЛО: лифт -> этаж '+fl.n+' ('+fl.t+')');
+await printLines(['КАБИНА ПРИБЫЛА. ЭТАЖ '+fl.n+': '+fl.t+'.','','ДВЕРИ КАБИНЫ ОТКРЫТЫ. ХОРОШЕГО СЕАНСА, '+currentUser+'.'],22);
+return void redraw();}
+if(stableSection==='D'){
+const locks=st.locks||{};
+const names=Object.keys(locks);
+const n=num(k);
+if(n>=1&&n<=names.length){
+const nm=names[n-1];
+const nl={...locks};nl[nm]=!locks[nm];
+await DB.patchStable({locks:nl});
+logEvent('СТОЙЛО: замок секции "'+nm+'" -> '+(nl[nm]?'ЗАБЛОКИРОВАНО':'ОТКРЫТО'));
+Sound.clunk();
+return void safe(()=>openStableSection('D'));}
+badInput();redraw();return;}
+if(stableSection==='E'){
+if(k==='1'||k==='2'){
+const tgt=k==='1'?'РЕЗЕРВ':'РЕАКТОР';
+if(tgt===st.power){Sound.error();await printLines(['УЖЕ РАБОТАЕТ ОТ: '+tgt],20);return void redraw();}
+await printLines(['','ПЕРЕКЛЮЧЕНИЕ ПИТАНИЯ...'],20);
+Sound.liftHum(1.6);
+await bar('ПЕРЕКЛЮЧЕНИЕ',1300);ensurePower();
+await DB.patchStable({power:tgt});
+logEvent('СТОЙЛО: питание -> '+tgt);
+await printLines(['ПИТАНИЕ: '+tgt+'.'],22);
+return void redraw();}
+badInput();redraw();return;}
+if(stableSection==='F'){
+if(k==='1'){
+await printLines(['','=== ПОЛНЫЙ ЦИКЛ ОЧИСТКИ ВОЗДУХА ===',''],20);
+await printLines(['ФАЗА 1/4: ГЕРМЕТИЗАЦИЯ ВЕНТИЛЯЦИОННОГО КОНТУРА...'],22);
+await bar('ГЕРМЕТИЗАЦИЯ',4200);ensurePower();
+commit(' КОНТУР ЗАКРЫТ. НАРУЖНЫЙ ЗАБОР ВОЗДУХА ОТКЛЮЧЁН.');
+await printLines(['ФАЗА 2/4: ПРОДУВКА ФИЛЬТРОВ ПАРОМ (3 СТУПЕНИ)...'],22);
+Sound.steam();
+await bar('ПРОДУВКА 1/3',3500);ensurePower();
+Sound.steam();
+commit(' ...КОНДЕНСАТ СТЕКАЕТ В СБОРНИК...');
+await bar('ПРОДУВКА 2/3',3500);ensurePower();
+Sound.steam();
+commit(' ...ПАРОПОДЪЁМ В ВЕРХНИЕ СЕКЦИИ...');
+await bar('ПРОДУВКА 3/3',3500);ensurePower();
+commit(' КОНДЕНСАТ СЛИТ. ОТЛОЖЕНИЯ УДАЛЕНЫ.');
+await printLines(['ФАЗА 3/4: АВТОЗАМЕНА КАРТРИДЖЕЙ ПО ОТСЕКАМ...'],22);
+await bar('КАРТРИДЖ: ЖИЛАЯ ЗОНА',2400);ensurePower();
+commit(' ЖИЛАЯ ЗОНА ............ ЗАМЕНЁН');
+await bar('КАРТРИДЖ: ЛАБОРАТОРИЯ',2400);ensurePower();
+commit(' ЛАБОРАТОРИЯ ........... ЗАМЕНЁН');
+await bar('КАРТРИДЖ: МЕД ОТСЕК',2400);ensurePower();
+commit(' МЕД ОТСЕК ............. ЗАМЕНЁН');
+await bar('КАРТРИДЖ: СКЛАД',2400);ensurePower();
+Sound.clunk();setTimeout(()=>Sound.clunk(),400);
+commit(' СКЛАД ................. ЗАМЕНЁН');
+await printLines(['ФАЗА 4/4: КОНТРОЛЬНЫЙ ЗАМЕР И ДОВОДКА СМЕСИ...'],22);
+await bar('КОНТРОЛЬНЫЙ ЗАМЕР',4200);ensurePower();
+await DB.patchStable({filters:100});
+logEvent('СТОЙЛО: полный цикл очистки воздуха выполнен');
+await printLines(['','ЦИКЛ ЗАВЕРШЁН. РЕСУРС ФИЛЬТРОВ: 100%.','ЧИСТОТА ВОЗДУХА: '+seededPct('ВОЗД',96,99)+'%.','ВОЗДУХ СВЕЖ. ГОЛУБИНАЯ СЛУЖБА ОДОБРЯЕТ.'],22);
+return void redraw();}
+badInput();redraw();return;}
+if(stableSection==='H'){
+if(k==='1'||k==='2'){
+const nv=k==='1';
+await DB.patchStable({alarm:nv});
+logEvent('СТОЙЛО: ТРЕВОГА '+(nv?'ВКЛЮЧЕНА':'ВЫКЛЮЧЕНА'),consoleMode==='master'?'МАСТЕР':(currentUser||'СИСТЕМА'));
+if(nv){Sound.alarmTone();setTimeout(()=>Sound.alarmTone(),500);doGlitch();
+ledAct.classList.add('err');setTimeout(()=>ledAct.classList.remove('err'),2000);}
+else Sound.clunk();
+await printLines(['ТРЕВОГА: '+(nv?'ВКЛЮЧЕНА. ВСЕ ОПЕРАТОРЫ УВЕДОМЛЕНЫ.':'ВЫКЛЮЧЕНА.')],22);
+return void redraw();}
+badInput();redraw();return;}
+badInput();redraw();
+}catch(e){if(!(e instanceof PowerOff))throw e;}
+finally{stableBusy=false;}}
+
+/* ==================== BOOT ==================== */
+const bootScript=[
+p(500),
+t('PLAGUE.INC (R) БАЗОВАЯ СИСТЕМА ВВОДА-ВЫВОДА, ВЕРСИЯ 7.7.1'),
+pr('(C) 2287 PLAGUE.INC. ВСЕ ПРАВА ЗАЩИЩЕНЫ.'),
+pr('СБОРКА TERMLINK 3.7 // КОРПУС PDX-12'),
+empty(),
+pr('СЕРИЙНЫЙ НОМЕР ............. OIDL-2287-0042'),
+t('ЗАПУСК САМОДИАГНОСТИКИ...'),
+p(600),
+pr('ЭНЕРГОПИТАНИЕ .............. НОРМА'),
+pr('ДЕГАУССИРОВАНИЕ ЭЛТ ........ ВЫПОЛНЕНО'),
+pr('ФОСФОРНЫЙ СЛОЙ ............. ЗЕЛЁНЫЙ, НОРМА'),
+pr('СТРОЧНАЯ РАЗВЁРТКА ......... НОРМА'),
+empty(),
+count('ПРОВЕРКА ПАМЯТИ: ',640,' КБ',1100),
+count('РАСШИРЕННАЯ ПАМЯТЬ: ',16384,' КБ',2300),
+p(300),
+empty(),
+pr('ПОИСК УСТРОЙСТВ:'),
+pr('  ЛЕНТОЧНЫЙ НАКОПИТЕЛЬ A: ... ОК'),
+pr('  ЯЧЕЙКА ДАННЫХ B: .......... ОК'),
+pr('  ДАТЧИКИ РАДИАЦИИ .......... ОК'),
+pr('  КАНАЛ СВЯЗИ С ДОЛИНОЙ ..... ОК'),
+pr('  ПОЧТОВЫЙ УЗЕЛ ............. '+(DB.cloud?'СЕТЬ ОИДЛ':'ЛОКАЛЬНЫЙ РЕЖИМ')),
+pr('  СЕЙФ МАСТЕР-КЛЮЧА ......... НА ВЗВОДЕ'),
+pr('  ПУЛЬТ СТОЙЛА 37 ........... ОК'),
+pr('  ЛИФТ (4 ЭТАЖА) ............ ОК'),
+empty(),
+bar('ЗАГРУЗКА ЯДРА TERMLINK',1900),
+bar('ПРИМЕНЕНИЕ ПАТЧЕЙ PLAGUE.INC',1300),
+p(400),
+pr('ПРОВЕРКА ЦЕЛОСТНОСТИ ........ СБОЙ'),
+fx(),
+pr('СИНХРОНИЗАЦИЯ С УЗЛОМ B: .... ОК'),
+pr('ПОВТОРНАЯ ПРОВЕРКА ......... ОК'),
+p(500),
+fx(true),
+p(300),
+empty(),
+t('+------------------------------+'),
+t('|  PLAGUE.INC - ТЕРМИНАЛ ОИДЛ  |'),
+t('+------------------------------+'),
+empty(),
+t('ОБЩЕСТВО ИССЛЕДОВАТЕЛЕЙ ДОЛИНЫ ЛИТТЛХОРН'),
+t('ДОСТУП: ОПЕРАТОР // УРОВЕНЬ ДОПУСКА: 2'),
+p(500),
+t('СИНХРОНИЗАЦИЯ ВРЕМЕНИ: '+loreDate()),
+p(400),
+t('ТЕРМИНАЛ ГОТОВ.')];
+async function boot(){await sleep(2900);ensurePower();
+try{for(const step of bootScript)await step();}catch(e){if(e instanceof PowerOff)return;throw e;}
+ensurePower();
+skipBoot=false;bootDone=true;setState('wait');
+if(skipWasPressed)commit('< ДИАГНОСТИКА ПРОПУЩЕНА ОПЕРАТОРОМ >');
+commit('');
+commit(isTouch?'КОСНИТЕСЬ ЭКРАНА ДЛЯ ВХОДА В СИСТЕМУ ДОСТУПА':'НАЖМИТЕ ЛЮБУЮ КЛАВИШУ ДЛЯ ВХОДА В СИСТЕМУ ДОСТУПА');
+skipHintEl.style.opacity='0';}
+
+/* ==================== КОНСОЛИ ==================== */
+let consoleMode=null,masterModeOn=false;
+const TAB_SETS={admin:['accounts','security','dossiers','mail','dialogs','moderation'],
+master:['accounts','security','dossiers','mail','dialogs','moderation','content','log','backup','master']};
+const TAB_LABELS={accounts:'ОПЕРАТОРЫ',security:'БЕЗОПАСНОСТЬ',dossiers:'АНКЕТЫ',mail:'ПОЧТА',
+dialogs:'ДИАЛОГИ',moderation:'МОДЕРАЦИЯ',content:'КОНТЕНТ',log:'ЖУРНАЛ',backup:'БЭКАП',master:'МАСТЕР'};
+const isAdminActive=()=>consoleMode!==null;
+const DEFAULT_SERVICE_HASH=hashPass('розовое облако');
+const DEFAULT_MASTER_HASH=hashPass('03.11.2007');
+const serviceHash=()=>(DB.data.service&&DB.data.service.pass)||DEFAULT_SERVICE_HASH;
+const masterHash=()=>(DB.data.master&&DB.data.master.pass)||DEFAULT_MASTER_HASH;
+function buildTabs(mode){acTabsEl.innerHTML='';
+TAB_SETS[mode].forEach(tab=>{const b=document.createElement('button');
+b.type='button';b.textContent=TAB_LABELS[tab];b.dataset.tab=tab;
+b.addEventListener('click',()=>{Sound.beep(700,.05);renderTab(tab);});
+acTabsEl.appendChild(b);});}
+function renderTab(tab){acTabsEl.querySelectorAll('button').forEach(b=>b.classList.toggle('active',b.dataset.tab===tab));
+switch(tab){
+case'accounts':return renderAccounts();
+case'security':return renderSecurity();
+case'dossiers':return renderDossiers();
+case'mail':return renderMailAdmin();
+case'dialogs':return renderDialogsAdmin();
+case'moderation':return renderModeration();
+case'content':return renderContent();
+case'log':return renderLog();
+case'backup':return renderBackup();
+case'master':return renderMasterSettings();}}
+function mkBtn(label,onClick,danger=false){const b=document.createElement('button');
+b.type='button';b.className='ac-btn'+(danger?' danger':'');b.textContent=label;
+b.addEventListener('click',()=>{if(Sound.enabled)Sound.tick();safe(onClick);});return b;}
+function confirmBtn(label,confirmLabel,onConfirm){const b=mkBtn(label,()=>{
+if(b.dataset.c!=='1'){b.dataset.c='1';b.textContent=confirmLabel;Sound.beep(500,.07);
+setTimeout(()=>{if(b.isConnected){b.dataset.c='';b.textContent=label;}},4000);return;}
+onConfirm();},true);return b;}
+function swapToInput(row,promptText,type,validator,onDone){row.innerHTML='';
+const lbl=document.createElement('span');lbl.className='ac-meta';lbl.textContent=promptText;
+const inp=document.createElement('input');inp.type=type;inp.className='ac-input';
+inp.autocomplete='off';inp.spellcheck=false;
+const err=document.createElement('span');err.className='ac-meta';err.style.color='#ff6b6b';
+const ok=mkBtn('ОК',()=>{const problem=validator(inp.value);
+if(problem){err.textContent=problem;Sound.error();return;}onDone();});
+const cancel=mkBtn('ОТМЕНА',()=>onDone());
+row.append(lbl,inp,ok,cancel,err);inp.focus();}
+function renderAccounts(){acBodyEl.innerHTML='';
+const note=document.createElement('div');note.className='ac-note';
+note.textContent='РЕЖИМ БАЗЫ: '+(DB.cloud?'ОБЛАКО':'ЛОКАЛЬНО')+' | ПОЛНОМОЧИЯ: '+(consoleMode==='master'?'МАСТЕР':'АДМИНИСТРАТОР')
++' | ДОПУСКА: 1-5 ОПЕРАТОР, 6 СМОТРИТЕЛЬ, 7 ПРОИЗВОДИТЕЛЬ';
+acBodyEl.appendChild(note);
+const users=loadUsers();const names=Object.keys(users);
+if(!names.length){acBodyEl.insertAdjacentHTML('beforeend','<div class="ac-note">РЕЕСТР ПУСТ.</div>');return;}
+names.forEach(nick=>{const u=users[nick];
+const row=document.createElement('div');row.className='ac-row';
+const name=document.createElement('span');name.className='ac-name';name.textContent=nick;
+const meta=document.createElement('span');meta.className='ac-meta';
+meta.textContent='ДОПУСК:'+clearanceLabel(u.clearance||2)+' | XP:'+(u.xp||0)+' | ЗВ:'+rankOf(u.xp||0)[0]
++' | АНКЕТА:'+(u.profile?'✓':'—')+' | МЕД:'+(u.medical?'✓':'—')
++' | МЕДАЛЕЙ:'+Object.keys(u.medals||{}).length
++' | СЕЙФ:'+(u.safe?'ЕСТЬ':'—');
+const actions=document.createElement('span');actions.className='ac-actions';
+actions.appendChild(mkBtn('ПАРОЛЬ',()=>swapToInput(row,'НОВЫЙ ПАРОЛЬ (>=4): ','password',v=>{
+if(v.length<4)return'ПАРОЛЬ КОРОЧЕ 4 СИМВОЛОВ';
+const uu=loadUsers();uu[nick].hash=hashPass(v);saveUsers(uu);
+logEvent('смена пароля: '+nick,consoleMode==='master'?'МАСТЕР':'АДМИН');Sound.clunk();return null;},()=>renderAccounts())));
+actions.appendChild(mkBtn('ДОПУСК',()=>swapToInput(row,'1-5 ОП, 6 СМОТР, 7 ПРОИЗВ: ','text',v=>{
+const n=Number(v);if(!Number.isInteger(n)||n<1||n>7)return'ВВЕДИТЕ ЧИСЛО 1-7';
+const uu=loadUsers();uu[nick].clearance=n;saveUsers(uu);
+logEvent('допуск '+nick+' -> '+clearanceLabel(n),consoleMode==='master'?'МАСТЕР':'АДМИН');Sound.clunk();return null;},()=>renderAccounts())));
+actions.appendChild(mkBtn('XP',()=>swapToInput(row,'УСТАНОВИТЬ XP: ','text',v=>{
+const n=Number(v);if(!Number.isInteger(n)||n<0||n>99999)return'ВВЕДИТЕ ЧИСЛО 0-99999';
+const uu=loadUsers();uu[nick].xp=n;saveUsers(uu);
+logEvent('XP '+nick+' -> '+n,consoleMode==='master'?'МАСТЕР':'АДМИН');Sound.clunk();return null;},()=>renderAccounts())));
+actions.appendChild(mkBtn('МЕДАЛИ',()=>renderMedals(nick)));
+actions.appendChild(confirmBtn('УДАЛИТЬ','ТОЧНО?',()=>{
+const uu=loadUsers();delete uu[nick];saveUsers(uu);
+logEvent('удалён оператор '+nick,consoleMode==='master'?'МАСТЕР':'АДМИН');
+Sound.crackle();renderAccounts();}));
+row.append(name,meta,actions);acBodyEl.appendChild(row);});}
+const MEDAL_PRESETS=['ЗА ЭКСПЕДИЦИЮ','100 ДНЕЙ В КЛАНЕ','ЗАЩИТНИК ДОЛИНЫ','ОТЛИЧНИК СВЯЗИ','ХРАНИТЕЛЬ СВЕТА'];
+function renderMedals(nick){acBodyEl.innerHTML='';
+const users=loadUsers();const u=users[nick]||{};
+const head=document.createElement('div');head.className='ac-note';
+head.textContent='МЕДАЛИ: '+nick+' — выдача даёт +25 XP.';
+acBodyEl.appendChild(head);
+const block=document.createElement('div');block.className='ac-block';
+const h=document.createElement('h4');h.textContent='ПРЕСЕТЫ';
+block.appendChild(h);
+MEDAL_PRESETS.forEach(pname=>{
+block.appendChild(mkBtn('+'+pname,()=>{
+const uu=loadUsers();
+if(!uu[nick].medals)uu[nick].medals={};
+uu[nick].medals[Date.now().toString(36)+Math.random().toString(36).slice(2,5)]
+={name:pname,ts:Date.now(),by:consoleMode==='master'?'МАСТЕР':'АДМИН'};
+saveUsers(uu);
+addXP(nick,25,true);
+logEvent('медаль "'+pname+'" выдана: '+nick,consoleMode==='master'?'МАСТЕР':'АДМИН');
+Sound.fanfare();renderMedals(nick);}));});
+const r=document.createElement('div');r.className='ac-row';
+r.appendChild(mkBtn('СВОЯ МЕДАЛЬ',()=>swapToInput(r,'НАЗВАНИЕ: ','text',v=>{
+if(!v.trim()||v.length>40)return'ВВЕДИТЕ НАЗВАНИЕ (1-40)';
+const uu=loadUsers();
+if(!uu[nick].medals)uu[nick].medals={};
+uu[nick].medals[Date.now().toString(36)+Math.random().toString(36).slice(2,5)]
+={name:v.trim().toUpperCase(),ts:Date.now(),by:consoleMode==='master'?'МАСТЕР':'АДМИН'};
+saveUsers(uu);addXP(nick,25,true);
+logEvent('медаль "'+v.trim()+'" выдана: '+nick);Sound.fanfare();return null;},()=>renderMedals(nick))));
+block.appendChild(r);
+const list=document.createElement('div');list.className='ac-block';
+const h2=document.createElement('h4');h2.textContent='ВЫДАНЫ ('+Object.keys(u.medals||{}).length+')';
+list.appendChild(h2);
+Object.entries(u.medals||{}).forEach(([id,m])=>{
+const row=document.createElement('div');row.className='ac-row';
+const meta=document.createElement('span');meta.className='ac-meta';meta.style.flex='1 1 auto';
+meta.textContent=m.name+' // '+fmtDT(m.ts)+' // ОТ: '+m.by;
+row.append(meta,confirmBtn('УД','ТОЧНО?',()=>{
+const uu=loadUsers();if(uu[nick].medals)delete uu[nick].medals[id];
+saveUsers(uu);Sound.crackle();renderMedals(nick);}));
+list.appendChild(row);});
+acBodyEl.appendChild(block);
+acBodyEl.appendChild(list);
+const back=document.createElement('div');back.className='ac-back-row';
+back.appendChild(mkBtn('← К ОПЕРАТОРАМ',()=>renderAccounts()));
+acBodyEl.appendChild(back);}
+function renderSecurity(){acBodyEl.innerHTML='';
+const users=loadUsers();
+const lockUntil=getLockUntil();const locked=Date.now()<lockUntil;
+const block=document.createElement('div');block.className='ac-block';
+const status=document.createElement('div');status.className='ac-note';
+status.textContent='БЛОКИРОВКА: '+(locked?'АКТИВНА ДО '+new Date(lockUntil).toLocaleTimeString('ru-RU'):'НЕ АКТИВНА')
++' | ОПЕРАТОРОВ: '+Object.keys(users).length
++' | ЗАПИСЕЙ: '+Object.keys(DB.data.notes||{}).length
++' | НАУЧ.ДОК: '+Object.keys(DB.data.sdocs||{}).length
++' | СКЛАД: '+Object.keys(DB.data.stock||{}).length
++' | ТРЕВОГА СТОЙЛА: '+(stableData().alarm?'ВКЛЮЧЕНА':'НЕТ')
++' | БАЗА: '+(DB.cloud?'ОБЛАКО':'ЛОКАЛЬНО');
+block.append(status,mkBtn('СБРОСИТЬ БЛОКИРОВКУ',()=>{clearLock();Sound.clunk();renderSecurity();}));
+acBodyEl.appendChild(block);
+const danger=document.createElement('div');danger.className='ac-block';
+const dNote=document.createElement('div');dNote.className='ac-note';
+dNote.textContent='ПОЛНЫЙ СБРОС: удалит ВСЁ. Необратимо. Сначала сделайте бэкап!';
+const wipe=confirmBtn('ПОЛНЫЙ СБРОС ВСЕГО','ПОДТВЕРДИТЕ',()=>{
+DB.putAll({users:{},notes:{},mail:{},chat:{},dm:{},log:{},content:{},stock:{},sdocs:{},master:DB.data.master,service:DB.data.service});
+clearLock();logEvent('ПОЛНЫЙ СБРОС БАЗЫ',consoleMode==='master'?'МАСТЕР':'АДМИН');
+Sound.crackle();doGlitch();renderSecurity();});
+danger.append(dNote,wipe);acBodyEl.appendChild(danger);}
+function renderDossiers(){acBodyEl.innerHTML='';
+const users=loadUsers();const names=Object.keys(users);
+if(!names.length){acBodyEl.innerHTML='<div class="ac-note">РЕЕСТР ПУСТ.</div>';return;}
+const note=document.createElement('div');note.className='ac-note';
+note.textContent='Правка анкеты И медицинского блока. Содержимое личных сейфов недоступно никому.';
+acBodyEl.appendChild(note);
+names.forEach(nick=>{const u=users[nick];
+const row=document.createElement('div');row.className='ac-row';
+const name=document.createElement('span');name.className='ac-name';name.textContent=nick;
+const meta=document.createElement('span');meta.className='ac-meta';
+meta.textContent=u.profile?('АНКЕТА: '+(u.profile.name||'-')+' | ОТДЕЛ: '+(u.profile.department||'—')+(u.medical?' | МЕД:✓':' | МЕД:—')+(u.safe?' | СЕЙФ:ЕСТЬ':'')):'АНКЕТА НЕ ЗАПОЛНЕНА';
+const actions=document.createElement('span');actions.className='ac-actions';
+if(u.profile){actions.appendChild(mkBtn('ОТКРЫТЬ',()=>renderDossier(nick)));
+actions.appendChild(confirmBtn('СБРОС','ТОЧНО?',()=>{
+const uu=loadUsers();uu[nick].profile=null;uu[nick].medical=null;saveUsers(uu);
+logEvent('сброс анкеты: '+nick);Sound.crackle();renderDossiers();}));
+}else{actions.appendChild(mkBtn('СОЗДАТЬ АНКЕТУ',()=>{
+const uu=loadUsers();uu[nick].profile={};uu[nick].medical={};
+PROFILE_FIELDS.forEach(f=>uu[nick].profile[f.key]='-');
+MED_FIELDS.forEach(f=>uu[nick].medical[f.key]='-');
+saveUsers(uu);renderDossier(nick);}));}
+if(u.safe){actions.appendChild(confirmBtn('СЕЙФ→УД','ТОЧНО?',()=>{
+const uu=loadUsers();uu[nick].safe=null;saveUsers(uu);
+logEvent('уничтожен личный сейф: '+nick+' (без чтения содержимого)',consoleMode==='master'?'МАСТЕР':'АДМИН');
+Sound.crackle();renderDossiers();}));}
+row.append(name,meta,actions);acBodyEl.appendChild(row);});}
+function renderDossier(nick){acBodyEl.innerHTML='';
+const title=document.createElement('div');title.className='ac-note';
+title.textContent='ДОСЬЕ: '+nick+' — коснитесь поля для правки.';
+acBodyEl.appendChild(title);
+function makeBlock(fields,storeKey,blockTitle){
+const head=document.createElement('div');head.className='ac-note';head.textContent=blockTitle;
+acBodyEl.appendChild(head);
+const block=document.createElement('div');block.className='ac-block';
+fields.forEach(f=>{const b=document.createElement('button');b.type='button';b.className='ac-field';
+const setValue=()=>{const users=loadUsers();
+const val=(users[nick][storeKey]&&users[nick][storeKey][f.key])||'-';
+b.innerHTML='';const l=document.createElement('span');l.className='fl';l.textContent=f.q+': ';
+b.append(l,document.createTextNode(val));};
+setValue();
+b.addEventListener('click',()=>{Sound.tick();
+const users=loadUsers();
+const old=(users[nick][storeKey]&&users[nick][storeKey][f.key])||'';
+const inp=document.createElement('input');inp.className='ac-input';
+inp.value=old==='-'?'':old;inp.maxLength=f.max;inp.autocomplete='off';inp.spellcheck=false;
+const ok=mkBtn('ОК',()=>{const uu=loadUsers();
+if(!uu[nick][storeKey])uu[nick][storeKey]={};
+uu[nick][storeKey][f.key]=inp.value.trim()||'-';saveUsers(uu);Sound.clunk();setValue();});
+b.replaceWith(inp,ok);inp.focus();
+inp.addEventListener('keydown',e=>{
+if(e.key==='Enter'){e.preventDefault();ok.click();}
+if(e.key==='Escape')setValue();});});
+block.appendChild(b);});
+acBodyEl.appendChild(block);}
+makeBlock(PROFILE_FIELDS,'profile','— АНКЕТА —');
+makeBlock(MED_FIELDS,'medical','— МЕДИЦИНСКИЙ БЛОК (только медкарты) —');
+const back=document.createElement('div');back.className='ac-back-row';
+back.appendChild(mkBtn('← К СПИСКУ',()=>renderDossiers()));
+acBodyEl.appendChild(back);}
+function renderMailAdmin(){acBodyEl.innerHTML='';
+const head=document.createElement('div');head.className='ac-note';
+head.textContent='Классификация писем по отделам. Отдельно — письма вне отделов (личные).';
+acBodyEl.appendChild(head);
+const mail=Object.entries(DB.data.mail||{}).map(([id,m])=>({id,...m})).sort((a,b)=>b.ts-a.ts);
+function delRow(row,en,path){
+row.append(confirmBtn('УД','ТОЧНО?',()=>{
+DB.deleteItem(path,en.id).then(()=>{
+logEvent('модерация: удалено письмо',consoleMode==='master'?'МАСТЕР':'АДМИН');
+Sound.crackle();renderMailAdmin();});}));}
+DEPT_GROUPS.forEach(g=>{
+const items=mail.filter(m=>m.to&&m.to[0]==='@'&&resolveGroup(m.to)===g.key);
+const block=document.createElement('div');block.className='ac-block';
+const h=document.createElement('h4');h.textContent=g.name+' ('+items.length+') [@'+g.key+']';
+block.appendChild(h);
+if(!items.length){const n=document.createElement('div');n.className='ac-note';n.textContent='писем нет';block.appendChild(n);}
+items.forEach(m=>{const row=document.createElement('div');row.className='ac-row';
+const meta=document.createElement('span');meta.className='ac-meta';meta.style.flex='1 1 auto';
+meta.textContent='ОТ '+m.from+' // '+(m.subj||'(БЕЗ ТЕМЫ)')+' // '+fmtDT(m.ts);
+row.append(meta);delRow(row,m,'mail');block.appendChild(row);});
+acBodyEl.appendChild(block);});
+const personal=mail.filter(m=>!m.to||m.to[0]!=='@');
+const pBlock=document.createElement('div');pBlock.className='ac-block';
+const pH=document.createElement('h4');pH.textContent='ПИСЬМА ВНЕ ОТДЕЛОВ (ЛИЧНЫЕ) ('+personal.length+')';
+pBlock.appendChild(pH);
+if(!personal.length){const n=document.createElement('div');n.className='ac-note';n.textContent='писем нет';pBlock.appendChild(n);}
+personal.forEach(m=>{const row=document.createElement('div');row.className='ac-row';
+const meta=document.createElement('span');meta.className='ac-meta';meta.style.flex='1 1 auto';
+meta.textContent='ОТ '+m.from+' К '+m.to+' // '+(m.subj||'(БЕЗ ТЕМЫ)')+' // '+fmtDT(m.ts);
+row.append(meta);delRow(row,m,'mail');pBlock.appendChild(row);});
+acBodyEl.appendChild(pBlock);}
+function collectDialogs(){
+const dm=DB.data.dm||{};
+const map={};
+Object.entries(dm).forEach(([id,m])=>{
+const key=[m.from,m.to].sort().join('␟');
+if(!map[key])map[key]={a:m.from,b:m.to,items:[],last:0};
+map[key].items.push({id,...m});
+map[key].last=Math.max(map[key].last,m.ts);});
+return Object.values(map).sort((x,y)=>y.last-x.last);}
+function renderDialogsAdmin(){acBodyEl.innerHTML='';
+const head=document.createElement('div');head.className='ac-note';
+head.textContent='Личные диалоги операторов. Откройте — увидите всю переписку пары.';
+acBodyEl.appendChild(head);
+const dialogs=collectDialogs();
+if(!dialogs.length){acBodyEl.insertAdjacentHTML('beforeend','<div class="ac-note">ДИАЛОГОВ ПОКА НЕТ.</div>');return;}
+dialogs.forEach(d=>{
+const row=document.createElement('div');row.className='ac-row';
+const meta=document.createElement('span');meta.className='ac-meta';meta.style.flex='1 1 auto';
+meta.textContent=d.a+' ⇄ '+d.b+' | СООБЩЕНИЙ: '+d.items.length+' | ПОСЛЕДНЕЕ: '+fmtDT(d.last);
+const actions=document.createElement('span');actions.className='ac-actions';
+actions.appendChild(mkBtn('ОТКРЫТЬ',()=>renderDialogView(d.a,d.b)));
+row.append(meta,actions);acBodyEl.appendChild(row);});}
+function renderDialogView(a,b){acBodyEl.innerHTML='';
+const title=document.createElement('div');title.className='ac-note';
+title.textContent='ДИАЛОГ: '+a+' ⇄ '+b+' — вся переписка, сверху старые.';
+acBodyEl.appendChild(title);
+const dm=DB.data.dm||{};
+const items=Object.entries(dm).map(([id,m])=>({id,...m}))
+.filter(m=>(m.from===a&&m.to===b)||(m.from===b&&m.to===a))
+.sort((x,y)=>x.ts-y.ts);
+const block=document.createElement('div');block.className='ac-block';
+if(!items.length){const n=document.createElement('div');n.className='ac-note';n.textContent='сообщений нет';block.appendChild(n);}
+items.forEach(m=>{const row=document.createElement('div');row.className='ac-row';
+const meta=document.createElement('span');meta.className='ac-meta';meta.style.flex='1 1 auto';
+meta.textContent=fmtDT(m.ts)+' | '+m.from+' → '+m.to+': '+(m.text||'');
+row.append(meta,confirmBtn('УД','ТОЧНО?',()=>{
+DB.deleteItem('dm',m.id).then(()=>{
+logEvent('модерация: удалено сообщение из диалога',consoleMode==='master'?'МАСТЕР':'АДМИН');
+Sound.crackle();renderDialogView(a,b);});}));
+block.appendChild(row);});
+acBodyEl.appendChild(block);
+const back=document.createElement('div');back.className='ac-back-row';
+back.appendChild(mkBtn('← К СПИСКАМ ДИАЛОГОВ',()=>renderDialogsAdmin()));
+acBodyEl.appendChild(back);}
+function renderModeration(){acBodyEl.innerHTML='';
+const head=document.createElement('div');head.className='ac-note';
+head.textContent='Удаление любых материалов. Действия пишутся в журнал.';
+acBodyEl.appendChild(head);
+function section(title,entries,render,delpath){
+const block=document.createElement('div');block.className='ac-block';
+const h=document.createElement('h4');h.textContent=title+' ('+entries.length+')';
+block.appendChild(h);
+if(!entries.length){const n=document.createElement('div');n.className='ac-note';n.textContent='пусто';block.appendChild(n);}
+entries.forEach(en=>{const row=document.createElement('div');row.className='ac-row';
+const meta=document.createElement('span');meta.className='ac-meta';meta.style.flex='1 1 auto';
+meta.textContent=render(en);
+row.append(meta,confirmBtn('УД','ТОЧНО?',()=>{
+DB.deleteItem(delpath,en.id).then(()=>{logEvent('модерация: '+delpath,consoleMode==='master'?'МАСТЕР':'АДМИН');Sound.crackle();renderModeration();});}));
+block.appendChild(row);});
+acBodyEl.appendChild(block);}
+section('ЗАПИСИ УЧАСТНИКОВ',notesList().slice(0,15),
+x=>'['+(x.type||'ИНФ')+'] '+(x.title||'')+' — '+x.author+' // '+fmtDT(x.ts),'notes');
+const sdocs=sdocsAll().sort((a,b)=>b.ts-a.ts).slice(0,15);
+section('НАУЧНЫЕ ДОКУМЕНТЫ',sdocs,
+x=>'['+x.cat+'-'+(x.num||1)+'] '+(x.title||'')+' — '+x.author+' // '+fmtDT(x.ts),'sdocs');
+const mail=Object.entries(DB.data.mail||{}).map(([id,m])=>({id,...m})).sort((a,b)=>b.ts-a.ts).slice(0,15);
+section('ПОЧТА',mail,m=>'ОТ '+m.from+' К '+m.to+': '+(m.subj||'')+' // '+fmtDT(m.ts),'mail');
+const chat=Object.entries(DB.data.chat||{}).map(([id,m])=>({id,...m})).sort((a,b)=>b.ts-a.ts).slice(0,15);
+section('ОБЩИЙ ЭФИР',chat,m=>m.author+': '+(m.text||'').slice(0,50)+' // '+fmtDT(m.ts),'chat');
+const dm=Object.entries(DB.data.dm||{}).map(([id,m])=>({id,...m})).sort((a,b)=>b.ts-a.ts).slice(0,15);
+section('ЛИЧНЫЕ СООБЩЕНИЯ',dm,m=>m.from+' -> '+m.to+': '+(m.text||'').slice(0,40)+' // '+fmtDT(m.ts),'dm');
+section('ОБЩИЙ СКЛАД',Object.entries(DB.data.stock||{}).map(([id,s])=>({id,...s})),
+s=>s.name+' x'+s.qty+(s.taken?' (У: '+s.taken+')':''),'stock');}
+function renderContent(){acBodyEl.innerHTML='';
+const head=document.createElement('div');head.className='ac-note';
+head.textContent='Редактор разделов. У каждого документа — минимальный допуск 1-5.';
+acBodyEl.appendChild(head);
+MENU.forEach((s,i)=>{if(s.type!=='static')return;
+const items=getStaticItems(i);
+const block=document.createElement('div');block.className='ac-block';
+const h=document.createElement('h4');h.textContent='['+(i+1)+'] '+s.t;
+block.appendChild(h);
+items.forEach((d,j)=>{const row=document.createElement('div');row.className='ac-row';
+const meta=document.createElement('span');meta.className='ac-meta';meta.style.flex='1 1 auto';
+meta.textContent=d.name+' (УР.'+(d.lvl||1)+')';
+const acts=document.createElement('span');acts.className='ac-actions';
+acts.appendChild(mkBtn('ПРАВКА',()=>editDocForm(block,i,j)));
+acts.appendChild(confirmBtn('УД','ТОЧНО?',()=>{
+const content={...(DB.data.content||{})};
+const arr=[...(content[i]||MENU[i].items)];
+arr.splice(j,1);content[i]=arr;
+DB.putNode('content',content).then(()=>{
+logEvent('контент: удалён документ в разделе '+(i+1),'МАСТЕР');
+Sound.crackle();renderContent();});}));
+row.append(meta,acts);block.appendChild(row);});
+block.appendChild(mkBtn('+ ДОБАВИТЬ ДОКУМЕНТ',()=>editDocForm(block,i,-1)));
+acBodyEl.appendChild(block);});}
+function editDocForm(block,secIdx,docIdx){
+const items=getStaticItems(secIdx);
+const d=docIdx>=0?items[docIdx]:{name:'',lvl:1,lines:[]};
+block.innerHTML='';
+const name=document.createElement('input');name.className='ac-input';name.style.width='100%';
+name.value=d.name;name.placeholder='НАЗВАНИЕ ДОКУМЕНТА';name.maxLength=60;
+const lvlRow=document.createElement('div');lvlRow.className='ac-row';
+const lvlLbl=document.createElement('span');lvlLbl.className='ac-meta';lvlLbl.textContent='МИНИМАЛЬНЫЙ ДОПУСК (1-5): ';
+const lvl=document.createElement('input');lvl.className='ac-input';lvl.type='number';lvl.min=1;lvl.max=5;
+lvl.value=d.lvl||1;lvl.style.width='70px';
+lvlRow.append(lvlLbl,lvl);
+const ta=document.createElement('textarea');ta.className='ac-ta';ta.style.marginTop='6px';
+ta.value=d.lines.join('\n');ta.placeholder='ТЕКСТ (каждая строка - отдельная строка на экране)';
+const err=document.createElement('div');err.className='ac-meta';err.style.color='#ff6b6b';
+const ok=mkBtn('СОХРАНИТЬ',()=>{
+if(!name.value.trim()){err.textContent='ВВЕДИТЕ НАЗВАНИЕ';Sound.error();return;}
+const lv=Math.max(1,Math.min(5,Number(lvl.value)||1));
+const content={...(DB.data.content||{})};
+const arr=[...(content[secIdx]||MENU[secIdx].items)];
+const doc={name:name.value.trim(),lvl:lv,lines:ta.value.split('\n')};
+if(docIdx>=0)arr[docIdx]=doc;else arr.push(doc);
+content[secIdx]=arr;
+DB.putNode('content',content).then(()=>{
+logEvent('контент: сохранён документ раздела '+(secIdx+1),'МАСТЕР');
+Sound.clunk();renderContent();});});
+const cancel=mkBtn('ОТМЕНА',()=>renderContent());
+block.append(name,lvlRow,ta,ok,cancel,err);name.focus();}
+function renderLog(){acBodyEl.innerHTML='';
+const log=Object.values(DB.data.log||{}).sort((a,b)=>b.ts-a.ts).slice(0,30);
+const block=document.createElement('div');block.className='ac-block';
+const h=document.createElement('h4');h.textContent='ПОСЛЕДНИЕ СОБЫТИЯ ('+log.length+')';
+block.appendChild(h);
+if(!log.length){const n=document.createElement('div');n.className='ac-note';n.textContent='журнал пуст';block.appendChild(n);}
+log.forEach(e=>{const d=document.createElement('div');d.className='ac-field';d.style.cursor='default';
+d.textContent=fmtDT(e.ts)+' | '+e.who+' | '+e.what;
+block.appendChild(d);});
+acBodyEl.appendChild(block);}
+function renderBackup(){acBodyEl.innerHTML='';
+const block=document.createElement('div');block.className='ac-block';
+const h=document.createElement('h4');h.textContent='РЕЗЕРВНОЕ КОПИРОВАНИЕ';
+const note=document.createElement('div');note.className='ac-note';
+note.textContent='Скачайте файл базы. Восстановление заменяет ВСЁ содержимое.';
+const dl=mkBtn('СКАЧАТЬ БЭКАП',()=>{
+const blob=new Blob([JSON.stringify(DB.data,null,2)],{type:'application/json'});
+const a=document.createElement('a');a.href=URL.createObjectURL(blob);
+a.download='oidl-backup-'+new Date().toISOString().slice(0,10)+'.json';
+a.click();URL.revokeObjectURL(a.href);
+logEvent('скачан бэкап базы','МАСТЕР');Sound.clunk();});
+const fileInput=document.createElement('input');fileInput.type='file';fileInput.accept='.json';fileInput.style.display='none';
+const restore=confirmBtn('ВОССТАНОВИТЬ ИЗ ФАЙЛА','ВЫБРАТЬ ФАЙЛ',()=>fileInput.click());
+fileInput.addEventListener('change',()=>{const f=fileInput.files[0];if(!f)return;
+const r=new FileReader();
+r.onload=()=>{try{const j=JSON.parse(r.result);
+if(!j||typeof j!=='object'||!('users'in j))throw 0;
+DB.putAll(j).then(()=>{logEvent('БАЗА ВОССТАНОВЛЕНА ИЗ ФАЙЛА','МАСТЕР');Sound.chord();renderBackup();});
+}catch{Sound.error();alert('ФАЙЛ ПОВРЕЖДЁН ИЛИ НЕ ПОХОЖ НА БЭКАП ОИДЛ.')}};
+r.readAsText(f);});
+block.append(h,note,dl,restore,fileInput);
+acBodyEl.appendChild(block);}
+function renderMasterSettings(){acBodyEl.innerHTML='';
+const note=document.createElement('div');note.className='ac-note';
+note.textContent='Смена кодов. Мастер-код — для ключ-карты, сервис-пароль — для кнопки СЕРВИС.';
+acBodyEl.appendChild(note);
+const b1=document.createElement('div');b1.className='ac-block';
+const h1=document.createElement('h4');h1.textContent='КОД МАСТЕР-КАРТЫ';
+const r1=document.createElement('div');r1.className='ac-row';
+r1.appendChild(mkBtn('СМЕНИТЬ КОД КАРТЫ',()=>swapToInput(r1,'НОВЫЙ КОД (>=4): ','password',v=>{
+if(v.length<4)return'КОРОЧЕ 4 СИМВОЛОВ';
+DB.putNode('master',{pass:hashPass(v)}).then(()=>{logEvent('сменён мастер-код','МАСТЕР');Sound.clunk();renderMasterSettings();});
+return null;},()=>renderMasterSettings())));
+b1.append(h1,r1);acBodyEl.appendChild(b1);
+const b2=document.createElement('div');b2.className='ac-block';
+const h2=document.createElement('h4');h2.textContent='СЕРВИС-ПАРОЛЬ (кнопка СЕРВИС)';
+const r2=document.createElement('div');r2.className='ac-row';
+r2.appendChild(mkBtn('СМЕНИТЬ СЕРВИС-ПАРОЛЬ',()=>swapToInput(r2,'НОВЫЙ ПАРОЛЬ (>=4): ','password',v=>{
+if(v.length<4)return'КОРОЧЕ 4 СИМВОЛОВ';
+DB.putNode('service',{pass:hashPass(v)}).then(()=>{logEvent('сменён сервис-пароль','МАСТЕР');Sound.clunk();renderMasterSettings();});
+return null;},()=>renderMasterSettings())));
+b2.append(h2,r2);acBodyEl.appendChild(b2);}
+function enterAdminMode(){consoleMode='admin';
+adminConsoleEl.classList.remove('master');
+acTitleEl.textContent='PLAGUE.INC // КОНСОЛЬ АДМИНИСТРАТОРА';
+adminConsoleEl.hidden=false;buildTabs('admin');renderTab('accounts');
+safe(()=>printLines(['','> СЕРВИСНЫЙ ВХОД: АДМИНИСТРАТОР ........ ОК','> ОТКРЫТА КОНСОЛЬ. ЗАКРЫТИЕ - КНОПКА ✕.','']));}
+function enterMasterMode(){masterModeOn=true;consoleMode='master';
+adminConsoleEl.classList.add('master');
+acTitleEl.textContent='PLAGUE.INC // КОНСОЛЬ МАСТЕРА ★';
+adminConsoleEl.hidden=false;buildTabs('master');renderTab('accounts');
+ledAct.classList.add('violet');
+logEvent('МАСТЕР-ДОСТУП ОТКРЫТ','МАСТЕР');
+safe(()=>{if(!busy)printLines(['','> МАСТЕР-КАРТА ПРИНЯТА. УРОВЕНЬ: СОЗДАТЕЛЬ.','> ОТКРЫТА КОНСОЛЬ МАСТЕРА. КАРТУ ИЗ СЛОТА - СЕАНС ЗАВЕРШЁН.','']);});}
+function exitConsole(silent){if(!consoleMode)return;
+consoleMode=null;adminConsoleEl.hidden=true;adminConsoleEl.classList.remove('master');
+if(!masterModeOn)ledAct.classList.remove('violet');
+if(!silent){Sound.beep(500,.09);safe(()=>printLines(['> КОНСОЛЬ ЗАКРЫТА.']));}}
+adminCloseEl.addEventListener('click',()=>exitConsole(false));
+
+/* ============ КАМЕРА / СЕЙФ / КАРТА ============ */
+let vaultOpen=false,vaultOpening=false,camClicks=[];
+let cardState='hidden';
+let masterAttempts=0,dragOff=null,pullStart=null;
+setInterval(()=>{if(document.hidden)return;
+camLed.classList.add('blink');setTimeout(()=>camLed.classList.remove('blink'),260);},8000+Math.random()*4000);
+camEl.addEventListener('pointerenter',()=>camLed.classList.add('hot'));
+camEl.addEventListener('pointerleave',()=>camLed.classList.remove('hot'));
+camEl.addEventListener('pointerdown',e=>{e.preventDefault();e.stopPropagation();
+const now=Date.now();
+camClicks=camClicks.filter(tm=>now-tm<3000);
+camClicks.push(now);
+Sound.camClick();
+camLed.classList.add('blink');setTimeout(()=>{camLed.classList.remove('blink');
+if(camClicks.length>0)setTimeout(()=>camLed.classList.add('blink'),120);
+setTimeout(()=>camLed.classList.remove('blink'),240);},200);
+if(camClicks.length>=4){camClicks=[];openVault();}});
+function openVault(){if(vaultOpen||vaultOpening)return;
+vaultOpening=true;camLed.classList.add('steady');
+Sound.vaultSqueak(2.4);
+if(powerOn){doGlitch();setTimeout(()=>doGlitch(),1100);}
+vaultEl.classList.add('open');
+setTimeout(()=>{vaultOpen=true;vaultOpening=false;camLed.classList.remove('steady');dropCard();},2500);}
+function dropCard(){cardState='rest';
+mcardEl.hidden=false;mcardEl.classList.remove('drag','over');
+mcardEl.style.left=mcardEl.style.top=mcardEl.style.right=mcardEl.style.bottom='';
+Sound.cardDrop();
+const s=vaultSlotEl.getBoundingClientRect();
+requestAnimationFrame(()=>{const r=mcardEl.getBoundingClientRect();
+const dx=(s.left+s.width/2)-(r.left+r.width/2);
+const dy=(s.top+s.height/2)-(r.top+r.height/2);
+mcardEl.animate([
+{transform:`translate(${dx}px,${dy}px) rotate(-95deg)`,opacity:.5},
+{transform:`translate(${dx*.35}px,${dy*.6}px) rotate(-45deg)`,offset:.45},
+{transform:'translate(0,-16px) rotate(2deg)',offset:.78},
+{transform:'translate(0,0) rotate(-3deg)'}],
+{duration:950,easing:'cubic-bezier(.3,.6,.35,1)'});});}
+function returnCard(){if(cardState!=='drag')return;
+const cur=mcardEl.getBoundingClientRect();
+mcardEl.classList.remove('drag','over');
+mcardEl.style.transition='none';
+mcardEl.style.left=mcardEl.style.top=mcardEl.style.right=mcardEl.style.bottom='';
+const rest=mcardEl.getBoundingClientRect();
+const dx=cur.left-rest.left,dy=cur.top-rest.top;
+cardState='rest';
+mcardEl.animate([
+{transform:`translate(${dx}px,${dy}px) rotate(0deg)`},
+{transform:'translate(0,0) rotate(-3deg)'}],
+{duration:420,easing:'cubic-bezier(.3,.7,.4,1)'});
+setTimeout(()=>{mcardEl.style.transition='';},430);}
+function insertCard(){const s=vaultSlotEl.getBoundingClientRect();
+const r=mcardEl.getBoundingClientRect();
+const dx=(s.left+s.width/2)-(r.left+r.width/2);
+const dy=(s.top+s.height/2)-(r.top+r.height/2);
+Sound.cardInsert();
+const anim=mcardEl.animate([
+{transform:'translate(0,0) scale(1.1) rotate(0deg)'},
+{transform:`translate(${dx}px,${dy}px) scale(.6) rotate(-90deg)`,opacity:.4}],
+{duration:380,easing:'ease-in'});
+anim.onfinish=()=>{
+cardState='slot';
+mcardEl.hidden=true;mcardEl.classList.remove('drag','over');
+mcardEl.style.left=mcardEl.style.top=mcardEl.style.right=mcardEl.style.bottom='';
+cardStuckEl.classList.remove('in');
+cardStuckEl.hidden=false;
+void cardStuckEl.offsetWidth;
+cardStuckEl.classList.add('in');
+slotLed.classList.add('card');
+masterAttempts=0;openMasterModal();};}
+function ejectFromSlot(silent){
+slotLed.classList.remove('card','on');
+cardStuckEl.hidden=true;cardStuckEl.classList.remove('in');
+if(masterModeOn){masterModeOn=false;exitConsole(true);
+ledAct.classList.remove('violet');
+logEvent('мастер-сеанс завершён (карта извлечена)','МАСТЕР');
+if(!silent&&!busy)safe(()=>printLines(['> МАСТЕР-КАРТА ИЗВЛЕЧЕНА. СЕАНС СОЗДАТЕЛЯ ЗАВЕРШЁН.']));}
+cardState='rest';mcardEl.hidden=false;
+const s=vaultSlotEl.getBoundingClientRect();
+requestAnimationFrame(()=>{const r=mcardEl.getBoundingClientRect();
+const dx=(s.left+s.width/2)-(r.left+r.width/2);
+const dy=(s.top+s.height/2)-(r.top+r.height/2);
+mcardEl.animate([
+{transform:`translate(${dx}px,${dy}px) scale(.6) rotate(-90deg)`,opacity:.4},
+{transform:'translate(0,0) rotate(-3deg)'}],
+{duration:500,easing:'cubic-bezier(.2,.7,.3,1)'});});
+if(!silent)Sound.cardDrop();}
+cardStuckEl.addEventListener('pointerdown',e=>{
+if(cardState!=='slot')return;
+e.preventDefault();e.stopPropagation();
+Sound.cardInsert();
+try{mcardEl.setPointerCapture(e.pointerId);}catch{}
+cardStuckEl.hidden=true;cardStuckEl.classList.remove('in');
+slotLed.classList.remove('card','on');
+if(masterModeOn){masterModeOn=false;exitConsole(true);
+ledAct.classList.remove('violet');
+logEvent('мастер-сеанс завершён (карта извлечена)','МАСТЕР');
+safe(()=>printLines(['> МАСТЕР-КАРТА ИЗВЛЕЧЕНА. СЕАНС СОЗДАТЕЛЯ ЗАВЕРШЁН.']));}
+const s=vaultSlotEl.getBoundingClientRect();
+const cw=mcardEl.offsetWidth,ch=mcardEl.offsetHeight;
+const px=s.left+s.width/2-cw/2;
+const py=s.top+s.height*0.3-ch/2;
+mcardEl.hidden=false;
+mcardEl.classList.add('drag');
+mcardEl.style.left=px+'px';mcardEl.style.top=py+'px';
+mcardEl.style.right='auto';mcardEl.style.bottom='auto';
+cardState='drag';
+dragOff={x:e.clientX-px,y:e.clientY-py};
+pullStart={x:e.clientX,y:e.clientY};});
+mcardEl.addEventListener('pointerdown',e=>{
+if(cardState==='slot')return;
+if(cardState!=='rest')return;
+e.preventDefault();e.stopPropagation();
+cardState='drag';
+mcardEl.setPointerCapture(e.pointerId);
+const r=mcardEl.getBoundingClientRect();
+dragOff={x:e.clientX-r.left,y:e.clientY-r.top};
+pullStart={x:e.clientX,y:e.clientY};
+mcardEl.classList.add('drag');
+mcardEl.style.left=r.left+'px';mcardEl.style.top=r.top+'px';
+mcardEl.style.right='auto';mcardEl.style.bottom='auto';});
+document.addEventListener('pointermove',e=>{
+if(cardState!=='drag')return;
+mcardEl.style.left=(e.clientX-dragOff.x)+'px';
+mcardEl.style.top=(e.clientY-dragOff.y)+'px';
+const s=vaultSlotEl.getBoundingClientRect();
+const over=vaultOpen&&e.clientX>s.left-12&&e.clientX<s.right+12&&e.clientY>s.top-12&&e.clientY<s.bottom+12;
+mcardEl.classList.toggle('over',over);});
+document.addEventListener('pointerup',e=>{
+if(cardState!=='drag')return;
+pullStart=pullStart||{x:e.clientX,y:e.clientY};
+const moved=Math.hypot(e.clientX-pullStart.x,e.clientY-pullStart.y);
+const s=vaultSlotEl.getBoundingClientRect();
+const over=vaultOpen&&e.clientX>s.left-12&&e.clientX<s.right+12&&e.clientY>s.top-12&&e.clientY<s.bottom+12;
+if(moved<10){returnCard();return;}
+if(over&&powerOn)return insertCard();
+if(over&&!powerOn){slotLed.classList.add('err');
+setTimeout(()=>slotLed.classList.remove('err'),2000);
+Sound.error();return returnCard();}
+returnCard();});
+vaultSlotEl.addEventListener('click',e=>{
+if(e.target.closest('.card-stuck'))return;
+if(cardState!=='slot')return;
+if(!powerOn){Sound.error();return;}
+if(masterModeOn){adminConsoleEl.hidden=false;if(Sound.enabled)Sound.beep(700,.06);}
+else{masterAttempts=0;openMasterModal();}});
+vaultCoverEl.addEventListener('click',e=>{e.stopPropagation();
+if(!vaultOpen||vaultOpening)return;
+if(cardState==='slot'){Sound.error();return;}
+closeVault();});
+vaultEl.addEventListener('click',e=>{
+if(e.target===vaultSlotEl||vaultSlotEl.contains(e.target))return;
+if(!vaultOpen||vaultOpening)return;
+if(cardState==='slot'){Sound.error();return;}
+closeVault();});
+function closeVault(){
+if(cardState==='rest'){const s=vaultSlotEl.getBoundingClientRect();
+const r=mcardEl.getBoundingClientRect();
+const dx=(s.left+s.width/2)-(r.left+r.width/2);
+const dy=(s.top+s.height/2)-(r.top+r.height/2);
+mcardEl.animate([
+{transform:'translate(0,0) rotate(-3deg)'},
+{transform:`translate(${dx}px,${dy}px) rotate(-90deg)`,opacity:.3}],
+{duration:520,easing:'ease-in'}).onfinish=()=>{mcardEl.hidden=true;cardState='hidden';};}
+else if(cardState==='drag'){returnCard();setTimeout(closeVault,600);return;}
+vaultOpen=false;Sound.vaultSqueak(1.4);
+vaultEl.classList.remove('open');vaultEl.classList.add('closing');
+setTimeout(()=>vaultEl.classList.remove('closing'),1450);}
+function openMasterModal(){const lock=Number(localStorage.getItem('oidl_mlock_v1'))||0;
+if(Date.now()<lock){masterErrorEl.textContent='БЛОКИРОВКА: '+Math.ceil((lock-Date.now())/1000)+' СЕК';return;}
+masterModalEl.hidden=false;masterErrorEl.textContent='';masterPassEl.value='';
+setTimeout(()=>masterPassEl.focus({preventScroll:true}),50);}
+function closeMasterModal(){masterModalEl.hidden=true;}
+masterCancelEl.addEventListener('click',()=>{Sound.beep(500,.07);closeMasterModal();});
+masterModalEl.addEventListener('pointerdown',e=>{if(e.target===masterModalEl)closeMasterModal();});
+masterFormEl.addEventListener('submit',e=>{e.preventDefault();checkMasterCode();});
+function checkMasterCode(){
+const lock=Number(localStorage.getItem('oidl_mlock_v1'))||0;
+if(Date.now()<lock){masterErrorEl.textContent='БЛОКИРОВКА: '+Math.ceil((lock-Date.now())/1000)+' СЕК';return;}
+const v=masterPassEl.value.trim();
+if(hashPass(v)===masterHash()){
+localStorage.removeItem('oidl_mlock_v1');
+Sound.chordPurple();
+slotLed.classList.remove('card');slotLed.classList.add('on');
+closeMasterModal();enterMasterMode();
+}else{masterAttempts++;
+Sound.error();doGlitch();
+masterPassEl.value='';masterPassEl.focus({preventScroll:true});
+const modal=masterModalEl.querySelector('.modal');
+modal.classList.remove('shake');void modal.offsetWidth;modal.classList.add('shake');
+if(masterAttempts>=5){localStorage.setItem('oidl_mlock_v1',String(Date.now()+60000));
+masterAttempts=0;masterErrorEl.textContent='5 НЕВЕРНЫХ КОДОВ. БЛОКИРОВКА 60 СЕК.';
+}else{masterErrorEl.textContent='НЕВЕРНЫЙ КОД. ПОПЫТОК ОСТАЛОСЬ: '+(5-masterAttempts);}}}
+function openAdminModal(){adminModalEl.hidden=false;adminErrorEl.textContent='';adminPassEl.value='';
+setTimeout(()=>adminPassEl.focus({preventScroll:true}),50);}
+function closeAdminModal(){adminModalEl.hidden=true;}
+serviceBtnEl.addEventListener('click',()=>{
+if(!powerOn){Sound.error();
+serviceBtnEl.classList.remove('deny');void serviceBtnEl.offsetWidth;
+serviceBtnEl.classList.add('deny');
+clearTimeout(denyTimer);denyTimer=setTimeout(()=>serviceBtnEl.classList.remove('deny'),550);
+return;}
+if(consoleMode)return exitConsole(false);
+Sound.beep(700,.07);openAdminModal();});
+adminCancelEl.addEventListener('click',()=>{Sound.beep(500,.07);closeAdminModal();});
+adminModalEl.addEventListener('pointerdown',e=>{if(e.target===adminModalEl)closeAdminModal();});
+adminFormEl.addEventListener('submit',e=>{e.preventDefault();checkAdminPass();});
+function checkAdminPass(){const v=adminPassEl.value.trim().toLowerCase().replace(/\s+/g,' ');
+if(hashPass(v)===serviceHash()){Sound.chord();closeAdminModal();enterAdminMode();}
+else{Sound.error();doGlitch();
+adminErrorEl.textContent='НЕВЕРНЫЙ ПАРОЛЬ.';
+adminPassEl.value='';adminPassEl.focus({preventScroll:true});
+const modal=adminModalEl.querySelector('.modal');
+modal.classList.remove('shake');void modal.offsetWidth;modal.classList.add('shake');}}
+
+/* ==================== КОРПУС-ОТКЛИК ==================== */
+const tapCounts={};
+function bodyTap(x,y){
+const flash=document.createElement('div');
+flash.className='tapflash';
+flash.style.left=x+'px';flash.style.top=y+'px';
+document.body.appendChild(flash);
+setTimeout(()=>flash.remove(),600);
+const bezel=document.getElementById('bezel');
+bezel.classList.remove('nudge');void bezel.offsetWidth;bezel.classList.add('nudge');
+const key=Math.round(x/60)+'_'+Math.round(y/60);
+tapCounts[key]=(tapCounts[key]||0)+1;
+if(tapCounts[key]===30){
+const pl=document.createElement('div');
+pl.className='polish';
+const br=bezel.getBoundingClientRect();
+pl.style.left=(x-br.left)+'px';pl.style.top=(y-br.top)+'px';
+pl.style.width='90px';pl.style.height='90px';
+bezel.appendChild(pl);}}
+document.getElementById('bezel').addEventListener('pointerdown',e=>{
+if(e.target.closest('.controls,.touchbar,.modal-overlay,.admin-console,.camera,.vault,.mcard'))return;
+bodyTap(e.clientX,e.clientY);
+if(Sound.enabled){
+if(e.target.closest('.crt')&&!powerOn)Sound.glassTap();
+else Sound.caseBezel();}});
+crtEl.addEventListener('pointerdown',e=>{
+if(powerOn)return;
+if(Sound.enabled){Sound.glassTap();
+const flash=document.createElement('div');
+flash.className='tapflash';
+flash.style.left=e.clientX+'px';flash.style.top=e.clientY+'px';
+document.body.appendChild(flash);
+setTimeout(()=>flash.remove(),600);}});
+document.getElementById('vault-cover').addEventListener('pointerdown',e=>{
+bodyTap(e.clientX,e.clientY);
+if(Sound.enabled)Sound.caseCover();});
+
+/* ==================== ЖИВЫЕ ОБНОВЛЕНИЯ ==================== */
+DB.on(snap=>{
+if(!powerOn)return;
+if(state==='chat')renderChat();
+else if(state==='dm-chat')renderDM();
+else if(state==='stable'&&stableSection&&!stableBusy){const sec=STABLE_SECTIONS.find(s=>s.key===stableSection);
+if(sec)safe(()=>openStableSection(stableSection));}
+if(currentUser){
+const users=snap.users||{};
+const mail=Object.values(snap.mail||{}).filter(m=>isMailFor(m,currentUser,users));
+const dm=Object.values(snap.dm||{}).filter(m=>m.to===currentUser);
+const all=[...mail.map(m=>({k:'mail',m})),...dm.map(m=>({k:'dm',m}))];
+const fresh=all.filter(x=>x.m.ts>lastIncoming&&x.m.ts>Date.now()-15000);
+if(fresh.length){
+lastIncoming=Math.max(...fresh.map(x=>x.m.ts));
+const me=users[currentUser];
+fresh.forEach(x=>{
+if(me&&me.notify!==false&&('Notification' in window)
+&&Notification.permission==='granted'&&document.hidden){
+try{new Notification('ПОЧТА ОИДЛ',{
+body:(x.m.from||'')+(x.m.subj?': '+x.m.subj:': '+(x.m.text||'').slice(0,40))});}catch{}}});}}});
+DB.init();
+
+/* ==================== СЕНСОРНАЯ ПАНЕЛЬ ==================== */
+function renderTouchbar(){if(!isTouch)return;
+touchbarEl.innerHTML='';
+const keys=[];
+if(state==='boot'&&!bootDone){
+keys.push({label:'ПРОПУСК ▶',act:()=>{skipBoot=true;skipWasPressed=true;}});
+}else if(state==='menu-select'){
+keys.push({label:'◀',act:()=>menuSelectMove(0,-1)});
+keys.push({label:'▶',act:()=>menuSelectMove(0,1)});
+keys.push({label:'▲',act:()=>menuSelectMove(-1,0)});
+keys.push({label:'▼',act:()=>menuSelectMove(1,0)});
+keys.push({label:'ВЫБРАТЬ ↵',act:()=>menuSelectConfirm()});
+keys.push({label:'РЕГИСТР N',act:()=>safe(startRegistration)});
+}else if(state==='mainmenu'){
+MENU.forEach((s,i)=>keys.push({label:String(i+1),act:()=>{passBuffer=String(i+1);mainMenuEnter();}}));
+STABLE_SECTIONS.forEach(s=>keys.push({label:s.key+' '+s.t.split(' ')[0],act:()=>{passBuffer=s.key;mainMenuEnter();}}));
+keys.push({label:'ВЫХОД',act:doLogout});
+}else if(state==='section'){
+const s=MENU[sectionIdx];
+const items=s.type==='static'?getStaticItems(sectionIdx):(s.items||[]);
+items.slice(0,6).forEach((d,i)=>keys.push({label:String(i+1),act:()=>{passBuffer=String(i+1);sectionEnter();}}));
+keys.push({label:'НАЗАД',act:inputEscape});
+}else if(state==='docsmenu'){
+keys.push({label:'1 МУТАНТ',act:()=>{passBuffer='1';docsMenuEnter();}});
+keys.push({label:'2 АНОМАЛ',act:()=>{passBuffer='2';docsMenuEnter();}});
+keys.push({label:'3 ТЕХНОГ',act:()=>{passBuffer='3';docsMenuEnter();}});
+keys.push({label:'4 ПРОЧЕЕ',act:()=>{passBuffer='4';docsMenuEnter();}});
+keys.push({label:'5 СОЗДАТЬ',act:()=>{passBuffer='5';docsMenuEnter();}});
+keys.push({label:'НАЗАД',act:inputEscape});
+}else if(state==='doc-cat'){
+keys.push({label:'МУТАНТ',act:()=>{passBuffer='1';docCatEnter();}});
+keys.push({label:'АНОМАЛИЯ',act:()=>{passBuffer='2';docCatEnter();}});
+keys.push({label:'ТЕХНОГ',act:()=>{passBuffer='3';docCatEnter();}});
+keys.push({label:'ПРОЧЕЕ',act:()=>{passBuffer='4';docCatEnter();}});
+keys.push({label:'НАЗАД',act:inputEscape});
+}else if(state==='docs-list'){
+const cat=docCatsList()[docCatIdx];
+cat.arr.slice(0,6).forEach((d,i)=>keys.push({label:String(i+1),act:()=>{passBuffer=String(i+1);docsListEnter();}}));
+keys.push({label:'НАЗАД',act:inputEscape});
+}else if(state==='stable'){
+if(stableSection==='B'){keys.push({label:'1 ОТКР',act:()=>{passBuffer='1';stableCmdEnter();}});
+keys.push({label:'2 ЗАКР',act:()=>{passBuffer='2';stableCmdEnter();}});
+keys.push({label:'3 БЛОК',act:()=>{passBuffer='3';stableCmdEnter();}});}
+else if(stableSection==='C'){LIFT_FLOORS.forEach(f=>keys.push({label:'ЭТ.'+f.n,act:()=>{passBuffer=String(f.n);stableCmdEnter();}}));}
+else if(stableSection==='D'){const locks=stableData().locks||{};
+Object.keys(locks).slice(0,6).forEach((nm,i)=>keys.push({label:String(i+1),act:()=>{passBuffer=String(i+1);stableCmdEnter();}}));}
+else if(stableSection==='E'||stableSection==='F'||stableSection==='H'){
+keys.push({label:'1',act:()=>{passBuffer='1';stableCmdEnter();}});
+keys.push({label:'2',act:()=>{passBuffer='2';stableCmdEnter();}});}
+keys.push({label:'НАЗАД',act:inputEscape});
+}else if(state==='medlist'){
+const users=loadUsers();
+Object.keys(users).filter(x=>users[x].profile).sort().slice(0,6).forEach((x,i)=>
+keys.push({label:String(i+1),act:()=>{passBuffer=String(i+1);medEnter();}}));
+keys.push({label:'НАЗАД',act:inputEscape});
+}else if(state==='notesmenu'){
+keys.push({label:'1 ЧИТАТЬ',act:()=>{passBuffer='1';notesMenuEnter();}});
+keys.push({label:'2 СОЗДАТЬ',act:()=>{passBuffer='2';notesMenuEnter();}});
+keys.push({label:'НАЗАД',act:inputEscape});
+}else if(state==='note-type'){
+keys.push({label:'ОБЪЯВ',act:()=>{passBuffer='1';noteTypeEnter();}});
+keys.push({label:'ОТЧЁТ',act:()=>{passBuffer='2';noteTypeEnter();}});
+keys.push({label:'ДНЕВНИК',act:()=>{passBuffer='3';noteTypeEnter();}});
+keys.push({label:'ДРУГОЕ',act:()=>{passBuffer='4';noteTypeEnter();}});
+keys.push({label:'НАЗАД',act:inputEscape});
+}else if(state==='notes-list'){
+notesList().slice(0,6).forEach((x,i)=>keys.push({label:String(i+1),act:()=>{passBuffer=String(i+1);notesListEnter();}}));
+if(isAdminActive())keys.push({label:'УДАЛ. РЕЖИМ',act:()=>{notesArm=!notesArm;Sound.beep(notesArm?600:400,.06);redraw();}});
+keys.push({label:'НАЗАД',act:inputEscape});
+}else if(state==='mailmenu'){
+keys.push({label:'1 ВХОДЯЩИЕ',act:()=>{passBuffer='1';mailMenuEnter();}});
+keys.push({label:'2 НАПИСАТЬ',act:()=>{passBuffer='2';mailMenuEnter();}});
+keys.push({label:'НАЗАД',act:inputEscape});
+}else if(state==='mail-list'){
+inboxFor(currentUser).slice(0,6).forEach((m,i)=>keys.push({label:String(i+1),act:()=>{passBuffer=String(i+1);mailListEnter();}}));
+keys.push({label:'НАЗАД',act:inputEscape});
+}else if(state==='mail-read'){
+keys.push({label:'ОТВЕТИТЬ',act:replyMail});
+keys.push({label:'УДАЛИТЬ',act:deleteOwnMail});
+keys.push({label:'НАЗАД',act:inputEscape});
+}else if(state==='dmlist'){
+const users=loadUsers();
+Object.keys(users).filter(x=>x!==currentUser).sort().slice(0,6).forEach((x,i)=>
+keys.push({label:String(i+1),act:()=>{passBuffer=String(i+1);dmListEnter();}}));
+keys.push({label:'НАЗАД',act:inputEscape});
+}else if(state==='dm-card'){
+keys.push({label:'ВВОД ↵',act:()=>inputEnter()});
+keys.push({label:'НАЗАД',act:inputEscape});
+}else if(state==='profilemenu'){
+keys.push({label:'1 АНКЕТА',act:()=>{passBuffer='1';profileMenuEnter();}});
+keys.push({label:'2 МЕДБЛОК',act:()=>{passBuffer='2';profileMenuEnter();}});
+keys.push({label:'3 ОПОВЕЩ.',act:()=>{passBuffer='3';profileMenuEnter();}});
+keys.push({label:'4 СЕЙФ',act:()=>{passBuffer='4';profileMenuEnter();}});
+keys.push({label:'НАЗАД',act:inputEscape});
+}else if(state==='invmenu'){
+keys.push({label:'1 РЮКЗАК',act:()=>{passBuffer='1';invMenuEnter();}});
+keys.push({label:'2 СКЛАД',act:()=>{passBuffer='2';invMenuEnter();}});
+keys.push({label:'3 СЕБЕ',act:()=>{passBuffer='3';invMenuEnter();}});
+keys.push({label:'4 СКЛАД+',act:()=>{passBuffer='4';invMenuEnter();}});
+keys.push({label:'НАЗАД',act:inputEscape});
+}else if(state==='invmine'){
+const u=(loadUsers()[currentUser])||{};
+Object.keys(u.inventory||{}).slice(0,6).forEach((x,i)=>keys.push({label:String(i+1),act:()=>{passBuffer=String(i+1);invMineEnter();}}));
+keys.push({label:'НАЗАД',act:inputEscape});
+}else if(state==='invstock'){
+Object.keys(DB.data.stock||{}).slice(0,6).forEach((x,i)=>keys.push({label:String(i+1),act:()=>{passBuffer=String(i+1);invStockEnter();}}));
+keys.push({label:'НАЗАД',act:inputEscape});
+}else if(ML_STATES.includes(state)){
+keys.push({label:'⌫',act:inputBack});
+keys.push({label:'ГОТОВО ✔',act:()=>safe(finishML)});
+keys.push({label:'ОТМЕНА',act:inputEscape});
+}else if(CHAT_STATES.includes(state)){
+keys.push({label:'⌫',act:inputBack});
+keys.push({label:'ОТПРАВИТЬ ▸',act:()=>safe(sendChatDispatch)});
+if(state==='chat')keys.push({label:'ОЧИСТИТЬ',act:()=>safe(clearChat)});
+keys.push({label:'ВЫХОД',act:inputEscape});
+}else if(INPUT_STATES[state]){
+keys.push({label:'⌫',act:inputBack});
+keys.push({label:'ВВОД ↵',act:()=>inputEnter()});
+keys.push({label:'ESC',act:inputEscape});}
+if(!keys.length){touchbarEl.style.display='none';return;}
+touchbarEl.style.display='flex';
+for(const k of keys){const b=document.createElement('button');
+b.type='button';b.textContent=k.label;
+b.addEventListener('pointerdown',e=>e.preventDefault());
+b.addEventListener('click',()=>{if(Sound.enabled)Sound.tick();safe(k.act);});
+touchbarEl.appendChild(b);}}
+
+/* ==================== КЛАВИАТУРА ==================== */
+function handleKey(e){
+if(!adminModalEl.hidden){if(e.key==='Escape')closeAdminModal();return;}
+if(!masterModalEl.hidden){if(e.key==='Escape')closeMasterModal();return;}
+if(!powerOn)return;
+if(state==='boot'&&e.key==='Escape'&&!bootDone){skipBoot=true;skipWasPressed=true;return;}
+if(state==='wait'){if(e.key!=='Escape')safe(startAuth);return;}
+if(e.ctrlKey||e.metaKey||e.altKey)return;
+const ae=document.activeElement;
+if(ae===adminPassEl||ae===masterPassEl)return;
+if(ae&&ae.tagName==='INPUT'&&ae!==mobileInput)return;
+if(ae&&ae.tagName==='TEXTAREA')return;
+if(state==='menu-select'){
+const kk=e.key.toLowerCase();
+if(e.key==='ArrowUp'||kk==='w'||kk==='ц'){e.preventDefault();safe(()=>menuSelectMove(-1,0));redraw();return;}
+if(e.key==='ArrowDown'||kk==='s'||kk==='ы'){e.preventDefault();safe(()=>menuSelectMove(1,0));redraw();return;}
+if(e.key==='ArrowLeft'||kk==='a'||kk==='ф'){e.preventDefault();safe(()=>menuSelectMove(0,-1));redraw();return;}
+if(e.key==='ArrowRight'||kk==='d'||kk==='в'){e.preventDefault();safe(()=>menuSelectMove(0,1));redraw();return;}
+if(e.key==='Enter'){e.preventDefault();if(typeof menuSelectConfirm==='function'){safe(menuSelectConfirm);}else{safe(inputEnter);}return;}
+if(kk==='n'||kk==='т'){safe(startRegistration);return;}}
+if(e.key==='Enter'){safe(inputEnter);return;}
+if(e.key==='Escape'){safe(inputEscape);return;}
+if(e.key==='Backspace'){inputBack();return;}
+const fromHidden=(document.activeElement===mobileInput);
+if(e.key.length===1&&!fromHidden)inputChar(e.key);}
+document.addEventListener('keydown',e=>{
+const fromHidden=(document.activeElement===mobileInput);
+if(!e.repeat&&powerOn&&Sound.enabled&&!(fromHidden&&e.key.length===1))Sound.keyClick();
+handleKey(e);});
+
+/* ==================== КАСАНИЯ ==================== */
+mobileInput.addEventListener('input',()=>{
+const val=mobileInput.value;mobileInput.value='';
+if(!val||busy||!powerOn)return;
+for(const ch of val){if(Sound.enabled)Sound.keyClick();inputChar(ch);}});
+document.addEventListener('pointerdown',e=>{
+if(e.target.closest('.controls,.touchbar,.modal-overlay,.admin-console,.camera,.vault,.mcard'))return;
+if(state==='wait'&&bootDone&&powerOn)safe(startAuth);
+if(isTouch&&powerOn&&(INPUT_STATES[state]||ML_STATES.includes(state)||CHAT_STATES.includes(state))
+&&!busy&&adminModalEl.hidden&&masterModalEl.hidden){
+setTimeout(()=>mobileInput.focus({preventScroll:true}),60);}});
+
+/* ==================== ЗВУК: АКТИВАЦИЯ ==================== */
+let soundActivated=false;
+function activateSound(){if(soundActivated)return;soundActivated=true;Sound.init();}
+document.addEventListener('pointerdown',activateSound);
+document.addEventListener('keydown',activateSound);
+</script>
+</body>
+</html>
