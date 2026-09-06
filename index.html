@@ -1034,11 +1034,10 @@ const KEY_INIT_MS = 60000;
 
 /* Сид-коды для ПЕРВОНАЧАЛЬНОГО посева базы (хеши).
    После первого входа смени оба кода через панели — тогда эти строки
-   в исходнике станут бесполезны. Хеширование: oidlHash(). */
+   в исходнике станут бесполезны. */
 const SEED_ADMIN_CODE = 'розовое облако';
 const SEED_MAKER_CODE = '03.11.2007';
 
-/* Firebase */
 const firebaseConfig = {
   apiKey: "AIzaSyCzX_KmA9ItYDVlzX8EFQmI3GEcDV6aTEM",
   authDomain: "plagueinc-6.firebaseapp.com",
@@ -1121,7 +1120,7 @@ const IS_TOUCH = (function(){
 if(IS_TOUCH) document.body.classList.add('touch');
 
 /* ==================================================================
-   FIREBASE: инициализация
+   FIREBASE
 ================================================================== */
 let auth=null, fs=null, fbReady=false;
 let dbOnline=false;
@@ -1132,7 +1131,6 @@ function initFB(){
     firebase.initializeApp(firebaseConfig);
     auth=firebase.auth();
     fs=firebase.firestore();
-    fs.enablePersistence({synchronizeTabs:true}).catch(function(){});
     fbReady=true;
   }catch(e){ fbReady=false; }
 }
@@ -1144,7 +1142,6 @@ function dbDown(){ dbOnline=false; updateLamps(); }
 window.addEventListener('online', ()=>{ dbOnline=true; updateLamps(); });
 window.addEventListener('offline', ()=>{ dbOnline=false; updateLamps(); });
 
-/* имя оператора → фиктивный служебный адрес (пользователь его не видит) */
 function fbEmail(name){
   const lower=name.toLowerCase();
   let bytes;
@@ -1157,14 +1154,9 @@ function fbEmail(name){
   for(let i=0;i<bytes.length;i++) hex+=('0'+bytes[i].toString(16)).slice(-2);
   return 'op'+hex+'@plagueinc.site';
 }
-/* пароль для Firebase: хеш имени+пароля — всегда валидной длины,
-   настоящий пароль нигде не хранится в открытом виде */
 function fbPass(name,pass){
   return 'OIDL'+oidlHash(name.toLowerCase()+'|'+pass);
 }
-
-/* детерминированный хеш кодов доступа (не криптостойкий — его задача:
-   не держать коды в открытом виде в исходнике и в базе) */
 function oidlHash(s){
   let h1=0x811c9dc5, h2=0x01000193;
   for(let i=0;i<s.length;i++){
@@ -1627,7 +1619,6 @@ function checkAutoMedals(op){
 }
 
 /* версии мастер-ключей */
-function loadKeys(){ return fs.collection('keys'); }
 function genKeyCode(){
   const ab='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
   function part(){ let s=''; for(let i=0;i<4;i++) s+=ab[Math.floor(Math.random()*ab.length)]; return s; }
@@ -1682,7 +1673,6 @@ let medCard=null;
 let admKeyDraft=null, admKeyTargetCode='';
 let admMedalTarget='';
 let admCodeDraft='';
-let profTarget='';
 
 function screenBusy(){
   return menuState==='granting'||menuState==='retina'||
@@ -1697,7 +1687,7 @@ function resetScratch(){
   sciKind=''; sciTopic=''; sciRankMin=1;
   medCard=null;
   admKeyDraft=null; admKeyTargetCode=''; admMedalTarget='';
-  admCodeDraft=''; profTarget='';
+  admCodeDraft='';
 }
 function printNotes(arr){
   if(!arr) return;
@@ -1868,15 +1858,32 @@ function backToPanel(extraLines){
   else showAdminPanel(extraLines);
 }
 
-/* ---------- ЭКРАН ОПЕРАТОРОВ (реестр из базы) ---------- */
-let registryNames=[]; /* список имён, ровно тот, что показан на экране */
+/* ---------- ЭКРАН ОПЕРАТОРОВ (ИСПРАВЛЕННЫЙ РЕЕСТР) ---------- */
+/* ИСПРАВЛЕНО v13.1: запрос без orderBy (не требует индекса), сортировка
+   в коде; ошибки не глотаются — причина видна на экране реестра. */
+let registryNames=[];
+let registryErr=null;
 async function refreshRegistry(){
   registryNames=[];
-  if(!dbOK()) return;
+  registryErr=null;
+  if(!dbOK()){ registryErr='▲ БАЗА НЕДОСТУПНА'; return; }
   try{
-    const q=await fxWrap(fs.collection('ops').orderBy('nameLower').limit(SLOTS).get());
-    registryNames=q.docs.map(d=>d.data().name);
-  }catch(e){ dbDown(); registryNames=[]; }
+    const q=await fxWrap(fs.collection('ops').limit(20).get());
+    const seen={};
+    const arr=[];
+    q.docs.forEach(d=>{
+      const n=d.data().name;
+      if(n&&!seen[n.toLowerCase()]){ seen[n.toLowerCase()]=1; arr.push(n); }
+    });
+    arr.sort(function(a,b){
+      return a.toLowerCase()<b.toLowerCase()?-1:(a.toLowerCase()>b.toLowerCase()?1:0);
+    });
+    registryNames=arr.slice(0,SLOTS);
+  }catch(e){
+    dbDown();
+    registryNames=[];
+    registryErr=authErrText(e);
+  }
 }
 async function showOperatorMenu(noteLines){
   menuState='menu'; inputBuf=''; selectedOp=null; regName='';
@@ -1895,6 +1902,7 @@ async function showOperatorMenu(noteLines){
   await refreshRegistry();
   let errNote=null;
   if(!dbOK()) errNote='▲ НЕТ СВЯЗИ С БАЗОЙ · РЕЕСТР НЕДОСТУПЕН';
+  else if(registryErr) errNote=registryErr;
 
   menuLines=[];
   menuPrint(dTop(),'bright');
@@ -2077,7 +2085,7 @@ async function showMembers(){
   renderInput();
   const rows=[];
   try{
-    const q=await fxWrap(fs.collection('ops').orderBy('nameLower').limit(100).get());
+    const q=await fxWrap(fs.collection('ops').limit(100).get());
     q.docs.forEach(d=>rows.push(d.data().name));
     const m=await fxWrap(fs.collection('members').get());
     m.docs.forEach(d=>{
@@ -2116,7 +2124,6 @@ async function showProfile(){
   menuPrint(dBot(),'bright');
   menuPrint(' ЗАПРОС ПРОФИЛЯ...','dim');
   renderInput();
-  /* свежая копия профиля из базы */
   try{
     const d=await fxWrap(fs.collection('ops').doc(myUid).get());
     if(d.exists) myDoc=d.data();
@@ -2265,7 +2272,7 @@ function showMainMenuAfterLogin(notes){
   setTimeout(function(){ showMainMenu(notes); },1700);
 }
 
-/* ---------- МАСТЕР-КЛЮЧ: инициализация + код ---------- */
+/* ---------- МАСТЕР-КЛЮЧ ---------- */
 function startKeyInit(){
   resetScratch();
   menuState='mk_init'; inputBuf=''; menuLines=[];
@@ -2342,7 +2349,6 @@ function showJournal(noteLines){
   menuPrint(' ЗАПРОС ЗАПИСЕЙ...','dim');
   renderInput();
 
-  const cur=curOperator();
   let mine=[], others=[];
   const p1=fxWrap(fs.collection('journal').where('authorUid','==',myUid).get())
     .then(q=>{ q.docs.forEach(d=>mine.push(Object.assign({id:d.id},d.data()))); })
@@ -2460,7 +2466,7 @@ function stockApply(name,qty,mode){
   const lower=name.toLowerCase();
   const rec=jStock.find(s=>s.id===lower);
   let note;
-  const doFinish=function(rn){
+  const doFinish=function(){
     if(mode==='add') note=' ИТОГ ▸ ПРИНЯТО '+name+' +'+qty+' ШТ';
     else note=' ИТОГ ▸ ВЫДАНО '+name+' -'+qty+' ШТ';
     audit('СКЛАД ▸ '+(mode==='add'?'ПРИНЯТО ':'ВЫДАНО ')+name+' '+(mode==='add'?'+':'-')+qty);
@@ -2470,16 +2476,15 @@ function stockApply(name,qty,mode){
   if(mode==='add'){
     if(rec){
       fxWrap(fs.collection('stock').doc(lower).update({qty:rec.qty+qty}))
-        .then(()=>doFinish(null))
+        .then(()=>doFinish())
         .catch(()=>showStock([' ▲ ОШИБКА ЗАПИСИ В БАЗУ']));
     } else {
       fxWrap(fs.collection('stock').doc(lower).set({name:name,qty:qty}))
-        .then(()=>doFinish(null))
+        .then(()=>doFinish())
         .catch(()=>showStock([' ▲ ОШИБКА ЗАПИСИ В БАЗУ']));
     }
     return;
   }
-  /* выдача */
   if(!isMaker()&&!rec){
     sfx.error();
     showStock([' ▲ ОТКАЗ ▸ «'+name+'» НЕТ НА СКЛАДЕ · ПРИМИТЕ ЧЕРЕЗ [П]']);
@@ -2494,7 +2499,7 @@ function stockApply(name,qty,mode){
   const p=rec
     ? fs.collection('stock').doc(lower).update({qty:left})
     : fs.collection('stock').doc(lower).set({name:name,qty:left});
-  fxWrap(p).then(()=>doFinish(null)).catch(()=>showStock([' ▲ ОШИБКА ЗАПИСИ В БАЗУ']));
+  fxWrap(p).then(()=>doFinish()).catch(()=>showStock([' ▲ ОШИБКА ЗАПИСИ В БАЗУ']));
 }
 
 /* ---------- НАУКА ---------- */
@@ -3033,10 +3038,15 @@ function showAdmMedalList(){
   renderInput();
   sfx.beep();
 }
-/* кеш операторов для панелей (обновляется списком) */
 let opsCache=[];
 function getCachedOp(name){
   return opsCache.find(o=>o.name===name)||null;
+}
+async function refreshOpsCache(){
+  try{
+    const q=await fxWrap(fs.collection('ops').limit(50).get());
+    opsCache=q.docs.map(d=>Object.assign({id:d.id},d.data()));
+  }catch(e){}
 }
 function showAdmAudit(){
   menuState='adm_audit'; inputBuf=''; menuLines=[];
@@ -3061,9 +3071,7 @@ function showAdmAudit(){
   }).catch(function(){ backToPanel([' ▲ НЕТ СВЯЗИ С БАЗОЙ']); });
 }
 
-/* ==================================================================
-   АУДИТ (запись — бросовая, ошибки не критичны)
-================================================================== */
+/* аудит */
 function audit(what){
   if(!dbOK()||!fs) return;
   const who=(curOperator()||'?')+(adminMode?' ◈':'')+(mkGranted?' ✦':'');
@@ -3079,7 +3087,7 @@ async function submitMenu(){
   inputBuf='';
 
   /* ===== операторы ===== */
-    if(menuState==='menu'){
+  if(menuState==='menu'){
     if(buf==='0'){
       menuState='reg_name'; menuPrint('');
       menuPrint(sep('РЕГИСТРАЦИЯ'),'bright');
@@ -3089,9 +3097,8 @@ async function submitMenu(){
       return;
     }
     const n=parseInt(buf,10);
-    /* ПОДСТРАХОВКА: если список пуст, а на экране он был —
-       дозапрашиваем реестр прямо сейчас */
-    if(!registryNames.length){
+    /* ПОДСТРАХОВКА: пустой список — дозапрос реестра прямо сейчас */
+    if(!registryNames.length&&!registryErr){
       menuPrint(' ЗАПРОС РЕЕСТРА...','dim'); renderInput();
       await refreshRegistry();
       menuLines=menuLines.filter(l=>l.t.indexOf('ЗАПРОС РЕЕСТРА')<0);
@@ -3117,21 +3124,21 @@ async function submitMenu(){
     menuPrint(' ПРОВЕРКА В БАЗЕ...','dim'); renderInput();
     try{
       const name=selectedOp;
-      let uid=null, docData=null;
-      try{
-        const q=await fxWrap(fs.collection('ops').where('nameLower','==',name.toLowerCase()).limit(1).get());
-        if(!q.empty){ uid=q.docs[0].id; docData=q.docs[0].data(); }
-      }catch(e){}
       const cred=await fxWrap(auth.signInWithEmailAndPassword(fbEmail(name),fbPass(name,buf)));
       myUid=cred.user.uid;
-      if(!docData||uid!==myUid){
-        /* аккаунт был обнулён — создаём заново с нуля */
-        docData={name:name,nameLower:name.toLowerCase(),rank:1,xp:0,manualRank:null,
+      /* профиль из базы; если обнулён — создаём заново с нуля */
+      let docSnap=null;
+      try{
+        const d=await fxWrap(fs.collection('ops').doc(myUid).get());
+        if(d.exists) docSnap=d.data();
+      }catch(e){}
+      if(!docSnap){
+        docSnap={name:name,nameLower:name.toLowerCase(),rank:1,xp:0,manualRank:null,
                  medals:[],stats:freshStats(),createdAt:Date.now()};
-        await fxWrap(fs.collection('ops').doc(myUid).set(docData));
+        await fxWrap(fs.collection('ops').doc(myUid).set(docSnap));
         audit('ПОВТОРНАЯ АКТИВАЦИЯ ▸ '+name);
       }
-      myDoc=docData;
+      myDoc=docSnap;
       try{ localStorage.setItem(CUR_KEY,name); }catch(e){}
       audit('ПАРОЛЬ ПРИНЯТ ▸ '+name);
       fbSeedConfig();
@@ -3156,8 +3163,6 @@ async function submitMenu(){
     menuPrint(' СОЗДАНИЕ АККАУНТА...','dim'); renderInput();
     try{
       const name=regName;
-      const q=await fxWrap(fs.collection('ops').where('nameLower','==',name.toLowerCase()).limit(1).get());
-      if(!q.empty){ menuErr('▲ ТАКОЙ ОПЕРАТОР УЖЕ ЕСТЬ'); renderInput(); return; }
       const cred=await fxWrap(auth.createUserWithEmailAndPassword(fbEmail(name),fbPass(name,buf)));
       myUid=cred.user.uid;
       myDoc={name:name,nameLower:name.toLowerCase(),rank:1,xp:XP.REG,manualRank:null,
@@ -3169,6 +3174,8 @@ async function submitMenu(){
       fbSeedConfig();
       startRetinaScan();
     }catch(e){
+      /* если doc не создался из-за прав — чистим auth-аккаунт не можем,
+         просто сообщаем; при повторной попытке входа профиль дозапишется */
       menuErr(authErrText(e)); renderInput();
     }
     return;
@@ -3197,7 +3204,7 @@ async function submitMenu(){
     renderInput(); return;
   }
 
-  /* ===== код смотрителя → ранг 6 ===== */
+  /* ===== код смотрителя ===== */
   if(menuState==='admin_pass'){
     if(!dbOK()){ menuErr('▲ БАЗА НЕДОСТУПНА'); renderInput(); return; }
     const h=oidlHash(normCode(buf));
@@ -3227,18 +3234,14 @@ async function submitMenu(){
     if(buf==='0'){ closePanelToStart(); return; }
     if(buf==='1'){
       menuPrint(' ЗАПРОС РЕЕСТРА...','dim'); renderInput();
-      try{
-        const q=await fxWrap(fs.collection('ops').orderBy('nameLower').limit(50).get());
-        opsCache=q.docs.map(d=>Object.assign({id:d.id},d.data()));
-        const extra=[{t:'──[ РЕЕСТР ОПЕРАТОРОВ ]──'}];
-        if(!opsCache.length) extra.push({t:'  РЕЕСТР ПУСТ',c:'dim'});
-        opsCache.forEach((o,i)=>{
-          ensureOpFields(o);
-          extra.push({t:'  ['+(i+1)+'] ▸ '+o.name+' · Д'+(o.manualRank||xpRank(o.xp))+' · '+o.xp+' XP'});
-        });
-        backToPanel(extra);
-      }catch(e){ backToPanel([{t:'▲ НЕТ СВЯЗИ С БАЗОЙ'}]); }
-      return;
+      await refreshOpsCache();
+      const extra=[{t:'──[ РЕЕСТР ОПЕРАТОРОВ ]──'}];
+      if(!opsCache.length) extra.push({t:'  РЕЕСТР ПУСТ',c:'dim'});
+      opsCache.forEach((o,i)=>{
+        ensureOpFields(o);
+        extra.push({t:'  ['+(i+1)+'] ▸ '+o.name+' · Д'+(o.manualRank||xpRank(o.xp))+' · '+o.xp+' XP'});
+      });
+      backToPanel(extra); return;
     }
     if(buf==='2'){
       if(!opsCache.length){ await refreshOpsCache(); }
@@ -3295,22 +3298,18 @@ async function submitMenu(){
     if(buf==='0'){ closePanelToStart(); return; }
     if(buf==='1'){
       menuPrint(' ЗАПРОС ДАННЫХ...','dim'); renderInput();
-      try{
-        const q=await fxWrap(fs.collection('ops').orderBy('nameLower').limit(50).get());
-        opsCache=q.docs.map(d=>Object.assign({id:d.id},d.data()));
-        const extra=[{t:'──[ ОПЕРАТОРЫ · ПОЛНЫЕ ДАННЫЕ ]──'}];
-        if(!opsCache.length) extra.push({t:'  РЕЕСТР ПУСТ',c:'dim'});
-        opsCache.forEach((o,i)=>{
-          ensureOpFields(o);
-          const r=o.manualRank||xpRank(o.xp);
-          extra.push({t:'  ['+(i+1)+'] ▸ '+o.name+' · ['+r+'] '+RANK_NAMES[r]+(o.manualRank?' (НАЗН)':'')});
-          extra.push({t:'      XP:'+o.xp+' · СЕРИЯ:'+o.stats.streak+'Д · ВХОД:'+o.stats.logins,c:'dim'});
-          extra.push({t:'      ЗАП:'+o.stats.journal+' ПУБ:'+o.stats.pub+' НАУК:'+o.stats.sciTotal+' КАРТ:'+o.stats.med+' СКЛ:'+o.stats.stock,c:'dim'});
-          extra.push({t:'      МЕДАЛЕЙ:'+o.medals.length,c:'dim'});
-        });
-        backToPanel(extra);
-      }catch(e){ backToPanel([{t:'▲ НЕТ СВЯЗИ С БАЗОЙ'}]); }
-      return;
+      await refreshOpsCache();
+      const extra=[{t:'──[ ОПЕРАТОРЫ · ПОЛНЫЕ ДАННЫЕ ]──'}];
+      if(!opsCache.length) extra.push({t:'  РЕЕСТР ПУСТ',c:'dim'});
+      opsCache.forEach((o,i)=>{
+        ensureOpFields(o);
+        const r=o.manualRank||xpRank(o.xp);
+        extra.push({t:'  ['+(i+1)+'] ▸ '+o.name+' · ['+r+'] '+RANK_NAMES[r]+(o.manualRank?' (НАЗН)':'')});
+        extra.push({t:'      XP:'+o.xp+' · СЕРИЯ:'+o.stats.streak+'Д · ВХОД:'+o.stats.logins,c:'dim'});
+        extra.push({t:'      ЗАП:'+o.stats.journal+' ПУБ:'+o.stats.pub+' НАУК:'+o.stats.sciTotal+' КАРТ:'+o.stats.med+' СКЛ:'+o.stats.stock,c:'dim'});
+        extra.push({t:'      МЕДАЛЕЙ:'+o.medals.length,c:'dim'});
+      });
+      backToPanel(extra); return;
     }
     if(buf==='2'){
       if(!opsCache.length){ await refreshOpsCache(); }
@@ -3364,13 +3363,6 @@ async function submitMenu(){
     if(buf==='13'){ startStableAnalysis(true); return; }
     if(buf==='14'){ showMkCodeSet(); return; }
     menuErr('▲ НЕТ ТАКОЙ КОМАНДЫ'); renderInput(); return;
-  }
-
-  async function refreshOpsCache(){
-    try{
-      const q=await fxWrap(fs.collection('ops').orderBy('nameLower').limit(50).get());
-      opsCache=q.docs.map(d=>Object.assign({id:d.id},d.data()));
-    }catch(e){}
   }
 
   /* ===== обнуление аккаунта ===== */
@@ -3453,9 +3445,7 @@ async function submitMenu(){
         audit('МЕДАЛЬ ВЫДАНА ▸ '+MEDALS[id].name+' ▸ '+target.name);
       }
       sfx.medal();
-      /* обновить кеш и перерисовать */
-      const q=await fxWrap(fs.collection('ops').orderBy('nameLower').limit(50).get());
-      opsCache=q.docs.map(d=>Object.assign({id:d.id},d.data()));
+      await refreshOpsCache();
       showAdmMedalList();
     }catch(e){ backToPanel([{t:'▲ ОШИБКА БАЗЫ'}]); }
     return;
@@ -3579,7 +3569,6 @@ async function submitMenu(){
           const k=Object.assign({id:d.id},d.data());
           const h=oidlHash(normCode(k.code));
           await fxWrap(ref.update({status:'revoked'}));
-          /* убрать из активных хешей */
           const kh=await fxWrap(fs.collection('config').doc('keyHashes').get());
           if(kh.exists){
             const active=(kh.data().active||[]).filter(x=>x!==h);
@@ -3588,7 +3577,7 @@ async function submitMenu(){
             await fxWrap(fs.collection('config').doc('keyHashes').update({active:active,m:m}));
           }
           audit('ОТЗЫВ КЛЮЧА ▸ '+k.name+' '+k.code);
-          if(mkVia&&mkVia.code===k.code){ revokeMaker('ВЕРСИЯ ОТЗЫВАНА'); return; }
+          if(mkVia&&mkVia.code===k.id){ revokeMaker('ВЕРСИЯ ОТЗЫВАНА'); return; }
           sfx.error();
           showAdmKeys([' ВЕРСИЯ ОТЗЫВАНА ▸ '+k.name]);
         } else showAdmKeys();
@@ -3599,7 +3588,7 @@ async function submitMenu(){
     renderInput(); return;
   }
 
-  /* ===== код смотрителя (смена производителем) ===== */
+  /* ===== код смотрителя (смена) ===== */
   if(menuState==='adm_code'){
     if(buf.trim().length<4){ menuErr('▲ КОД КОРОЧЕ 4 СИМВОЛОВ'); renderInput(); return; }
     admCodeDraft=buf.trim();
@@ -3622,7 +3611,7 @@ async function submitMenu(){
     return;
   }
 
-  /* ===== код производителя (смена производителем) ===== */
+  /* ===== код производителя (смена) ===== */
   if(menuState==='mk_code_new'){
     if(buf.trim().length<4){ menuErr('▲ КОД КОРОЧЕ 4 СИМВОЛОВ'); renderInput(); return; }
     admCodeDraft=buf.trim();
@@ -3715,7 +3704,7 @@ async function submitMenu(){
     const codeUp=raw.toUpperCase();
     menuPrint(' ПРОВЕРКА КОДА...','dim'); renderInput();
     try{
-      if(raw===SEED_MAKER_CODE||codeUp==='MK-SEED'){ /* сид-код работает всегда (до смены) */
+      if(raw===SEED_MAKER_CODE){
         await makerClaim(oidlHash(SEED_MAKER_CODE),null);
         return;
       }
@@ -3733,7 +3722,6 @@ async function submitMenu(){
           menuErr('▲ ВХОДЫ ВЕРСИИ ИСЧЕРПАНЫ'); renderInput(); return;
         }
         await makerClaim(h,meta);
-        /* списать вход (уже производитель — права на запись есть) */
         if(meta.type==='uses'){
           const left=meta.usesLeft-1;
           const m=kh.data().m; m[h].usesLeft=left;
@@ -3751,7 +3739,7 @@ async function submitMenu(){
     return;
   }
 
-  /* ===== профиль / о клане / участники ===== */
+  /* ===== профиль ===== */
   if(menuState==='profile'){
     if(buf==='0'){ gotoMainMenu(); return; }
     const low=buf.toLowerCase();
@@ -3767,7 +3755,7 @@ async function submitMenu(){
     menuPrint(' СМЕНА ПАРОЛЯ...','dim'); renderInput();
     try{
       await fxWrap(auth.currentUser.updatePassword(fbPass(curOperator(),buf)));
-      audit('СМЕНА ПАРОЛЬ · '+curOperator());
+      audit('СМЕНА ПАРОЛЯ · '+curOperator());
       sfx.grant();
       menuState='profile';
       menuPrint(' ПАРОЛЬ ИЗМЕНЁН.','bright');
@@ -4315,7 +4303,7 @@ escFloat.addEventListener('click',function(){
 });
 
 /* ==================================================================
-   ЛАМПЫ (СВЯЗЬ — реальный индикатор базы)
+   ЛАМПЫ
 ================================================================== */
 let actTimer=null;
 function updateLamps(){
@@ -4515,7 +4503,7 @@ hatch.addEventListener('animationend',(e)=>{
 });
 
 /* ==================================================================
-   МАСТЕР-КЛЮЧ: физика, вставка, ВЫТАСКИВАНИЕ
+   МАСТЕР-КЛЮЧ: физика
 ================================================================== */
 let keyState='stowed';
 let keyPos={x:0,y:0};
