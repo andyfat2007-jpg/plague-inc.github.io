@@ -4,6 +4,17 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>PLAGUE.INC // ОИДЛ</title>
+
+<!-- ================= PWA / ИКОНКА ================= -->
+<meta name="theme-color" content="#0b0f0b">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" type="image/png" href="icon.png">
+<link rel="apple-touch-icon" href="icon.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="PLAGUE.INC">
+
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
@@ -16,7 +27,7 @@
     --mk1:#c98bff; --mk2:#8a44e8; --mk3:#3c1a66; --mk-glow:rgba(170,100,255,.6);
     --adm:#ff5b5b; --adm-glow:rgba(255,80,80,.55);
   }
-  *{ box-sizing:border-box; }
+  *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
   html,body{ margin:0; padding:0; overflow-x:hidden; }
   body{
     min-height:100vh;
@@ -24,9 +35,12 @@
     background:radial-gradient(1200px 800px at 50% 40%, #0c0f0c, #050605 75%);
     font-family:'JetBrains Mono','Courier New',monospace;
     padding:20px 10px;
+    touch-action:manipulation;
   }
+  /* место под экранную клавиатуру на мобильных */
+  body.kbd-open{ padding-bottom:262px; }
 
-  /* ================= ЗАТЕНЕНИЕ (свет в Стойле выключен) ================= */
+  /* ================= ЗАТЕНЕНИЕ (свет Стойла выключен) ================= */
   #vaultShade{
     position:fixed; inset:0;
     pointer-events:none;
@@ -186,12 +200,14 @@
 
   .scanlines{
     position:absolute; inset:0; z-index:2; pointer-events:none;
+    transform:translateZ(0);
     background:repeating-linear-gradient(0deg,
       rgba(0,0,0,.28) 0px, rgba(0,0,0,.28) 1px,
       transparent 1px, transparent 3px);
   }
   .flicker{
     position:absolute; inset:0; z-index:3; pointer-events:none;
+    transform:translateZ(0);
     background:rgba(61,255,116,.05);
     animation:flicker 3.7s infinite steps(1);
   }
@@ -201,6 +217,7 @@
   }
   .vignette{
     position:absolute; inset:0; z-index:4; pointer-events:none;
+    transform:translateZ(0);
     background:radial-gradient(120% 100% at 50% 50%,
       transparent 55%, rgba(0,0,0,.45) 88%, rgba(0,0,0,.75) 100%);
   }
@@ -305,6 +322,8 @@
     cursor:pointer;
     filter:drop-shadow(0 3px 5px rgba(0,0,0,.65));
   }
+  /* на тач-устройствах цели нажатия крупнее */
+  body.touch .cam{ width:48px; height:48px; }
   .cam:active{ transform:scale(.92); }
   .cam:focus{ outline:none; }
   .cam:focus-visible{ outline:1px solid rgba(61,255,116,.5); outline-offset:3px; border-radius:50%; }
@@ -454,6 +473,7 @@
     background:transparent;
     cursor:grab;
     touch-action:none;
+    will-change:transform;
   }
   .lever-knob:active{ cursor:grabbing; }
   .lever-knob.settle{ transition:top .12s ease-out; }
@@ -679,6 +699,7 @@
     cursor:grab;
     touch-action:none;
     user-select:none;
+    will-change:transform;
   }
   .master-key:active{ cursor:grabbing; }
   .master-key::before{
@@ -786,6 +807,64 @@
     100% { transform:translateX(0) translateZ(0) scale(1);                     filter:brightness(1); }
   }
 
+  /* ================= ЭКРАННАЯ КЛАВИАТУРА (тач-устройства) ================= */
+  .kbd-wrap{
+    position:fixed; left:0; right:0; bottom:0; z-index:1140;
+    background:linear-gradient(180deg, rgba(10,14,10,.97), rgba(4,6,4,.99));
+    border-top:2px solid var(--ph-faint);
+    box-shadow:0 -6px 24px rgba(0,0,0,.7);
+    padding:8px 6px 10px;
+  }
+  .kbd-title{
+    font-size:9px; letter-spacing:.3em; color:#5f6a60;
+    text-align:center; margin-bottom:6px;
+  }
+  .kb-row{ display:flex; gap:4px; margin-bottom:4px; }
+  .kb-key{
+    flex:1; min-height:44px;
+    border-radius:6px; border:1px solid #000;
+    background:linear-gradient(180deg,#20261f,#12160f 60%,#0b0e0a);
+    color:var(--ph); font-family:inherit; font-size:14px;
+    text-shadow:0 0 4px var(--ph-glow);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.07), 0 2px 3px rgba(0,0,0,.6);
+    touch-action:manipulation; padding:0;
+    cursor:pointer;
+  }
+  .kb-key:active{
+    background:linear-gradient(180deg,#2c3a2a,#161d13);
+    transform:translateY(1px);
+  }
+  .kb-num .kb-key{ font-size:13px; }
+  .kb-space{ flex:3.2; font-size:11px; letter-spacing:.2em; }
+  .kb-enter{ flex:1.8; color:#d9ffe4; }
+  .kb-fn{ color:var(--mk1); text-shadow:0 0 5px var(--mk-glow); }
+  .kb-lang{ font-size:12px; }
+
+  /* плавающая ESC-кнопка для тач-устройств */
+  .esc-float{
+    position:fixed; top:8px; right:8px; z-index:1150;
+    padding:10px 16px;
+    border-radius:8px;
+    border:1px solid rgba(61,255,116,.5);
+    background:rgba(5,10,6,.88);
+    color:var(--ph); font-family:inherit; font-size:14px; letter-spacing:.12em;
+    text-shadow:0 0 5px var(--ph-glow);
+    box-shadow:0 0 12px rgba(61,255,116,.2);
+    touch-action:manipulation;
+    cursor:pointer;
+  }
+  .esc-float:active{ transform:scale(.94); }
+
+  /* переключатель клавиатуры (только тач) */
+  .kbd-toggle{
+    margin-top:10px; padding:9px 20px;
+    border-radius:8px; border:1px solid #3a3f3a;
+    background:#0c0e0c; color:#8a938a;
+    font-family:inherit; font-size:11px; letter-spacing:.2em;
+    touch-action:manipulation;
+    cursor:pointer;
+  }
+
   /* ================= УЗКИЕ ЭКРАНЫ ================= */
   @media (max-width:760px){
     .terminal{ grid-template-columns:1fr; padding:14px; gap:14px; }
@@ -794,12 +873,14 @@
       flex-direction:row; flex-wrap:wrap; justify-content:center; align-items:center;
       gap:26px; padding:16px 10px;
     }
+    .status-bar{ font-size:.68em; letter-spacing:.04em; }
     .lever-plate{ width:100px; }
     .niche-wrap{ width:120px; height:90px; }
     .hatch{ --hatch-shift:64px; --hatch-depth:-34px; }
     .slot-hole{ width:96px; top:15px; }
     .master-key{ width:78px; height:50px; }
     .master-key.inserted{ width:78px; height:50px; }
+    .crt-label{ font-size:9px; }
   }
 </style>
 </head>
@@ -925,11 +1006,19 @@
 
   </div>
 
+  <!-- тач-элементы: клавиатура, ESC, переключатель -->
+  <button class="esc-float hidden" id="escFloat" type="button">ESC</button>
+  <button class="kbd-toggle hidden" id="kbdToggle" type="button">КЛАВИАТУРА</button>
+  <div class="kbd-wrap hidden" id="kbdWrap">
+    <div class="kbd-title">ТЕРМИНАЛЬНАЯ КЛАВИАТУРА</div>
+    <div id="kbd"></div>
+  </div>
+
 <script>
 'use strict';
 
 /* ==================================================================
-   КОНСТАНТЫ
+   КОНСТАНТЫ И ОПРЕДЕЛЕНИЕ УСТРОЙСТВА
 ================================================================== */
 const PWR_KEY   = 'oidl_pwr_state';
 const LORE_YEAR = 2287;
@@ -947,6 +1036,7 @@ const KEYS_KEY  = 'oidl_keys';
 const GEAR_KEY  = 'oidl_gear';
 const LIGHTS_KEY= 'oidl_lights';
 const ADMINCODE_KEY = 'oidl_admin_code';
+const KBD_LANG_KEY  = 'oidl_kbd_lang';
 
 const NAME_MIN = 4;
 const NAME_MAX = 14;
@@ -958,6 +1048,17 @@ const MAKER_CODE  = '03.11.2007';
 const KEY_INIT_MS = 60000;
 const SCAN_MS     = 43000;
 const GEAR_MS     = 34000;
+
+/* тач-устройство? (клавиатура и ESC-кнопка — только там) */
+const IS_TOUCH = (function(){
+  try{
+    if(window.matchMedia && window.matchMedia('(pointer: coarse)').matches) return true;
+    if('ontouchstart' in window) return true;
+    if(navigator.maxTouchPoints > 0) return true;
+  }catch(e){}
+  return false;
+})();
+if(IS_TOUCH) document.body.classList.add('touch');
 
 const SCI_KINDS = ['МУТАНТ','АНОМАЛИЯ','РАСТИТЕЛЬНОСТЬ','ПРОЧЕЕ'];
 const SCI_FIELD = { 'МУТАНТ':'sciMutant', 'АНОМАЛИЯ':'sciAnomaly', 'РАСТИТЕЛЬНОСТЬ':'sciFlora', 'ПРОЧЕЕ':'sciOther' };
@@ -1004,6 +1105,9 @@ const camLens       = document.getElementById('camLens');
 const hatch         = document.getElementById('hatch');
 const slotHole      = document.getElementById('slotHole');
 const masterKey     = document.getElementById('masterKey');
+const kbdWrap       = document.getElementById('kbdWrap');
+const kbdToggle     = document.getElementById('kbdToggle');
+const escFloat      = document.getElementById('escFloat');
 
 let powered=false, booting=false, skipBoot=false;
 
@@ -1181,6 +1285,19 @@ function gestureUnlock(){
 }
 document.addEventListener('pointerdown',gestureUnlock,true);
 document.addEventListener('keydown',gestureUnlock,true);
+
+/* ОПТИМИЗАЦИЯ: при скрытой вкладке — тишина (экономия батареи),
+   при возврате — гул продолжается */
+document.addEventListener('visibilitychange',()=>{
+  if(!audioCtx) return;
+  if(document.hidden){
+    if(hum) stopHum(0.15);
+    if(gearNoise) stopGearNoise();
+  } else {
+    if(powered && !hum) startHum();
+    if(menuState==='gear' && powered && !gearNoise) startGearNoise();
+  }
+});
 
 /* ==================================================================
    ЭКРАН: helpers
@@ -1529,9 +1646,6 @@ function resetScratch(){
   admKeyDraft=null; admKeyTargetCode=''; admMedalTarget='';
   admCodeDraft='';
 }
-/* ИСПРАВЛЕНО: раньше заметки печатались тускло (проверка шла по строке
-   с ведущим пробелом) — результаты и ошибки выглядели «как ничего».
-   Теперь: ошибки/медали/повышения — ярко, обычные итоги — обычным цветом. */
 function printNotes(arr){
   if(!arr) return;
   arr.forEach(t=>{
@@ -1539,7 +1653,10 @@ function printNotes(arr){
     menuPrint(t,(c0==='◆'||c0==='▲')?'bright':'');
   });
 }
+/* ОПТИМИЗАЦИЯ: измерение ширины кэшируется (раньше мерилось на每 рендер) */
+let cplCache=0;
 function charsPerLine(){
+  if(cplCache) return cplCache;
   try{
     const probe=document.createElement('span');
     probe.textContent='0'.repeat(50);
@@ -1547,10 +1664,11 @@ function charsPerLine(){
     screenContent.appendChild(probe);
     const w=probe.getBoundingClientRect().width/50;
     probe.remove();
-    if(!w) return 64;
+    if(!w){ cplCache=64; return 64; }
     const avail=screenContent.getBoundingClientRect().width;
-    return Math.max(20,Math.floor(avail/w));
-  }catch(e){ return 64; }
+    cplCache=Math.max(20,Math.floor(avail/w));
+    return cplCache;
+  }catch(e){ cplCache=64; return 64; }
 }
 function opCell(i,ops){
   const rec=ops[i];
@@ -1661,7 +1779,10 @@ function renderInput(){
     brandify(d);
     screenContent.appendChild(d);
   }
-  if(menuState==='retina'||menuState==='gear'||menuState==='analys') return;
+  if(menuState==='retina'||menuState==='gear'||menuState==='analys'){
+    updateTouchUI();
+    return;
+  }
   const row=document.createElement('div');
   const rc=inputRowClass();
   row.className='ln'+(rc?' '+rc:'');
@@ -1671,6 +1792,7 @@ function renderInput(){
   cur.className='cursor'; cur.textContent='█';
   row.appendChild(cur);
   screenContent.appendChild(row);
+  updateTouchUI();
 }
 
 /* ---------- переходы ---------- */
@@ -1736,7 +1858,7 @@ function showMainMenu(noteLines){
   sfx.beep();
 }
 
-/* ---------- АДМИН-ПАНЕЛЬ (допуск 6) ---------- */
+/* ---------- АДМИН-ПАНЕЛЬ ---------- */
 function showAdminPanel(extraLines){
   menuState='admin'; inputBuf=''; resetScratch();
   admPanelOwner='admin';
@@ -1770,7 +1892,7 @@ function showAdminPanel(extraLines){
   sfx.beep();
 }
 
-/* ---------- ПАНЕЛЬ ПРОИЗВОДИТЕЛЯ (допуск 7) ---------- */
+/* ---------- ПАНЕЛЬ ПРОИЗВОДИТЕЛЯ ---------- */
 function showProducerPanel(extraLines){
   menuState='prod'; inputBuf=''; resetScratch();
   admPanelOwner='prod';
@@ -1851,8 +1973,6 @@ function showAbout(){
   renderInput();
   sfx.beep();
 }
-/* УЧАСТНИКИ: зарегистрированные операторы появляются и исчезают
-   автоматически (требование владельца), ручной список сохранён */
 function showMembers(){
   menuState='members'; inputBuf=''; resetScratch(); menuLines=[];
   const ops=loadOps();
@@ -1935,6 +2055,8 @@ function startRetinaScan(){
   menuPrint(dRow('СКАНИРОВАНИЕ СЕТЧАТКИ'),'bright');
   menuPrint(dBot(),'bright');
   menuPrint('');
+  menuPrint(' ОПЕРАТОР ▸ '+(selectedOp||curOperator()||'?'));
+  menuPrint('');
   const eyeTop=menuLines.length;
   for(let i=0;i<9;i++) menuPrint('');
   const beamIdx=menuLines.length;
@@ -1943,7 +2065,9 @@ function startRetinaScan(){
   menuPrint('');
   const barIdx=menuLines.length;
   menuPrint('');
-  menuPrint(' ESC ▸ ПРОПУСТИТЬ СКАН','dim');
+  /* ИСПРАВЛЕНО: Enter тоже пропускает скан (раньше только ESC —
+     выглядело как «подтверждение по ESC») */
+  menuPrint(' ENTER / ESC ▸ ПРОПУСТИТЬ СКАН','dim');
   retinaLines={eyeTop:eyeTop,beam:beamIdx,match:matchIdx,bar:barIdx};
   renderInput();
   sfx.beep();
@@ -2157,7 +2281,7 @@ function publishJournalConfirm(){
   sfx.beep();
 }
 
-/* ---------- СКЛАД (переработан: итоги всегда видны) ---------- */
+/* ---------- СКЛАД ---------- */
 function showStock(noteLines){
   menuState='stock_menu'; inputBuf=''; resetScratch(); menuLines=[];
   const stock=loadData(STOCK_KEY,[]);
@@ -2548,7 +2672,7 @@ function doReboot(){
   },900);
 }
 
-/* ---------- УЧАСТНИКИ (управление, производитель) ---------- */
+/* ---------- УЧАСТНИКИ (управление) ---------- */
 function showAdmMembers(noteLines){
   menuState='adm_members'; inputBuf=''; menuLines=[];
   const list=loadData(MEMB_KEY,[]);
@@ -2642,7 +2766,7 @@ function handleEscape(){
   }
 }
 
-/* ---------- ПОДМЕНЮ КЛЮЧЕЙ (переработано и проверено) ---------- */
+/* ---------- ПОДМЕНЮ КЛЮЧЕЙ ---------- */
 function showAdmKeys(noteLines){
   menuState='adm_keys'; inputBuf=''; menuLines=[];
   const keys=loadKeys();
@@ -3611,6 +3735,8 @@ function createKeyVersion(){
 }
 
 function handleMenuKey(e){
+  /* ИСПРАВЛЕНО: Enter надёжно определяется (включая экзотические клавиатуры) */
+  const isEnter=(e.key==='Enter'||e.keyCode===13);
   if(menuState==='granting') return;
   if(menuState==='gear'){
     if(e.key==='Escape'){ e.preventDefault(); abortGearCycle(); }
@@ -3625,8 +3751,13 @@ function handleMenuKey(e){
     handleEscape();
     return;
   }
-  if(menuState==='retina'||menuState==='mk_init') return;
-  if(e.key==='Enter'){
+  /* ИСПРАВЛЕНО: во время скана сетчатки Enter тоже пропускает */
+  if(menuState==='retina'){
+    if(isEnter){ e.preventDefault(); finishRetinaScan(true); }
+    return;
+  }
+  if(menuState==='mk_init') return;
+  if(isEnter){
     e.preventDefault();
     sfx.button();
     submitMenu();
@@ -3644,6 +3775,113 @@ function handleMenuKey(e){
   sfx.key();
   renderInput();
 }
+
+/* ==================================================================
+   ЭКРАННАЯ КЛАВИАТУРА (тач-устройства)
+================================================================== */
+let kbdLang='RU';
+try{ kbdLang=localStorage.getItem(KBD_LANG_KEY)||'RU'; }catch(e){}
+let kbdHidden=false;
+let kbdSig='';
+
+const KB_ROWS={
+  RU:['ЙЦУКЕНГШЩЗХЪ','ФЫВАПРОЛДЖЭ','ЯЧСМИТЬБЮЁ'],
+  EN:['QWERTYUIOP','ASDFGHJKL','ZXCVBNM']
+};
+const KB_NUM='1234567890.-:';
+
+function kbKey(label,code,extra){
+  const b=document.createElement('button');
+  b.type='button';
+  b.className='kb-key'+(extra?' '+extra:'');
+  b.textContent=label;
+  b.addEventListener('click',function(ev){
+    ev.preventDefault();
+    kbdAction(code);
+  });
+  return b;
+}
+function kbdAction(code){
+  ensureAudio();
+  if(code==='ESC'){
+    if(menuState==='gear'){ abortGearCycle(); return; }
+    if(menuState==='analys'){ abortAnalysis(); return; }
+    sfx.cancel();
+    handleEscape();
+    return;
+  }
+  if(code==='ENT'){ sfx.button(); submitMenu(); return; }
+  if(code==='BS'){
+    if(inputBuf.length){ inputBuf=inputBuf.slice(0,-1); sfx.key(); renderInput(); }
+    return;
+  }
+  if(code==='LANG'){
+    kbdLang=(kbdLang==='RU')?'EN':'RU';
+    try{ localStorage.setItem(KBD_LANG_KEY,kbdLang); }catch(e){}
+    buildKbd(); return;
+  }
+  if(code==='::'){
+    inputBuf+='::'; /* терминатор — не ограничен inputMax */
+    kbdAction('ENT');
+    return;
+  }
+  if(inputBuf.length>=inputMax()) return;
+  inputBuf+=code;
+  sfx.key();
+  renderInput();
+}
+function buildKbd(){
+  const kbd=document.getElementById('kbd');
+  if(!kbd) return;
+  kbd.innerHTML='';
+  /* цифровой ряд: всегда (нужен для меню) */
+  const rnum=document.createElement('div');
+  rnum.className='kb-row kb-num';
+  for(const ch of KB_NUM) rnum.appendChild(kbKey(ch,ch));
+  kbd.appendChild(rnum);
+  /* буквенные ряды активной раскладки */
+  for(const row of KB_ROWS[kbdLang]){
+    const r=document.createElement('div');
+    r.className='kb-row';
+    for(const ch of row) r.appendChild(kbKey(ch,ch));
+    kbd.appendChild(r);
+  }
+  /* служебный ряд */
+  const s=document.createElement('div');
+  s.className='kb-row';
+  s.appendChild(kbKey(kbdLang==='RU'?'РУ':'EN','LANG','kb-lang'));
+  s.appendChild(kbKey('ПРОБЕЛ',' ','kb-space'));
+  if(isMultiState()) s.appendChild(kbKey('::','::','kb-fn'));
+  s.appendChild(kbKey('⌫','BS'));
+  s.appendChild(kbKey('ESC','ESC'));
+  s.appendChild(kbKey('↵','ENT','kb-enter'));
+  kbd.appendChild(s);
+}
+function updateTouchUI(){
+  const interactive=powered&&!booting&&!screenBusy();
+  const wantKbd=IS_TOUCH&&interactive&&!kbdHidden;
+  kbdWrap.classList.toggle('hidden',!wantKbd);
+  document.body.classList.toggle('kbd-open',wantKbd);
+  kbdToggle.classList.toggle('hidden',!IS_TOUCH||!powered);
+  escFloat.classList.toggle('hidden',!(IS_TOUCH&&powered&&!booting));
+  const sig=wantKbd+':'+kbdLang+':'+isMultiState();
+  if(wantKbd&&sig!==kbdSig){
+    buildKbd();
+    kbdSig=sig;
+  }
+}
+kbdToggle.addEventListener('click',function(){
+  kbdHidden=!kbdHidden;
+  kbdToggle.textContent=kbdHidden?'КЛАВИАТУРА ✕':'КЛАВИАТУРА';
+  updateTouchUI();
+});
+escFloat.addEventListener('click',function(){
+  ensureAudio();
+  if(menuState==='gear'){ abortGearCycle(); return; }
+  if(menuState==='analys'){ abortAnalysis(); return; }
+  sfx.cancel();
+  handleEscape();
+});
 
 /* ==================================================================
    ЛАМПЫ
@@ -3725,6 +3963,7 @@ function powerOff(){
 
   stopLampIdle();
   updateLamps();
+  updateTouchUI();
 
   sfx.powerOff();
   stopHum(0.5);
@@ -4015,7 +4254,9 @@ function insertKey(holeRect,k){
   setTimeout(once,300);
 }
 
+/* ОПТИМИЗАЦИЯ: при изменении окна — сброс кэша ширины + границы ключа */
 window.addEventListener('resize',()=>{
+  cplCache=0;
   if(keyState==='free'&&!keyDrag){
     clampKeyToBounds();
     applyKeyTransform(1);
@@ -4031,6 +4272,33 @@ document.addEventListener('keydown',(e)=>{
   if(e.key==='Escape'&&booting){ skipBoot=true; return; }
   if(powered&&!booting) handleMenuKey(e);
 });
+
+/* ==================================================================
+   PWA: иконка-заглушка, если icon.png не найден; регистрация SW
+================================================================== */
+(function(){
+  const img=new Image();
+  img.onerror=function(){
+    const l=document.createElement('link');
+    l.rel='icon'; l.type='image/svg+xml';
+    l.href='data:image/svg+xml,'+encodeURIComponent(
+      '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">'+
+      '<circle cx="32" cy="32" r="26" fill="#1d2a33"/>'+
+      '<circle cx="32" cy="32" r="19" fill="none" stroke="#0a0a0a" stroke-width="3"/>'+
+      '<circle cx="32" cy="32" r="9" fill="#0a0a0a"/>'+
+      '<text x="32" y="36" font-size="11" font-family="monospace" font-weight="bold" fill="#f2c713" text-anchor="middle">37</text>'+
+      '</svg>');
+    document.head.appendChild(l);
+  };
+  img.src='icon.png';
+})();
+if('serviceWorker' in navigator){
+  window.addEventListener('load',function(){
+    if(location.protocol==='https:'||location.hostname==='localhost'||location.hostname==='127.0.0.1'){
+      navigator.serviceWorker.register('sw.js').catch(function(){});
+    }
+  });
+}
 
 /* ==================================================================
    СТАРТ
