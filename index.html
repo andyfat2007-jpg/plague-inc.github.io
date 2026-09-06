@@ -1869,6 +1869,15 @@ function backToPanel(extraLines){
 }
 
 /* ---------- ЭКРАН ОПЕРАТОРОВ (реестр из базы) ---------- */
+let registryNames=[]; /* список имён, ровно тот, что показан на экране */
+async function refreshRegistry(){
+  registryNames=[];
+  if(!dbOK()) return;
+  try{
+    const q=await fxWrap(fs.collection('ops').orderBy('nameLower').limit(SLOTS).get());
+    registryNames=q.docs.map(d=>d.data().name);
+  }catch(e){ dbDown(); registryNames=[]; }
+}
 async function showOperatorMenu(noteLines){
   menuState='menu'; inputBuf=''; selectedOp=null; regName='';
   resetScratch();
@@ -1879,24 +1888,15 @@ async function showOperatorMenu(noteLines){
   menuPrint(dBot(),'bright');
   menuPrint('');
   menuPrint('──[ ЗАРЕГИСТРИРОВАННЫЕ ОПЕРАТОРЫ ]──');
+  menuPrint('');
   menuPrint('  ЗАПРОС РЕЕСТРА ИЗ БАЗЫ...','dim');
   renderInput();
 
-  let names=[];
+  await refreshRegistry();
   let errNote=null;
-  if(dbOK()){
-    try{
-      const q=await fxWrap(fs.collection('ops').orderBy('nameLower').limit(SLOTS).get());
-      names=q.docs.map(d=>d.data().name);
-    }catch(e){
-      dbDown();
-      errNote='▲ НЕТ СВЯЗИ С БАЗОЙ · РЕЕСТР НЕДОСТУПЕН';
-    }
-  } else {
-    errNote='▲ БАЗА НЕДОСТУПНА';
-  }
+  if(!dbOK()) errNote='▲ НЕТ СВЯЗИ С БАЗОЙ · РЕЕСТР НЕДОСТУПЕН';
 
-  menuLines=[]; /* шапку рисуем заново (без «ЗАПРОС...») */
+  menuLines=[];
   menuPrint(dTop(),'bright');
   menuPrint(dRow('ДОСТУП К ТЕРМИНАЛУ'),'bright');
   menuPrint(dRow('PLAGUE.INC · ОИДЛ'),'bright');
@@ -1906,14 +1906,14 @@ async function showOperatorMenu(noteLines){
   menuPrint('');
   const two=charsPerLine()>=42;
   for(let r=0;r<SLOTS;r+=2){
-    let row='  '+opCell(r,names[r]);
-    if(two&&r+1<SLOTS) row+='  '+opCell(r+1,names[r+1]);
+    let row='  '+opCell(r,registryNames[r]);
+    if(two&&r+1<SLOTS) row+='  '+opCell(r+1,registryNames[r+1]);
     menuPrint(row);
   }
   menuPrint('');
   menuPrint('  [0] ▸ РЕГИСТРАЦИЯ НОВОГО ОПЕРАТОРА');
   menuPrint('');
-  if(names.length===0&&!errNote) menuPrint('  РЕЕСТР ПУСТ · [0] СОЗДАТЬ ОПЕРАТОРА','dim');
+  if(registryNames.length===0&&!errNote) menuPrint('  РЕЕСТР ПУСТ · [0] СОЗДАТЬ ОПЕРАТОРА','dim');
   printNotes(noteLines);
   if(errNote) menuPrint(errNote,'bright');
   menuPrint('  ЦИФРА + ENTER · [0] РЕГИСТРАЦИЯ','dim');
@@ -3079,7 +3079,7 @@ async function submitMenu(){
   inputBuf='';
 
   /* ===== операторы ===== */
-  if(menuState==='menu'){
+    if(menuState==='menu'){
     if(buf==='0'){
       menuState='reg_name'; menuPrint('');
       menuPrint(sep('РЕГИСТРАЦИЯ'),'bright');
@@ -3089,11 +3089,22 @@ async function submitMenu(){
       return;
     }
     const n=parseInt(buf,10);
-    const ops=opsCache.slice(0,SLOTS);
-    if(!buf||isNaN(n)||n<1||n>Math.min(SLOTS,ops.length)){
-      menuErr('▲ ОШИБКА: НЕВЕРНЫЙ НОМЕР ОПЕРАТОРА'); renderInput(); return;
+    /* ПОДСТРАХОВКА: если список пуст, а на экране он был —
+       дозапрашиваем реестр прямо сейчас */
+    if(!registryNames.length){
+      menuPrint(' ЗАПРОС РЕЕСТРА...','dim'); renderInput();
+      await refreshRegistry();
+      menuLines=menuLines.filter(l=>l.t.indexOf('ЗАПРОС РЕЕСТРА')<0);
+      renderInput();
     }
-    selectedOp=ops[n-1];
+    if(!buf||isNaN(n)||n<1||n>Math.min(SLOTS,registryNames.length)){
+      menuErr(registryNames.length
+        ?'▲ ОШИБКА: НЕВЕРНЫЙ НОМЕР ОПЕРАТОРА'
+        :'▲ РЕЕСТР НЕДОСТУПЕН · ПРОВЕРЬ СВЯЗЬ И ОБНОВИ СТРАНИЦУ');
+      renderInput();
+      return;
+    }
+    selectedOp=registryNames[n-1];
     menuState='pass';
     menuPrint(''); menuPrint(' ОПЕРАТОР ▸ '+selectedOp);
     menuPrint(' ВВЕДИТЕ ПАРОЛЬ + ENTER','dim');
