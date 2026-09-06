@@ -1,0 +1,16 @@
+{
+  "name": "PLAGUE.INC // ОИДЛ — Терминал",
+  "short_name": "PLAGUE.INC",
+  "description": "Терминал РП-клана ОИДЛ · Общество Исследователей Долины Литтлхорн",
+  "lang": "ru",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#050605",
+  "theme_color": "#0b0f0b",
+  "icons": [
+    { "src": "icon.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icon.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}
