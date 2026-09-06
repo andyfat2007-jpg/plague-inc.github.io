@@ -3092,23 +3092,36 @@ async function submitMenu(){
     return;
   }
 
-  if(menuState==='pass'){
+    if(menuState==='pass'){
     if(!dbOK()){ menuErr('▲ БАЗА НЕДОСТУПНА'); renderInput(); return; }
     menuPrint(' ПРОВЕРКА В БАЗЕ...','dim'); renderInput();
     try{
       const name=selectedOp;
       const cred=await fxWrap(auth.signInWithEmailAndPassword(fbEmail(name),fbPass(name,buf)));
       myUid=cred.user.uid;
+      menuPrint(' АВТОРИЗАЦИЯ ОК · ЧТЕНИЕ ПРОФИЛЯ...','dim'); renderInput();
       let docSnap=null;
       try{
         const d=await fxWrap(fs.collection('ops').doc(myUid).get());
         if(d.exists) docSnap=d.data();
-      }catch(e){}
+      }catch(readErr){
+        /* БОЛЬШЕ НЕ МОЛЧИМ: показываем настоящую причину */
+        menuErr('▲ ЧТЕНИЕ ПРОФИЛЯ: '+authErrText(readErr));
+        renderInput();
+        return;
+      }
       if(!docSnap){
-        docSnap={name:name,nameLower:name.toLowerCase(),rank:1,xp:0,manualRank:null,
-                 medals:[],stats:freshStats(),createdAt:Date.now()};
-        await fxWrap(fs.collection('ops').doc(myUid).set(docSnap));
-        audit('ПОВТОРНАЯ АКТИВАЦИЯ ▸ '+name);
+        menuPrint(' ПРОФИЛЬ НЕ НАЙДЕН · СОЗДАНИЕ...','dim'); renderInput();
+        try{
+          docSnap={name:name,nameLower:name.toLowerCase(),rank:1,xp:0,manualRank:null,
+                   medals:[],stats:freshStats(),createdAt:Date.now()};
+          await fxWrap(fs.collection('ops').doc(myUid).set(docSnap));
+          audit('ПОВТОРНАЯ АКТИВАЦИЯ ▸ '+name);
+        }catch(createErr){
+          menuErr('▲ СОЗДАНИЕ ПРОФИЛЯ: '+authErrText(createErr));
+          renderInput();
+          return;
+        }
       }
       myDoc=docSnap;
       try{ localStorage.setItem(CUR_KEY,name); }catch(e){}
