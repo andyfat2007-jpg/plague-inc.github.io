@@ -1168,13 +1168,19 @@ function ensureOpFields(op){
 function authErrText(e){
   const c=(e&&e.code)||'';
   if(c.indexOf('email-already-in-use')>=0) return '▲ ТАКОЙ ОПЕРАТОР УЖЕ ЕСТЬ';
-  if(c.indexOf('wrong-password')>=0||c.indexOf('invalid-credential')>=0||c.indexOf('user-not-found')>=0) return '▲ НЕВЕРНЫЙ ПАРОЛЬ';
-  if(c.indexOf('invalid-email')>=0) return '▲ ОШИБКА СЛУЖЕБНОГО АДРЕСА';
+  if(c.indexOf('wrong-password')>=0||c.indexOf('invalid-credential')>=0) return '▲ НЕВЕРНЫЙ ПАРОЛЬ';
+  if(c.indexOf('user-not-found')>=0) return '▲ ОПЕРАТОР НЕ НАЙДЕН В СИСТЕМЕ АВТОРИЗАЦИИ · ЗАРЕГИСТРИРУЙТЕ ЗАНОВО';
+  if(c.indexOf('invalid-email')>=0) return '▲ ОШИБКА СЛУЖЕБНОГО АДРЕСА (СИМВОЛЫ ИМЕНИ)';
   if(c.indexOf('network')>=0||c.indexOf('unavailable')>=0) return '▲ НЕТ СВЯЗИ С БАЗОЙ';
   if(c.indexOf('too-many-requests')>=0) return '▲ СЛИШКОМ МНОГО ПОПЫТОК · ПОДОЖДИТЕ';
   if(c.indexOf('weak-password')>=0) return '▲ ПАРОЛЬ ОТКЛОНЁН СИСТЕМОЙ';
+  if(c.indexOf('operation-not-allowed')>=0) return '▲ ВХОД ПО ПАРОЛЮ ОТКЛЮЧЁН В КОНСОЛИ FIREBASE';
+  if(c.indexOf('unauthorized-domain')>=0) return '▲ ДОМЕН САЙТА НЕ ДОБАВЛЕН В FIREBASE';
+  if(c.indexOf('api-key-not-valid')>=0) return '▲ КЛЮЧ ПРОЕКТА НЕДЕЙСТВИТЕЛЕН';
   if(c.indexOf('permission-denied')>=0) return '▲ ДОСТУП ЗАПРЕЩЁН ПРАВИЛАМИ БАЗЫ';
-  return '▲ ОШИБКА БАЗЫ · ПОПРОБУЙТЕ ЕЩЁ РАЗ';
+  /* последняя строка — сырой код ошибки, чтобы диагноз был точным */
+  const raw=(e&&e.code)?(' ['+e.code+']'):'';
+  return '▲ ОШИБКА БАЗЫ'+raw;
 }
 
 let seeded=false;
