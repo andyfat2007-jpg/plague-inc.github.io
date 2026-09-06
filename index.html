@@ -55,7 +55,6 @@
   }
   body.lights-off #vaultShade{ opacity:1; }
 
-  /* ================= КОРПУС ТЕРМИНАЛА ================= */
   .terminal{
     position:relative;
     z-index:0;
@@ -111,7 +110,6 @@
   .crt-assembly{ position:relative; z-index:1; }
   .control-panel{ position:relative; z-index:1; }
 
-  /* ================= ЭЛТ ================= */
   .crt-bezel{
     position:relative;
     background:linear-gradient(180deg,#0d0f0d,#050605);
@@ -262,7 +260,6 @@
   }
   .crt-label span{ color:#4d574f; }
 
-  /* ================= ПАНЕЛЬ УПРАВЛЕНИЯ ================= */
   .control-panel{
     display:flex; flex-direction:column; align-items:center;
     gap:20px; padding:26px 10px;
@@ -287,7 +284,6 @@
   }
   .plate-text{ position:relative; z-index:1; }
 
-  /* ================= ЛАМПЫ ================= */
   .lamps{ display:flex; gap:13px; align-items:flex-start; }
   .lamp{ display:flex; flex-direction:column; align-items:center; gap:4px; }
   .lamp-socket{
@@ -316,7 +312,6 @@
   .lamp.amber{ --lc:#ffb84d; }
   .lamp.blue{ --lc:#5fc9ff; }
 
-  /* ================= КАМЕРА ================= */
   .cam{
     position:relative;
     width:40px; height:40px;
@@ -397,7 +392,6 @@
     56%,100%{ opacity:.22; box-shadow:none; }
   }
 
-  /* ================= РЫЧАГ ================= */
   .lever-block{
     position:relative;
     display:flex; flex-direction:column; align-items:center; gap:7px;
@@ -598,7 +592,6 @@
     100% { transform:rotateX(0); }
   }
 
-  /* ================= КНОПКА РЕЗЕРВ ================= */
   .push-btn-block{ display:flex; flex-direction:column; align-items:center; gap:8px; }
   .push-btn{
     width:58px; height:58px; border-radius:50%;
@@ -620,7 +613,6 @@
   }
   .push-btn-label{ font-size:10px; letter-spacing:.15em; color:#6a746c; }
 
-  /* ================= КАБЕЛЬ ================= */
   .cable{
     position:absolute;
     top:100%; left:16%;
@@ -631,7 +623,6 @@
     filter:drop-shadow(0 8px 8px rgba(0,0,0,.55));
   }
 
-  /* ================= НИША ================= */
   .niche-wrap{
     position:relative;
     width:150px; height:104px;
@@ -678,7 +669,6 @@
     pointer-events:none;
   }
 
-  /* ================= МАСТЕР-КЛЮЧ ================= */
   .master-key{
     width:92px; height:58px;
     border-radius:6px;
@@ -764,7 +754,6 @@
     100%{ transform:translateX(-50%) translateY(0);     opacity:1; }
   }
 
-  /* ================= ДВЕРЦА ================= */
   .hatch{
     --hatch-shift:110px;
     --hatch-depth:-46px;
@@ -808,7 +797,6 @@
     100% { transform:translateX(0) translateZ(0) scale(1);                     filter:brightness(1); }
   }
 
-  /* ================= ЭКРАННАЯ КЛАВИАТУРА ================= */
   .kbd-wrap{
     position:fixed; left:0; right:0; bottom:0; z-index:1140;
     background:linear-gradient(180deg, rgba(10,14,10,.97), rgba(4,6,4,.99));
@@ -864,7 +852,6 @@
     cursor:pointer;
   }
 
-  /* ================= УЗКИЕ ЭКРАНЫ ================= */
   @media (max-width:760px){
     .terminal{ grid-template-columns:1fr; padding:14px; gap:14px; }
     .crt-bezel{ padding:12px; }
@@ -889,7 +876,6 @@
 
   <div class="terminal" id="terminal">
 
-    <!-- экран -->
     <div class="crt-assembly">
       <div class="crt-bezel">
         <div class="screen" id="screen">
@@ -911,7 +897,6 @@
       <div class="crt-label">PLAGUE.INC <span>TERMLINK</span></div>
     </div>
 
-    <!-- панель управления -->
     <div class="control-panel">
       <div class="plate"><span class="plate-text">PLAGUE.INC</span></div>
 
@@ -1017,7 +1002,6 @@ const PWR_KEY   = 'oidl_pwr_state';
 const LORE_YEAR = 2287;
 const GRAV      = 0.0022;
 
-/* localStorage остаётся только для устройств-настроек */
 const CUR_KEY     = 'oidl_operator';
 const GEAR_KEY    = 'oidl_gear';
 const LIGHTS_KEY  = 'oidl_lights';
@@ -1032,9 +1016,6 @@ const SCAN_MS     = 43000;
 const GEAR_MS     = 34000;
 const KEY_INIT_MS = 60000;
 
-/* Сид-коды для ПЕРВОНАЧАЛЬНОГО посева базы (хеши).
-   После первого входа смени оба кода через панели — тогда эти строки
-   в исходнике станут бесполезны. */
 const SEED_ADMIN_CODE = 'розовое облако';
 const SEED_MAKER_CODE = '03.11.2007';
 
@@ -1108,7 +1089,6 @@ let lightsOff=false;
 try{ lightsOff=(localStorage.getItem(LIGHTS_KEY)==='off'); }catch(e){}
 if(lightsOff) document.body.classList.add('lights-off');
 
-/* тач-устройство */
 const IS_TOUCH = (function(){
   try{
     if(window.matchMedia && window.matchMedia('(pointer: coarse)').matches) return true;
@@ -1197,7 +1177,6 @@ function authErrText(e){
   return '▲ ОШИБКА БАЗЫ · ПОПРОБУЙТЕ ЕЩЁ РАЗ';
 }
 
-/* посев конфига базы (однократно): хеши сид-кодов */
 let seeded=false;
 function fbSeedConfig(){
   if(seeded||!dbOK()||!myUid) return;
@@ -1618,7 +1597,6 @@ function checkAutoMedals(op){
   return got;
 }
 
-/* версии мастер-ключей */
 function genKeyCode(){
   const ab='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
   function part(){ let s=''; for(let i=0;i<4;i++) s+=ab[Math.floor(Math.random()*ab.length)]; return s; }
@@ -1858,9 +1836,7 @@ function backToPanel(extraLines){
   else showAdminPanel(extraLines);
 }
 
-/* ---------- ЭКРАН ОПЕРАТОРОВ (ИСПРАВЛЕННЫЙ РЕЕСТР) ---------- */
-/* ИСПРАВЛЕНО v13.1: запрос без orderBy (не требует индекса), сортировка
-   в коде; ошибки не глотаются — причина видна на экране реестра. */
+/* ---------- ЭКРАН ОПЕРАТОРОВ (v13.1: безопасный реестр) ---------- */
 let registryNames=[];
 let registryErr=null;
 async function refreshRegistry(){
@@ -3071,7 +3047,6 @@ function showAdmAudit(){
   }).catch(function(){ backToPanel([' ▲ НЕТ СВЯЗИ С БАЗОЙ']); });
 }
 
-/* аудит */
 function audit(what){
   if(!dbOK()||!fs) return;
   const who=(curOperator()||'?')+(adminMode?' ◈':'')+(mkGranted?' ✦':'');
@@ -3086,7 +3061,6 @@ async function submitMenu(){
   const buf=inputBuf;
   inputBuf='';
 
-  /* ===== операторы ===== */
   if(menuState==='menu'){
     if(buf==='0'){
       menuState='reg_name'; menuPrint('');
@@ -3097,7 +3071,6 @@ async function submitMenu(){
       return;
     }
     const n=parseInt(buf,10);
-    /* ПОДСТРАХОВКА: пустой список — дозапрос реестра прямо сейчас */
     if(!registryNames.length&&!registryErr){
       menuPrint(' ЗАПРОС РЕЕСТРА...','dim'); renderInput();
       await refreshRegistry();
@@ -3126,7 +3099,6 @@ async function submitMenu(){
       const name=selectedOp;
       const cred=await fxWrap(auth.signInWithEmailAndPassword(fbEmail(name),fbPass(name,buf)));
       myUid=cred.user.uid;
-      /* профиль из базы; если обнулён — создаём заново с нуля */
       let docSnap=null;
       try{
         const d=await fxWrap(fs.collection('ops').doc(myUid).get());
@@ -3174,14 +3146,11 @@ async function submitMenu(){
       fbSeedConfig();
       startRetinaScan();
     }catch(e){
-      /* если doc не создался из-за прав — чистим auth-аккаунт не можем,
-         просто сообщаем; при повторной попытке входа профиль дозапишется */
       menuErr(authErrText(e)); renderInput();
     }
     return;
   }
 
-  /* ===== главное меню ===== */
   if(menuState==='main'){
     const n=parseInt(buf,10);
     if(!buf||isNaN(n)||n<1||n>MAIN_ITEMS.length){
@@ -3204,7 +3173,6 @@ async function submitMenu(){
     renderInput(); return;
   }
 
-  /* ===== код смотрителя ===== */
   if(menuState==='admin_pass'){
     if(!dbOK()){ menuErr('▲ БАЗА НЕДОСТУПНА'); renderInput(); return; }
     const h=oidlHash(normCode(buf));
@@ -3229,7 +3197,6 @@ async function submitMenu(){
     return;
   }
 
-  /* ===== админ-панель ===== */
   if(menuState==='admin'){
     if(buf==='0'){ closePanelToStart(); return; }
     if(buf==='1'){
@@ -3293,7 +3260,6 @@ async function submitMenu(){
     menuErr('▲ НЕТ ТАКОЙ КОМАНДЫ'); renderInput(); return;
   }
 
-  /* ===== панель производителя ===== */
   if(menuState==='prod'){
     if(buf==='0'){ closePanelToStart(); return; }
     if(buf==='1'){
@@ -3365,7 +3331,6 @@ async function submitMenu(){
     menuErr('▲ НЕТ ТАКОЙ КОМАНДЫ'); renderInput(); return;
   }
 
-  /* ===== обнуление аккаунта ===== */
   if(menuState==='adm_reset_num'){
     const n=parseInt(buf,10);
     if(!buf||isNaN(n)||n<1||n>opsCache.length){ menuErr('▲ НЕТ ОПЕРАТОРА С ТАКИМ НОМЕРОМ'); renderInput(); return; }
@@ -3392,7 +3357,6 @@ async function submitMenu(){
     renderInput(); return;
   }
 
-  /* ===== удаление оператора ===== */
   if(menuState==='adm_del_num'){
     const n=parseInt(buf,10);
     if(!buf||isNaN(n)||n<1||n>opsCache.length){ menuErr('▲ НЕТ ОПЕРАТОРА С ТАКИМ НОМЕРОМ'); renderInput(); return; }
@@ -3415,7 +3379,6 @@ async function submitMenu(){
     return;
   }
 
-  /* ===== медали ===== */
   if(menuState==='adm_medals_op'){
     const n=parseInt(buf,10);
     if(!buf||isNaN(n)||n<1||n>opsCache.length){ menuErr('▲ НЕТ ОПЕРАТОРА С ТАКИМ НОМЕРОМ'); renderInput(); return; }
@@ -3451,7 +3414,6 @@ async function submitMenu(){
     return;
   }
 
-  /* ===== допуск ===== */
   if(menuState==='adm_rank_op'){
     const n=parseInt(buf,10);
     if(!buf||isNaN(n)||n<1||n>opsCache.length){ menuErr('▲ НЕТ ОПЕРАТОРА С ТАКИМ НОМЕРОМ'); renderInput(); return; }
@@ -3481,7 +3443,6 @@ async function submitMenu(){
     return;
   }
 
-  /* ===== XP ===== */
   if(menuState==='adm_xp_op'){
     const n=parseInt(buf,10);
     if(!buf||isNaN(n)||n<1||n>opsCache.length){ menuErr('▲ НЕТ ОПЕРАТОРА С ТАКИМ НОМЕРОМ'); renderInput(); return; }
@@ -3506,7 +3467,6 @@ async function submitMenu(){
     return;
   }
 
-  /* ===== версии ключей ===== */
   if(menuState==='adm_keys'){
     if(buf==='0'){ backToPanel(); return; }
     const low=buf.toLowerCase();
@@ -3588,7 +3548,6 @@ async function submitMenu(){
     renderInput(); return;
   }
 
-  /* ===== код смотрителя (смена) ===== */
   if(menuState==='adm_code'){
     if(buf.trim().length<4){ menuErr('▲ КОД КОРОЧЕ 4 СИМВОЛОВ'); renderInput(); return; }
     admCodeDraft=buf.trim();
@@ -3611,7 +3570,6 @@ async function submitMenu(){
     return;
   }
 
-  /* ===== код производителя (смена) ===== */
   if(menuState==='mk_code_new'){
     if(buf.trim().length<4){ menuErr('▲ КОД КОРОЧЕ 4 СИМВОЛОВ'); renderInput(); return; }
     admCodeDraft=buf.trim();
@@ -3634,7 +3592,6 @@ async function submitMenu(){
     return;
   }
 
-  /* ===== участники (управление) ===== */
   if(menuState==='adm_members'){
     if(buf==='0'){ backToPanel(); return; }
     const low=buf.toLowerCase();
@@ -3677,7 +3634,6 @@ async function submitMenu(){
     return;
   }
 
-  /* ===== Стойло ===== */
   if(menuState==='stable'){
     if(buf==='0'){ backToPanel(); return; }
     if(buf==='1'){ startGearCycle(); return; }
@@ -3697,7 +3653,6 @@ async function submitMenu(){
     renderInput(); return;
   }
 
-  /* ===== мастер-ключ: код ===== */
   if(menuState==='mk_pass'){
     if(!dbOK()){ menuErr('▲ БАЗА НЕДОСТУПНА'); renderInput(); return; }
     const raw=buf.trim();
@@ -3739,7 +3694,6 @@ async function submitMenu(){
     return;
   }
 
-  /* ===== профиль ===== */
   if(menuState==='profile'){
     if(buf==='0'){ gotoMainMenu(); return; }
     const low=buf.toLowerCase();
@@ -3771,7 +3725,6 @@ async function submitMenu(){
     renderInput(); return;
   }
 
-  /* ===== дневники ===== */
   if(menuState==='j_menu'){
     if(buf==='0'){ gotoMainMenu(); return; }
     const low=buf.toLowerCase();
@@ -3853,7 +3806,6 @@ async function submitMenu(){
     renderInput(); return;
   }
 
-  /* ===== склад ===== */
   if(menuState==='stock_menu'){
     if(buf==='0'){ gotoMainMenu(); return; }
     const low=buf.toLowerCase();
@@ -3895,7 +3847,6 @@ async function submitMenu(){
     stockApply(stockName,q,'take'); return;
   }
 
-  /* ===== наука ===== */
   if(menuState==='sci_menu'){
     if(buf==='0'){ gotoMainMenu(); return; }
     const low=buf.toLowerCase();
@@ -3975,7 +3926,6 @@ async function submitMenu(){
     renderInput(); return;
   }
 
-  /* ===== медкарты ===== */
   if(menuState==='med_menu'){
     if(buf==='0'){ gotoMainMenu(); return; }
     const low=buf.toLowerCase();
@@ -4075,7 +4025,6 @@ async function submitMenu(){
   renderInput();
 }
 
-/* выдача прав производителя */
 async function makerClaim(hash,keyMeta){
   try{
     await fxWrap(fs.collection('claims').doc(myUid).set({hash:hash,at:Date.now()}));
