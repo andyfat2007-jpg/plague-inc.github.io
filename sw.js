@@ -1,4 +1,4 @@
-const CACHE = 'oidl-term-v2';
+const CACHE = 'oidl-term-v3';
 const ASSETS = ['./', './index.html', './manifest.json', './icon.png',
   'https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js',
   'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js',
