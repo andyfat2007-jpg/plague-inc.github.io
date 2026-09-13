@@ -18,6 +18,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
 
+<!-- Firebase SDK -->
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
@@ -1147,18 +1148,11 @@ function oidlHash(s){
   return ('00000000'+h1.toString(16)).slice(-8)+('00000000'+h2.toString(16)).slice(-8);
 }
 
-/* v13.2: обёртка с таймаутом 10с и без «вечного dbDown» */
-let fxBusy=false;
 function fxWrap(p){
   fxBusy=true; updateTouchUI();
-  const timeout=new Promise((_,rej)=>setTimeout(()=>rej({code:'oidl/timeout'}),10000));
-  return Promise.race([p,timeout])
-    .then(function(r){ dbUp(); return r; })
-    .catch(function(e){
-      if(e&&e.code&&(e.code==='oidl/timeout'||String(e.code).indexOf('unavailable')>=0)) dbDown();
-      throw e;
-    })
-    .finally(function(){ fxBusy=false; updateTouchUI(); });
+  return p.then(function(r){ dbUp(); return r; })
+          .catch(function(e){ if(e&&e.code&&e.code.indexOf('unavailable')>=0) dbDown(); throw e; })
+          .finally(function(){ fxBusy=false; updateTouchUI(); });
 }
 function freshStats(){
   return {journal:0,pub:0,sciTotal:0,sciMutant:0,sciAnomaly:0,sciFlora:0,sciOther:0,med:0,medEntries:0,stock:0,logins:0,streak:0,lastDay:''};
@@ -1174,19 +1168,13 @@ function ensureOpFields(op){
 function authErrText(e){
   const c=(e&&e.code)||'';
   if(c.indexOf('email-already-in-use')>=0) return '▲ ТАКОЙ ОПЕРАТОР УЖЕ ЕСТЬ';
-  if(c.indexOf('wrong-password')>=0||c.indexOf('invalid-credential')>=0) return '▲ НЕВЕРНЫЙ ПАРОЛЬ';
-  if(c.indexOf('user-not-found')>=0) return '▲ ОПЕРАТОР НЕ НАЙДЕН · ЗАРЕГИСТРИРУЙТЕ ЗАНОВО';
-  if(c.indexOf('invalid-email')>=0) return '▲ ОШИБКА СЛУЖЕБНОГО АДРЕСА (СИМВОЛЫ ИМЕНИ)';
+  if(c.indexOf('wrong-password')>=0||c.indexOf('invalid-credential')>=0||c.indexOf('user-not-found')>=0) return '▲ НЕВЕРНЫЙ ПАРОЛЬ';
+  if(c.indexOf('invalid-email')>=0) return '▲ ОШИБКА СЛУЖЕБНОГО АДРЕСА';
   if(c.indexOf('network')>=0||c.indexOf('unavailable')>=0) return '▲ НЕТ СВЯЗИ С БАЗОЙ';
   if(c.indexOf('too-many-requests')>=0) return '▲ СЛИШКОМ МНОГО ПОПЫТОК · ПОДОЖДИТЕ';
   if(c.indexOf('weak-password')>=0) return '▲ ПАРОЛЬ ОТКЛОНЁН СИСТЕМОЙ';
-  if(c.indexOf('operation-not-allowed')>=0) return '▲ ВХОД ПО ПАРОЛЮ ОТКЛЮЧЁН В КОНСОЛИ FIREBASE';
-  if(c.indexOf('unauthorized-domain')>=0) return '▲ ДОМЕН САЙТА НЕ ДОБАВЛЕН В FIREBASE';
-  if(c.indexOf('api-key-not-valid')>=0) return '▲ КЛЮЧ ПРОЕКТА НЕДЕЙСТВИТЕЛЕН';
   if(c.indexOf('permission-denied')>=0) return '▲ ДОСТУП ЗАПРЕЩЁН ПРАВИЛАМИ БАЗЫ';
-  if(c.indexOf('oidl/timeout')>=0) return '▲ БАЗА НЕ ОТВЕЧАЕТ · ПРОВЕРЬ СВЯЗЬ';
-  const raw=(e&&e.code)?(' ['+e.code+']'):'';
-  return '▲ ОШИБКА БАЗЫ'+raw;
+  return '▲ ОШИБКА БАЗЫ · ПОПРОБУЙТЕ ЕЩЁ РАЗ';
 }
 
 let seeded=false;
@@ -1561,8 +1549,7 @@ function rankBadge(){
   const r=effRank();
   return '[ДОПУСК '+r+' · '+RANK_NAMES[r]+']';
 }
-/* v13.2: XP/медали — фоновое сохранение, отказ не блокирует действие */
-function grantReward(delta,extraMedalCheck){
+async function grantReward(delta,extraMedalCheck){
   const notes=[];
   if(!myUid||!myDoc) return notes;
   ensureOpFields(myDoc);
@@ -1573,6 +1560,7 @@ function grantReward(delta,extraMedalCheck){
     notes.push('+ '+delta+' XP');
   }
   const newRank=xpRank(myDoc.xp);
+  const upd={xp:myDoc.xp, medals:myDoc.medals, stats:myDoc.stats};
   if(newRank>oldRank){
     notes.push('▲ ДОПУСК ПОВЫШЕН ▸ ['+newRank+'] '+RANK_NAMES[newRank]);
     sfx.rankup();
@@ -1587,11 +1575,9 @@ function grantReward(delta,extraMedalCheck){
       sfx.medal();
     }
   });
-  fs.collection('ops').doc(myUid).update({
-    xp:myDoc.xp, medals:myDoc.medals, stats:myDoc.stats
-  }).catch(function(){
-    notes.push('▲ ПРОГРЕСС НЕ СОХРАНЁН · СВЯЗЬ');
-  });
+  try{
+    await fxWrap(fs.collection('ops').doc(myUid).update(upd));
+  }catch(e){ notes.push('▲ ОШИБКА СОХРАНЕНИЯ ПРОФИЛЯ'); }
   return notes;
 }
 function checkAutoMedals(op){
@@ -1665,8 +1651,6 @@ let medCard=null;
 let admKeyDraft=null, admKeyTargetCode='';
 let admMedalTarget='';
 let admCodeDraft='';
-let jMine=[], jOthers=[], jStock=[], jSci=[], jMed=[];
-let opsCache=[];
 
 function screenBusy(){
   return menuState==='granting'||menuState==='retina'||
@@ -1852,7 +1836,7 @@ function backToPanel(extraLines){
   else showAdminPanel(extraLines);
 }
 
-/* ---------- ЭКРАН ОПЕРАТОРОВ ---------- */
+/* ---------- ЭКРАН ОПЕРАТОРОВ (v13.1: безопасный реестр) ---------- */
 let registryNames=[];
 let registryErr=null;
 async function refreshRegistry(){
@@ -2117,8 +2101,8 @@ async function showProfile(){
   menuPrint(' ЗАПРОС ПРОФИЛЯ...','dim');
   renderInput();
   try{
-    const q=await fxWrap(fs.collection('ops').where('nameLower','==',(curOperator()||'').toLowerCase()).limit(1).get());
-    if(!q.empty) myDoc=q.docs[0].data();
+    const d=await fxWrap(fs.collection('ops').doc(myUid).get());
+    if(d.exists) myDoc=d.data();
   }catch(e){}
   if(!myDoc){ renderInput(); return; }
   ensureOpFields(myDoc);
@@ -2226,7 +2210,6 @@ function startRetinaScan(){
 function cancelRetinaScan(){
   if(retinaRAF){ cancelAnimationFrame(retinaRAF); retinaRAF=null; }
 }
-/* v13.2: входной XP/серия — фоном, вход не блокируется никогда */
 function finishRetinaScan(skipped){
   cancelRetinaScan();
   const name=selectedOp||curOperator()||'ОПЕРАТОР';
@@ -2240,12 +2223,15 @@ function finishRetinaScan(skipped){
       myDoc.stats.streak=(myDoc.stats.lastDay===yk)?(myDoc.stats.streak+1):1;
       myDoc.stats.lastDay=t;
       myDoc.stats.logins++;
-      notes.push(' СЕРИЯ ВХОДОВ ▸ '+myDoc.stats.streak+' ДН');
-      grantReward(XP.LOGIN,null).then(function(rn){ rn.forEach(n=>notes.push(n)); });
-      audit('ВХОД ▸ '+name);
-    } else {
-      audit('ВХОД ▸ '+name);
+      grantReward(XP.LOGIN,null).then(function(rn){
+        rn.forEach(n=>notes.push(n));
+        audit('ВХОД ▸ '+name);
+        showMainMenuAfterLogin(notes);
+      });
+      notes.unshift(' СЕРИЯ ВХОДОВ ▸ '+myDoc.stats.streak+' ДН');
+      return;
     }
+    audit('ВХОД ▸ '+name);
   }
   showMainMenuAfterLogin(notes);
 }
@@ -2377,6 +2363,7 @@ function showJournal(noteLines){
     sfx.beep();
   });
 }
+let jMine=[], jOthers=[];
 function readJournalEntry(e,backTo){
   jTarget=e; jBack=backTo||'j_menu';
   menuState='j_read'; inputBuf=''; menuLines=[];
@@ -2450,6 +2437,7 @@ function showStock(noteLines){
     sfx.beep();
   }).catch(function(){ dbDown(); showStock([' ▲ НЕТ СВЯЗИ С БАЗОЙ']); });
 }
+let jStock=[];
 function stockApply(name,qty,mode){
   const lower=name.toLowerCase();
   const rec=jStock.find(s=>s.id===lower);
@@ -2458,8 +2446,8 @@ function stockApply(name,qty,mode){
     if(mode==='add') note=' ИТОГ ▸ ПРИНЯТО '+name+' +'+qty+' ШТ';
     else note=' ИТОГ ▸ ВЫДАНО '+name+' -'+qty+' ШТ';
     audit('СКЛАД ▸ '+(mode==='add'?'ПРИНЯТО ':'ВЫДАНО ')+name+' '+(mode==='add'?'+':'-')+qty);
-    const rn=grantReward(XP.STOCK,function(op){ ensureOpFields(op); op.stats.stock++; return []; });
-    showStock([note].concat(rn));
+    grantReward(XP.STOCK,function(op){ ensureOpFields(op); op.stats.stock++; return []; })
+      .then(function(r2){ showStock([note].concat(r2)); });
   };
   if(mode==='add'){
     if(rec){
@@ -2526,6 +2514,7 @@ function showScience(noteLines){
     sfx.beep();
   }).catch(function(){ dbDown(); showScience([' ▲ НЕТ СВЯЗИ С БАЗОЙ']); });
 }
+let jSci=[];
 function readSciEntry(e){
   menuState='sci_view'; inputBuf=''; menuLines=[];
   menuPrint(sep(e.topic),'bright');
@@ -2543,7 +2532,7 @@ function readSciEntry(e){
 function visibleMed(all){
   const cur=curOperator();
   const r=effRank();
-  return all.filter(e=>e.createdByName===cur||r>=(e.minRank||1));
+  return all.filter(e=>e.createdBy===cur||r>=(e.minRank||1));
 }
 function showMed(noteLines){
   menuState='med_menu'; inputBuf=''; resetScratch(); menuLines=[];
@@ -2575,6 +2564,7 @@ function showMed(noteLines){
     sfx.beep();
   }).catch(function(){ dbDown(); showMed([' ▲ НЕТ СВЯЗИ С БАЗОЙ']); });
 }
+let jMed=[];
 function showMedCard(e,noteLines){
   medCard=e;
   menuState='med_view'; inputBuf=''; menuLines=[];
@@ -3010,12 +3000,13 @@ function showAdmKeyRevokeConfirm(k){
   sfx.beep();
 }
 function showAdmMedalList(){
+  if(!myDoc){ backToPanel([{t:'▲ ОПЕРАТОР ИСЧЕЗ'}]); return; }
   menuState='adm_medal_pick'; inputBuf=''; menuLines=[];
   menuPrint(sep('МЕДАЛИ ▸ '+admMedalTarget), admPanelOwner==='prod'?'pink':'red');
   menuPrint('');
   const target=getCachedOp(admMedalTarget);
   Object.keys(MEDALS).forEach((id,i)=>{
-    const has=target&&ensureOpFields(target).medals.some(m=>m.id===id);
+    const has=target&&target.medals.some(m=>m.id===id);
     menuPrint('  ['+(i+1)+'] '+(has?'◆ ':'◇ ')+MEDALS[id].name+' · '+(has?'СНЯТЬ':'ВЫДАТЬ'));
   });
   menuPrint('');
@@ -3023,6 +3014,7 @@ function showAdmMedalList(){
   renderInput();
   sfx.beep();
 }
+let opsCache=[];
 function getCachedOp(name){
   return opsCache.find(o=>o.name===name)||null;
 }
@@ -3069,7 +3061,6 @@ async function submitMenu(){
   const buf=inputBuf;
   inputBuf='';
 
-  /* ===== операторы ===== */
   if(menuState==='menu'){
     if(buf==='0'){
       menuState='reg_name'; menuPrint('');
@@ -3101,33 +3092,35 @@ async function submitMenu(){
     return;
   }
 
-  /* ===== ВХОД (v13.2: профиль по имени, XP фоном, все ошибки именованные) ===== */
-  if(menuState==='pass'){
+    if(menuState==='pass'){
     if(!dbOK()){ menuErr('▲ БАЗА НЕДОСТУПНА'); renderInput(); return; }
     menuPrint(' ПРОВЕРКА В БАЗЕ...','dim'); renderInput();
     try{
       const name=selectedOp;
       const cred=await fxWrap(auth.signInWithEmailAndPassword(fbEmail(name),fbPass(name,buf)));
       myUid=cred.user.uid;
-      menuPrint(' АВТОРИЗАЦИЯ ОК · ПОИСК ПРОФИЛЯ...','dim'); renderInput();
+      menuPrint(' АВТОРИЗАЦИЯ ОК · ЧТЕНИЕ ПРОФИЛЯ...','dim'); renderInput();
       let docSnap=null;
       try{
-        const q=await fxWrap(fs.collection('ops').where('nameLower','==',name.toLowerCase()).limit(1).get());
-        if(!q.empty) docSnap=q.docs[0].data();
+        const d=await fxWrap(fs.collection('ops').doc(myUid).get());
+        if(d.exists) docSnap=d.data();
       }catch(readErr){
+        /* БОЛЬШЕ НЕ МОЛЧИМ: показываем настоящую причину */
         menuErr('▲ ЧТЕНИЕ ПРОФИЛЯ: '+authErrText(readErr));
         renderInput();
         return;
       }
       if(!docSnap){
         menuPrint(' ПРОФИЛЬ НЕ НАЙДЕН · СОЗДАНИЕ...','dim'); renderInput();
-        docSnap={name:name,nameLower:name.toLowerCase(),rank:1,xp:0,manualRank:null,
-                 medals:[],stats:freshStats(),createdAt:Date.now()};
         try{
+          docSnap={name:name,nameLower:name.toLowerCase(),rank:1,xp:0,manualRank:null,
+                   medals:[],stats:freshStats(),createdAt:Date.now()};
           await fxWrap(fs.collection('ops').doc(myUid).set(docSnap));
           audit('ПОВТОРНАЯ АКТИВАЦИЯ ▸ '+name);
         }catch(createErr){
-          menuPrint(' ПРОФИЛЬ ДОПИШЕТСЯ ПОЗЖЕ ('+authErrText(createErr)+')','dim');
+          menuErr('▲ СОЗДАНИЕ ПРОФИЛЯ: '+authErrText(createErr));
+          renderInput();
+          return;
         }
       }
       myDoc=docSnap;
@@ -3155,17 +3148,11 @@ async function submitMenu(){
     menuPrint(' СОЗДАНИЕ АККАУНТА...','dim'); renderInput();
     try{
       const name=regName;
-      const q=await fxWrap(fs.collection('ops').where('nameLower','==',name.toLowerCase()).limit(1).get());
-      if(!q.empty){ menuErr('▲ ТАКОЙ ОПЕРАТОР УЖЕ ЕСТЬ'); renderInput(); return; }
       const cred=await fxWrap(auth.createUserWithEmailAndPassword(fbEmail(name),fbPass(name,buf)));
       myUid=cred.user.uid;
       myDoc={name:name,nameLower:name.toLowerCase(),rank:1,xp:XP.REG,manualRank:null,
              medals:[],stats:freshStats(),createdAt:Date.now()};
-      try{
-        await fxWrap(fs.collection('ops').doc(myUid).set(myDoc));
-      }catch(setErr){
-        menuPrint(' ПРОФИЛЬ ДОПИШЕТСЯ ПОЗЖЕ ('+authErrText(setErr)+')','dim');
-      }
+      await fxWrap(fs.collection('ops').doc(myUid).set(myDoc));
       selectedOp=name;
       try{ localStorage.setItem(CUR_KEY,name); }catch(e){}
       audit('РЕГИСТРАЦИЯ ▸ '+name+' · +'+XP.REG+' XP');
@@ -3177,7 +3164,6 @@ async function submitMenu(){
     return;
   }
 
-  /* ===== главное меню ===== */
   if(menuState==='main'){
     const n=parseInt(buf,10);
     if(!buf||isNaN(n)||n<1||n>MAIN_ITEMS.length){
@@ -3200,7 +3186,6 @@ async function submitMenu(){
     renderInput(); return;
   }
 
-  /* ===== код смотрителя ===== */
   if(menuState==='admin_pass'){
     if(!dbOK()){ menuErr('▲ БАЗА НЕДОСТУПНА'); renderInput(); return; }
     const h=oidlHash(normCode(buf));
@@ -3225,7 +3210,6 @@ async function submitMenu(){
     return;
   }
 
-  /* ===== админ-панель ===== */
   if(menuState==='admin'){
     if(buf==='0'){ closePanelToStart(); return; }
     if(buf==='1'){
@@ -3289,7 +3273,6 @@ async function submitMenu(){
     menuErr('▲ НЕТ ТАКОЙ КОМАНДЫ'); renderInput(); return;
   }
 
-  /* ===== панель производителя ===== */
   if(menuState==='prod'){
     if(buf==='0'){ closePanelToStart(); return; }
     if(buf==='1'){
@@ -3361,7 +3344,6 @@ async function submitMenu(){
     menuErr('▲ НЕТ ТАКОЙ КОМАНДЫ'); renderInput(); return;
   }
 
-  /* ===== обнуление аккаунта ===== */
   if(menuState==='adm_reset_num'){
     const n=parseInt(buf,10);
     if(!buf||isNaN(n)||n<1||n>opsCache.length){ menuErr('▲ НЕТ ОПЕРАТОРА С ТАКИМ НОМЕРОМ'); renderInput(); return; }
@@ -3388,7 +3370,6 @@ async function submitMenu(){
     renderInput(); return;
   }
 
-  /* ===== удаление оператора ===== */
   if(menuState==='adm_del_num'){
     const n=parseInt(buf,10);
     if(!buf||isNaN(n)||n<1||n>opsCache.length){ menuErr('▲ НЕТ ОПЕРАТОРА С ТАКИМ НОМЕРОМ'); renderInput(); return; }
@@ -3411,7 +3392,6 @@ async function submitMenu(){
     return;
   }
 
-  /* ===== медали ===== */
   if(menuState==='adm_medals_op'){
     const n=parseInt(buf,10);
     if(!buf||isNaN(n)||n<1||n>opsCache.length){ menuErr('▲ НЕТ ОПЕРАТОРА С ТАКИМ НОМЕРОМ'); renderInput(); return; }
@@ -3447,7 +3427,6 @@ async function submitMenu(){
     return;
   }
 
-  /* ===== допуск ===== */
   if(menuState==='adm_rank_op'){
     const n=parseInt(buf,10);
     if(!buf||isNaN(n)||n<1||n>opsCache.length){ menuErr('▲ НЕТ ОПЕРАТОРА С ТАКИМ НОМЕРОМ'); renderInput(); return; }
@@ -3477,7 +3456,6 @@ async function submitMenu(){
     return;
   }
 
-  /* ===== XP ===== */
   if(menuState==='adm_xp_op'){
     const n=parseInt(buf,10);
     if(!buf||isNaN(n)||n<1||n>opsCache.length){ menuErr('▲ НЕТ ОПЕРАТОРА С ТАКИМ НОМЕРОМ'); renderInput(); return; }
@@ -3502,7 +3480,6 @@ async function submitMenu(){
     return;
   }
 
-  /* ===== версии ключей ===== */
   if(menuState==='adm_keys'){
     if(buf==='0'){ backToPanel(); return; }
     const low=buf.toLowerCase();
@@ -3584,7 +3561,6 @@ async function submitMenu(){
     renderInput(); return;
   }
 
-  /* ===== код смотрителя (смена) ===== */
   if(menuState==='adm_code'){
     if(buf.trim().length<4){ menuErr('▲ КОД КОРОЧЕ 4 СИМВОЛОВ'); renderInput(); return; }
     admCodeDraft=buf.trim();
@@ -3607,7 +3583,6 @@ async function submitMenu(){
     return;
   }
 
-  /* ===== код производителя (смена) ===== */
   if(menuState==='mk_code_new'){
     if(buf.trim().length<4){ menuErr('▲ КОД КОРОЧЕ 4 СИМВОЛОВ'); renderInput(); return; }
     admCodeDraft=buf.trim();
@@ -3630,7 +3605,6 @@ async function submitMenu(){
     return;
   }
 
-  /* ===== участники (управление) ===== */
   if(menuState==='adm_members'){
     if(buf==='0'){ backToPanel(); return; }
     const low=buf.toLowerCase();
@@ -3673,7 +3647,6 @@ async function submitMenu(){
     return;
   }
 
-  /* ===== Стойло ===== */
   if(menuState==='stable'){
     if(buf==='0'){ backToPanel(); return; }
     if(buf==='1'){ startGearCycle(); return; }
@@ -3693,7 +3666,6 @@ async function submitMenu(){
     renderInput(); return;
   }
 
-  /* ===== мастер-ключ: код ===== */
   if(menuState==='mk_pass'){
     if(!dbOK()){ menuErr('▲ БАЗА НЕДОСТУПНА'); renderInput(); return; }
     const raw=buf.trim();
@@ -3735,7 +3707,6 @@ async function submitMenu(){
     return;
   }
 
-  /* ===== профиль ===== */
   if(menuState==='profile'){
     if(buf==='0'){ gotoMainMenu(); return; }
     const low=buf.toLowerCase();
@@ -3767,7 +3738,6 @@ async function submitMenu(){
     renderInput(); return;
   }
 
-  /* ===== дневники ===== */
   if(menuState==='j_menu'){
     if(buf==='0'){ gotoMainMenu(); return; }
     const low=buf.toLowerCase();
@@ -3806,7 +3776,7 @@ async function submitMenu(){
           date:nowStamp(), seq:Date.now()
         }));
         audit('ДНЕВНИК ▸ СОЗДАНА «'+draftTitle+'»');
-        const rn=grantReward(XP.JOURNAL,function(op){ op.stats.journal++; return []; });
+        const rn=await grantReward(XP.JOURNAL,function(op){ op.stats.journal++; return []; });
         sfx.grant();
         showJournal([' СОХРАНЕНО ▸ '+draftTitle].concat(rn));
       }catch(e){ menuErr('▲ ОШИБКА СОХРАНЕНИЯ'); renderInput(); }
@@ -3838,7 +3808,7 @@ async function submitMenu(){
       try{
         await fxWrap(fs.collection('journal').doc(jTarget.id).update({public:true}));
         audit('ДНЕВНИК ▸ ПУБЛИКАЦИЯ «'+jTarget.title+'»');
-        const rn=grantReward(XP.PUB,function(op){ op.stats.pub++; return []; });
+        const rn=await grantReward(XP.PUB,function(op){ op.stats.pub++; return []; });
         const t=jTarget.title;
         jTarget=null;
         showJournal([' ПУБЛИЧНО ▸ '+t].concat(rn));
@@ -3849,7 +3819,6 @@ async function submitMenu(){
     renderInput(); return;
   }
 
-  /* ===== склад ===== */
   if(menuState==='stock_menu'){
     if(buf==='0'){ gotoMainMenu(); return; }
     const low=buf.toLowerCase();
@@ -3891,7 +3860,6 @@ async function submitMenu(){
     stockApply(stockName,q,'take'); return;
   }
 
-  /* ===== наука ===== */
   if(menuState==='sci_menu'){
     if(buf==='0'){ gotoMainMenu(); return; }
     const low=buf.toLowerCase();
@@ -3951,7 +3919,7 @@ async function submitMenu(){
           authorUid:myUid, author:curOperator()||'НЕИЗВЕСТНЫЙ', date:nowStamp()
         }));
         audit('НАУКА ▸ ['+sciKind+'] '+sciTopic+' · Д'+sciRankMin);
-        const rn=grantReward(XP.SCI,function(op){
+        const rn=await grantReward(XP.SCI,function(op){
           ensureOpFields(op);
           op.stats.sciTotal++;
           op.stats[SCI_FIELD[sciKind]]++;
@@ -3971,7 +3939,6 @@ async function submitMenu(){
     renderInput(); return;
   }
 
-  /* ===== медкарты ===== */
   if(menuState==='med_menu'){
     if(buf==='0'){ gotoMainMenu(); return; }
     const low=buf.toLowerCase();
@@ -3989,7 +3956,7 @@ async function submitMenu(){
   }
   if(menuState==='med_new_name'){
     if(!buf.trim()){ menuErr('▲ ПУСТОЕ ИМЯ'); renderInput(); return; }
-    medCard={patient:buf.trim(),records:[],created:nowStamp(),createdByName:curOperator()||'?',minRank:1};
+    medCard={patient:buf.trim(),records:[],created:nowStamp(),createdBy:curOperator()||'?',minRank:1};
     menuState='med_new_rank';
     menuPrint(' ОПЕРАТОР ▸ '+medCard.patient);
     menuPrint('──[ ДОПУСК ЧТЕНИЯ ]──','dim');
@@ -4019,12 +3986,12 @@ async function submitMenu(){
       try{
         await fxWrap(fs.collection('med').add({
           patient:medCard.patient, records:medCard.records,
-          created:medCard.created, createdByName:medCard.createdByName,
+          created:medCard.created, createdBy:myUid, createdByName:curOperator()||'?',
           minRank:medCard.minRank
         }));
         audit('МЕДКАРТА ▸ ЗАВЕДЕНА ▸ '+medCard.patient+' · Д'+medCard.minRank);
         const p=medCard.patient;
-        const rn=grantReward(XP.MED,function(op){ op.stats.med++; return []; });
+        const rn=await grantReward(XP.MED,function(op){ op.stats.med++; return []; });
         medCard=null; bodyBuf='';
         showMed([' КАРТА ЗАВЕДЕНА ▸ '+p].concat(rn));
       }catch(e){ menuErr('▲ ОШИБКА СОХРАНЕНИЯ'); renderInput(); }
@@ -4057,7 +4024,7 @@ async function submitMenu(){
           records:firebase.firestore.FieldValue.arrayUnion(bodyBuf)
         }));
         audit('МЕДКАРТА ▸ ЗАПИСЬ ▸ '+medCard.patient);
-        const rn=grantReward(XP.MEDADD,function(op){ op.stats.medEntries++; return []; });
+        const rn=await grantReward(XP.MEDADD,function(op){ op.stats.medEntries++; return []; });
         medCard.records.push(bodyBuf);
         showMedCard(medCard,[' ЗАПИСЬ ДОБАВЛЕНА'].concat(rn));
       }catch(e){ menuErr('▲ ОШИБКА БАЗЫ'); renderInput(); }
@@ -4071,7 +4038,6 @@ async function submitMenu(){
   renderInput();
 }
 
-/* выдача прав производителя */
 async function makerClaim(hash,keyMeta){
   try{
     await fxWrap(fs.collection('claims').doc(myUid).set({hash:hash,at:Date.now()}));
@@ -4087,12 +4053,14 @@ async function makerClaim(hash,keyMeta){
   sfx.maker();
   audit('ВХОД ПО КЛЮЧУ ▸ '+(keyMeta?keyMeta.name:'МАСТЕР-КЛЮЧ'));
   try{
-    if(myDoc){
-      ensureOpFields(myDoc);
-      if(!myDoc.medals.some(m=>m.id==='chosen')){
-        myDoc.medals.push({id:'chosen',date:nowStamp()});
-        fs.collection('ops').doc(myUid).update({medals:myDoc.medals}).catch(function(){});
+    const d=await fxWrap(fs.collection('ops').doc(myUid).get());
+    if(d.exists){
+      const op=d.data(); ensureOpFields(op);
+      if(!op.medals.some(m=>m.id==='chosen')){
+        op.medals.push({id:'chosen',date:nowStamp()});
+        await fxWrap(fs.collection('ops').doc(myUid).update({medals:op.medals}));
       }
+      myDoc=op;
     }
   }catch(e){}
   menuPrint('');
