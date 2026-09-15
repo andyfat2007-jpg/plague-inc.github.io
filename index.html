@@ -1716,6 +1716,90 @@ function keyUsable(k){
 }
 
 /* ==================================================================
+   ОБЛАКО: НАУКА / ДНЕВНИК / МЕДКАРТЫ
+================================================================== */
+let sciWriteTs=0;
+function cloudSaveSci(all){
+  if(!fbReady||!fs) return;
+  try{
+    sciWriteTs=Date.now();
+    fs.collection('science').doc('archive').set({items:all,updated:new Date().toISOString()})
+      .then(function(){ console.log('[CLOUD] наука отправлена: '+all.length); })
+      .catch(function(err){ console.warn('[CLOUD] ошибка науки:',err); });
+  }catch(e){ console.warn('[CLOUD] сбой науки:',e); }
+}
+function cloudFetchSci(){
+  if(!fbReady||!fs) return;
+  try{
+    fs.collection('science').doc('archive').get()
+      .then(function(doc){
+        if(!doc.exists) return;
+        if(Date.now()-sciWriteTs<4000) return;
+        const items=doc.data().items;
+        if(Array.isArray(items)){
+          saveData(SCI_KEY,items);
+          if(menuState==='sci_menu') showScience([' АРХИВ ОБНОВЛЁН ИЗ ОБЛАКА'],true);
+        }
+      })
+      .catch(function(err){ console.warn('[CLOUD] чтение науки:',err); });
+  }catch(e){}
+}
+
+let jourWriteTs=0;
+function cloudSaveJour(all){
+  if(!fbReady||!fs) return;
+  try{
+    jourWriteTs=Date.now();
+    fs.collection('journal').doc('feed').set({items:all,updated:new Date().toISOString()})
+      .then(function(){ console.log('[CLOUD] дневник отправлен: '+all.length); })
+      .catch(function(err){ console.warn('[CLOUD] ошибка дневника:',err); });
+  }catch(e){ console.warn('[CLOUD] сбой дневника:',e); }
+}
+function cloudFetchJour(){
+  if(!fbReady||!fs) return;
+  try{
+    fs.collection('journal').doc('feed').get()
+      .then(function(doc){
+        if(!doc.exists) return;
+        if(Date.now()-jourWriteTs<4000) return;
+        const items=doc.data().items;
+        if(Array.isArray(items)){
+          saveData(JOUR_KEY,items);
+          if(menuState==='j_menu') showJournal([' ЗАПИСИ ОБНОВЛЕНЫ ИЗ ОБЛАКА'],true);
+        }
+      })
+      .catch(function(err){ console.warn('[CLOUD] чтение дневника:',err); });
+  }catch(e){}
+}
+
+let medWriteTs=0;
+function cloudSaveMed(all){
+  if(!fbReady||!fs) return;
+  try{
+    medWriteTs=Date.now();
+    fs.collection('med').doc('cards').set({items:all,updated:new Date().toISOString()})
+      .then(function(){ console.log('[CLOUD] медкарты отправлены: '+all.length); })
+      .catch(function(err){ console.warn('[CLOUD] ошибка медкарт:',err); });
+  }catch(e){ console.warn('[CLOUD] сбой медкарт:',e); }
+}
+function cloudFetchMed(){
+  if(!fbReady||!fs) return;
+  try{
+    fs.collection('med').doc('cards').get()
+      .then(function(doc){
+        if(!doc.exists) return;
+        if(Date.now()-medWriteTs<4000) return;
+        const items=doc.data().items;
+        if(Array.isArray(items)){
+          saveData(MED_KEY,items);
+          if(menuState==='med_menu') showMed([' КАРТЫ ОБНОВЛЕНЫ ИЗ ОБЛАКА'],true);
+        }
+      })
+      .catch(function(err){ console.warn('[CLOUD] чтение медкарт:',err); });
+  }catch(e){}
+}
+
+/* ==================================================================
    МЕНЮ-МАШИНА
 ================================================================== */
 let menuState='fake_name';
@@ -1831,7 +1915,11 @@ function promptFor(){
     case 'j_pub':            return '┃ ВЫБОР ▸ ';
     case 'j_pub_yes':        return '┃ ТОЧНО? ▸ ';
     case 'j_unlock':         return '┃ ПАРОЛЬ ▸ ';
-    case 'stock_menu':       return '┃ КОМАНДА ▸ ';
+    case 'stock_sec':        return '┃ КОМАНДА ▸ ';
+    case 'stock_menu':       return '┃ СЕКЦИЯ ▸ ';
+    case 'stock_sec_pass':   return '┃ ПАРОЛЬ ▸ ';
+    case 'stock_pw_pick':    return '┃ СЕКЦИЯ ▸ ';
+    case 'stock_pw_new':     return '┃ НОВЫЙ ПАРОЛЬ ▸ ';
     case 'stock_add_name':   return '┃ НАИМЕНОВАНИЕ ▸ ';
     case 'stock_add_qty':    return '┃ КОЛИЧЕСТВО ▸ ';
     case 'stock_take_name':  return '┃ НАИМЕНОВАНИЕ ▸ ';
@@ -1862,7 +1950,8 @@ function promptFor(){
 function isMaskedState(){
   return menuState==='fake_pass'||menuState==='admin_pass'||
          menuState==='adm_code'||menuState==='adm_code_confirm'||
-         menuState==='mk_code_new'||menuState==='mk_code_confirm';
+         menuState==='mk_code_new'||menuState==='mk_code_confirm'||
+         menuState==='stock_sec_pass'||menuState==='stock_pw_new';
 }
 function inputMax(){
   switch(menuState){
@@ -1873,6 +1962,7 @@ function inputMax(){
     case 'j_new_title':                           return 28;
     case 'sci_topic':                             return 22;
     case 'stock_add_name': case 'stock_take_name':return 20;
+    case 'stock_sec_pass': case 'stock_pw_new':   return PASS_MAX;
     case 'adm_key_new_name':                      return 20;
     case 'adm_xp_set':                            return 8;
     case 'sci_body': case 'j_new_body':
@@ -2488,7 +2578,7 @@ function revokeMaker(reason){
 }
 
 /* ---------- ДНЕВНИК (с замками) ---------- */
-function showJournal(noteLines){
+function showJournal(noteLines,fromCloud){
   menuState='j_menu'; inputBuf=''; resetScratch(); menuLines=[];
   const cur=curOperator();
   const all=loadData(JOUR_KEY,[]);
@@ -2517,6 +2607,7 @@ function showJournal(noteLines){
   menuPrint(' НОМЕР — ОТКРЫТЬ · [Н] — СОЗДАТЬ','dim');
   renderInput();
   sfx.beep();
+  if(!fromCloud) cloudFetchJour();
 }
 function readJournalEntry(e,backTo){
   if(e.pass&&!(adminMode||mkGranted)){
@@ -2568,28 +2659,35 @@ function publishJournalConfirm(){
 }
 
 /* ---------- СКЛАД ---------- */
-function showStock(noteLines){
+function showStock(noteLines,fromCloud){
   menuState='stock_menu'; inputBuf=''; resetScratch(); menuLines=[];
-  const stock=loadData(STOCK_KEY,[]);
+  const obj=loadStockObj();
+  const canSetPw=(adminMode||isMaker());
   menuPrint(dTop(),'bright');
   menuPrint(dRow('СКЛАД ОИДЛ'),'bright');
-  menuPrint(dRow('УЧЁТ ИМУЩЕСТВА'),'bright');
+  menuPrint(dRow('СЕКЦИИ ХРАНЕНИЯ'),'bright');
   menuPrint(dBot(),'bright');
   menuPrint('');
-  if(!stock.length) menuPrint(' СКЛАД ПУСТ','dim');
-  else{
-    menuPrint('──[ НАЛИЧИЕ ]──');
-    stock.forEach((s,i)=>menuPrint('  ['+(i+1)+'] ▸ '+s.name+' · '+s.qty+' ШТ'));
-  }
+  STOCK_SECTIONS.forEach(function(s,i){
+    const cnt=(obj[s.id]||[]).length;
+    let mark='';
+    if(s.locked){
+      if(canSetPw||stockUnlocked[s.id]) mark=' 🔓';
+      else if(stockAccess[s.id]) mark=' 🔒';
+      else mark=' ⛔';
+    }
+    menuPrint('  ['+(i+1)+'] ▸ ['+s.name+'] · ПОЗИЦИЙ: '+cnt+mark);
+  });
   menuPrint('');
-  menuPrint('  [П] ▸ ПРИНЯТЬ ТОВАР');
-  menuPrint('  [В] ▸ ВЫДАТЬ ТОВАР');
+  if(canSetPw) menuPrint('  [С] ▸ ПАРОЛИ СЕКЦИЙ');
   menuPrint('  [0] ▸ НАЗАД');
   menuPrint('');
   printNotes(noteLines);
-  menuPrint(' ИМЯ ТОВАРА ДОЛЖНО СОВПАДАТЬ С УЧЁТОМ','dim');
+  if(stockPending) menuPrint(' СИНХРОНИЗАЦИЯ АРХИВА...','dim');
+  menuPrint(' ЦИФРА СЕКЦИИ + ENTER','dim');
   renderInput();
   sfx.beep();
+  if(!fromCloud) cloudFetchStock();
 }
 /* v14: нормализация ключей при поиске товара */
 function stockApply(name,qty,mode){
@@ -2639,7 +2737,7 @@ function visibleSci(all){
   const r=effRank();
   return all.filter(e=>e.author===cur||r>=(e.minRank||1));
 }
-function showScience(noteLines){
+function showScience(noteLines,fromCloud){
   menuState='sci_menu'; inputBuf=''; resetScratch(); menuLines=[];
   const all=visibleSci(loadData(SCI_KEY,[]));
   menuPrint(dTop(),'bright');
@@ -2657,6 +2755,7 @@ function showScience(noteLines){
   menuPrint(' ПИСАТЬ МОГУТ С ДОПУСКА 3 · ЧТЕНИЕ — ПО МЕТКЕ ·Д','dim');
   renderInput();
   sfx.beep();
+  if(!fromCloud) cloudFetchSci();
 }
 function readSciEntry(e){
   if(e.pass&&!(adminMode||mkGranted)){
@@ -2688,7 +2787,7 @@ function visibleMed(all){
   const r=effRank();
   return all.filter(e=>e.createdBy===cur||r>=(e.minRank||1));
 }
-function showMed(noteLines){
+function showMed(noteLines,fromCloud){
   menuState='med_menu'; inputBuf=''; resetScratch(); menuLines=[];
   const all=visibleMed(loadData(MED_KEY,[]));
   menuPrint(dTop(),'bright');
@@ -2706,6 +2805,7 @@ function showMed(noteLines){
   menuPrint(' ПИСАТЬ МОГУТ С ДОПУСКА 4','dim');
   renderInput();
   sfx.beep();
+  if(!fromCloud) cloudFetchMed();
 }
 function showMedCard(e,noteLines){
   medCard=e;
@@ -2743,6 +2843,7 @@ function doLogout(){
   sbAdmin.classList.add('hidden');
   if(mkGranted) revokeMaker('СЕАНС ЗАВЕРШЁН');
   myDoc=null;
+  stockUnlocked={weapons:false,eng:false};
   showFakeLogin([' СЕАНС ЗАВЕРШЁН']);
 }
 
@@ -3113,6 +3214,9 @@ function handleEscape(){
       sfx.cancel(); showJournal(); break;
     case 'stock_add_name': case 'stock_add_qty':
     case 'stock_take_name': case 'stock_take_qty':
+    case 'stock_sec':
+      sfx.cancel(); showStockSection(); break;
+    case 'stock_sec_pass': case 'stock_pw_pick': case 'stock_pw_new':
       sfx.cancel(); showStock(); break;
     case 'sci_kind': case 'sci_topic': case 'sci_rank': case 'sci_body': case 'sci_new_pass':
       sfx.cancel(); showScience([' СОЗДАНИЕ ОТМЕНЕНО']); break;
@@ -3784,6 +3888,7 @@ function submitMenu(){
     all.push({id:newId(),title:draftTitle,body:bodyBuf,public:false,pass:pass,
               author:curOperator()||'НЕИЗВЕСТНЫЙ',date:nowStamp()});
     saveData(JOUR_KEY,all);
+    cloudSaveJour(all);
     audit('ДНЕВНИК ▸ СОЗДАНА «'+draftTitle+'»'+(pass?' 🔒':''));
     const rn=grantReward(XP.JOURNAL,function(op){ op.stats.journal++; return []; });
     sfx.grant();
@@ -3821,6 +3926,7 @@ function submitMenu(){
       const rec=all.find(e=>e.id===jTarget.id);
       if(rec) rec.public=true;
       saveData(JOUR_KEY,all);
+      cloudSaveJour(all);
       audit('ДНЕВНИК ▸ ПУБЛИКАЦИЯ «'+jTarget.title+'»');
       const rn=grantReward(XP.PUB,function(op){ op.stats.pub++; return []; });
       const t=jTarget.title;
@@ -3832,21 +3938,9 @@ function submitMenu(){
     renderInput(); return;
   }
 
-      if(menuState==='stock_menu'){
+  if(menuState==='stock_menu'){
     if(buf==='0'){ gotoMainMenu(); return; }
     const low=buf.toLowerCase();
-    if(low==='п'||low==='g'){
-      stockCurSec='common';
-      stockMode='add'; menuState='stock_add_name'; stockName='';
-      menuPrint(''); menuPrint(' ПРИЁМ ТОВАРА. НАИМЕНОВАНИЕ:','dim');
-      renderInput(); return;
-    }
-    if(low==='в'||low==='d'){
-      stockCurSec='common';
-      stockMode='take'; menuState='stock_take_name'; stockName='';
-      menuPrint(''); menuPrint(' ВЫДАЧА ТОВАРА. НАИМЕНОВАНИЕ:','dim');
-      renderInput(); return;
-    }
     if((low==='с'||low==='c')&&(adminMode||isMaker())){
       menuState='stock_pw_pick'; inputBuf=''; menuLines=[];
       menuPrint(sep('ПАРОЛИ СЕКЦИЙ'),'bright');
@@ -3854,7 +3948,7 @@ function submitMenu(){
       menuPrint('  [1] ▸ [ОРУЖЕЙНЫЙ] · '+(stockAccess.weapons?'ПАРОЛЬ УСТАНОВЛЕН':'БЕЗ ПАРОЛЯ'));
       menuPrint('  [2] ▸ [ИНЖЕНЕРНЫЙ] · '+(stockAccess.eng?'ПАРОЛЬ УСТАНОВЛЕН':'БЕЗ ПАРОЛЯ'));
       menuPrint('');
-      menuPrint(' НОМЕР — ВЫБРАТЬ СЕКЦИЮ · [0] НАЗАД','dim');
+      menuPrint(' НОМЕР — ВЫБРАТЬ СЕКЦИЮ','dim');
       renderInput(); sfx.beep(); return;
     }
     const n=parseInt(buf,10);
@@ -3863,8 +3957,7 @@ function submitMenu(){
     stockCurSec=sec.id;
     if(secLocked(sec.id)){
       if(!stockAccess[sec.id]){
-        menuErr('▲ СЕКЦИЯ ЗАКРЫТА · ПАРОЛЬ ЕЩЁ НЕ УСТАНОВЛЕН');
-        renderInput(); return;
+        menuErr('▲ СЕКЦИЯ ЗАКРЫТА · ПАРОЛЬ ЕЩЁ НЕ УСТАНОВЛЕН'); renderInput(); return;
       }
       menuState='stock_sec_pass'; inputBuf=''; menuLines=[];
       menuPrint(sep('ДОСТУП ОГРАНИЧЕН'),'bright');
@@ -3884,8 +3977,7 @@ function submitMenu(){
       sfx.grant();
       showStockSection([' ДОСТУП РАЗРЕШЁН ▸ ['+SEC_LABEL[stockCurSec]+']']);
     } else {
-      menuErr('▲ НЕВЕРНЫЙ ПАРОЛЬ СЕКЦИИ');
-      renderInput();
+      menuErr('▲ НЕВЕРНЫЙ ПАРОЛЬ СЕКЦИИ'); renderInput();
     }
     return;
   }
@@ -4019,6 +4111,7 @@ function submitMenu(){
     all.push({kind:sciKind,topic:sciTopic,body:bodyBuf,minRank:sciRankMin,pass:pass,
               author:curOperator()||'НЕИЗВЕСТНЫЙ',date:nowStamp()});
     saveData(SCI_KEY,all);
+    cloudSaveSci(all);
     audit('НАУКА ▸ ['+sciKind+'] '+sciTopic+' · Д'+sciRankMin+(pass?' 🔒':''));
     const rn=grantReward(XP.SCI,function(op){
       ensureProfile(op);
@@ -4091,6 +4184,7 @@ function submitMenu(){
       const all=loadData(MED_KEY,[]);
       all.push(medCard);
       saveData(MED_KEY,all);
+      cloudSaveMed(all);
       audit('МЕДКАРТА ▸ ЗАВЕДЕНА ▸ '+medCard.patient+' · Д'+medCard.minRank);
       const p=medCard.patient;
       const rn=grantReward(XP.MED,function(op){ op.stats.med++; return []; });
@@ -4125,6 +4219,7 @@ function submitMenu(){
       if(rec){
         rec.records.push(bodyBuf);
         saveData(MED_KEY,all);
+        cloudSaveMed(all);
         audit('МЕДКАРТА ▸ ЗАПИСЬ ▸ '+rec.patient);
         const rn=grantReward(XP.MEDADD,function(op){ op.stats.medEntries++; return []; });
         showMedCard(rec,[' ЗАПИСЬ ДОБАВЛЕНА'].concat(rn));
@@ -4150,7 +4245,7 @@ function submitMenu(){
     if(buf==='1'){
       const all=loadData(SCI_KEY,[]);
       const idx=all.findIndex(e=>e.topic===sciDelTarget.topic&&e.author===sciDelTarget.author&&e.date===sciDelTarget.date);
-      if(idx>=0){ all.splice(idx,1); saveData(SCI_KEY,all); }
+      if(idx>=0){ all.splice(idx,1); saveData(SCI_KEY,all); cloudSaveSci(all); }
       audit('НАУКА ▸ УДАЛЕНА «'+sciDelTarget.topic+'»');
       sfx.error();
       backToPanel([{t:' ЗАПИСЬ УДАЛЕНА ▸ '+sciDelTarget.topic}]);
@@ -4170,7 +4265,7 @@ function submitMenu(){
     if(buf==='1'){
       const all=loadData(MED_KEY,[]);
       const idx=all.findIndex(c=>c.id===medDelTarget.id);
-      if(idx>=0){ all.splice(idx,1); saveData(MED_KEY,all); }
+      if(idx>=0){ all.splice(idx,1); saveData(MED_KEY,all); cloudSaveMed(all); }
       audit('МЕДКАРТА ▸ УДАЛЕНА ▸ '+medDelTarget.patient);
       sfx.error();
       backToPanel([{t:' КАРТА УДАЛЕНА ▸ '+medDelTarget.patient}]);
