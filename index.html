@@ -522,74 +522,7 @@
     background:var(--ph);
     box-shadow:inset 0 0 2px rgba(255,255,255,.5), 0 0 0 2px rgba(0,0,0,.6), 0 0 8px var(--ph-glow);
   }
-
-  .lever-cover{
-    position:absolute; inset:-6px;
-    border-radius:12px;
-    border:1px solid rgba(0,0,0,.85);
-    background:linear-gradient(180deg, rgba(255,120,120,.15), rgba(120,40,40,.20) 45%, rgba(40,12,12,.28));
-    backdrop-filter:blur(2px) saturate(.85);
-    -webkit-backdrop-filter:blur(2px) saturate(.85);
-    box-shadow:
-      inset 0 1px 0 rgba(255,255,255,.28),
-      inset 0 -3px 6px rgba(255,255,255,.06),
-      0 5px 12px rgba(0,0,0,.55);
-    z-index:6;
-    cursor:pointer;
-    transform-origin:50% 0;
-    transform-style:preserve-3d;
-    will-change:transform;
-  }
-  .lever-cover::before{
-    content:''; position:absolute; left:6px; right:6px; bottom:-4px; height:5px;
-    border-radius:0 0 8px 8px;
-    background:linear-gradient(180deg, rgba(255,140,140,.25), rgba(30,8,8,.6));
-    box-shadow:0 3px 5px rgba(0,0,0,.5);
-  }
-  .cover-hinge{
-    position:absolute; top:-4px; left:22%; right:22%; height:7px;
-    border-radius:4px;
-    background:linear-gradient(180deg,#8a938a,#3c423c 60%,#1c201b);
-    box-shadow:inset 0 1px 1px rgba(255,255,255,.35), 0 1px 2px #000;
-  }
-  .cover-caption{
-    position:absolute; top:10px; left:0; right:0;
-    text-align:center;
-    font-size:8px; letter-spacing:.3em; color:rgba(255,225,225,.72);
-    text-shadow:0 1px 1px rgba(0,0,0,.6);
-    pointer-events:none;
-  }
-  .cover-shine{
-    position:absolute; left:8%; top:6%; width:26%; height:88%;
-    background:linear-gradient(100deg, rgba(255,255,255,.30), rgba(255,255,255,.05) 60%, transparent);
-    border-radius:8px;
-    transform:skewX(-8deg);
-    pointer-events:none;
-  }
-  .cover-latch{
-    position:absolute; bottom:7px; left:50%;
-    transform:translateX(-50%);
-    width:34px; height:6px; border-radius:3px;
-    background:rgba(10,6,6,.75);
-    box-shadow:inset 0 1px 2px #000, 0 1px 0 rgba(255,255,255,.12);
-  }
-  .lever-cover.open{ transform:rotateX(-92deg) translateZ(2px); }
-  .lever-cover.opening{ animation:coverUp .8s cubic-bezier(.34,1.3,.4,1) forwards; }
-  .lever-cover.closing{ animation:coverDown .7s cubic-bezier(.36,.8,.4,1) forwards; }
-  @keyframes coverUp{
-    0%   { transform:rotateX(0); }
-    22%  { transform:rotateX(-10deg); }
-    55%  { transform:rotateX(-98deg); }
-    78%  { transform:rotateX(-86deg); }
-    100% { transform:rotateX(-92deg) translateZ(2px); }
-  }
-  @keyframes coverDown{
-    0%   { transform:rotateX(-92deg) translateZ(2px); }
-    55%  { transform:rotateX(-14deg); }
-    78%  { transform:rotateX(3deg); }
-    100% { transform:rotateX(0); }
-  }
-
+  
   .push-btn-block{ display:flex; flex-direction:column; align-items:center; gap:8px; }
   .push-btn{
     width:58px; height:58px; border-radius:50%;
@@ -938,12 +871,6 @@
             </div>
             <div class="lever-label off">ВЫКЛ</div>
             <span class="lever-lamp" id="leverLamp"></span>
-          </div>
-          <div class="lever-cover" id="leverCover">
-            <span class="cover-hinge"></span>
-            <span class="cover-caption">ПИТАНИЕ</span>
-            <span class="cover-shine"></span>
-            <span class="cover-latch"></span>
           </div>
         </div>
       </div>
@@ -4616,33 +4543,6 @@ function endDrag(){
 }
 leverKnob.addEventListener('pointerup',endDrag);
 leverKnob.addEventListener('pointercancel',endDrag);
-
-let coverOpened=false, coverBusy=false, coverFailSafe=null;
-function coverReset(){
-  if(!coverBusy) return;
-  coverBusy=false;
-  clearTimeout(coverFailSafe);
-  leverCover.classList.remove('opening','closing');
-  if(coverOpened) leverCover.classList.add('open');
-}
-leverCover.addEventListener('pointerdown',(e)=>e.stopPropagation());
-leverCover.addEventListener('click',()=>{
-  if(coverBusy) return;
-  coverBusy=true;
-  clearTimeout(coverFailSafe);
-  coverFailSafe=setTimeout(coverReset,1500);
-  coverOpened=!coverOpened;
-  if(coverOpened) sfx.coverOpen(); else sfx.coverClose();
-  leverCover.classList.remove('open','opening','closing');
-  void leverCover.offsetWidth;
-  leverCover.classList.add(coverOpened?'opening':'closing');
-});
-leverCover.addEventListener('animationend',()=>{
-  coverBusy=false;
-  clearTimeout(coverFailSafe);
-  leverCover.classList.remove('opening','closing');
-  if(coverOpened) leverCover.classList.add('open');
-});
 
 /* ==================================================================
    КНОПКА РЕЗЕРВ
