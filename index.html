@@ -2095,12 +2095,14 @@ function showAbout(){
 }
 function showMembers(){
   menuState='members'; inputBuf=''; resetScratch(); menuLines=[];
+  membersCloudRows=[];
   const ops=loadOps();
   const manual=loadData(MEMB_KEY,[]);
   const seen={};
   const rows=[];
   ops.forEach(o=>{ const k=o.name.toLowerCase(); if(!seen[k]){ seen[k]=1; rows.push(o.name); } });
   manual.forEach(m=>{ const k=m.toLowerCase(); if(!seen[k]){ seen[k]=1; rows.push(m); } });
+  membersCloudRows.forEach(n=>{ const k=n.toLowerCase(); if(!seen[k]){ seen[k]=1; rows.push(n); } });
   menuPrint(dTop(),'bright');
   menuPrint(dRow('УЧАСТНИКИ КЛАНА'),'bright');
   menuPrint(dRow('ОИДЛ'),'bright');
@@ -2114,9 +2116,32 @@ function showMembers(){
     rows.forEach((m,i)=>menuPrint('  ['+(i+1)+'] ▸ '+m));
   }
   menuPrint('');
+  if(fbReady&&fs&&membersPending){
+    menuPrint(' СИНХРОНИЗАЦИЯ АРХИВА...','dim');
+  }
   menuPrint(' [0] ▸ НАЗАД','dim');
   renderInput();
   sfx.beep();
+  cloudFetchMembers();
+}
+
+let membersCloudRows=[];
+let membersPending=false;
+function cloudFetchMembers(){
+  if(!fbReady||!fs) return;
+  try{
+    membersPending=true;
+    fs.collection('operators').get()
+      .then(function(snap){
+        membersPending=false;
+        membersCloudRows=snap.docs.map(function(d){ return d.data().name; }).filter(Boolean);
+        if(menuState==='members') showMembers();
+      })
+      .catch(function(err){
+        membersPending=false;
+        console.warn('[CLOUD] чтение участников:', err);
+      });
+  }catch(e){ membersPending=false; console.warn('[CLOUD] сбой чтения:', e); }
 }
 
 /* ---------- ПРОФИЛЬ ---------- */
