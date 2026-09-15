@@ -522,7 +522,7 @@
     background:var(--ph);
     box-shadow:inset 0 0 2px rgba(255,255,255,.5), 0 0 0 2px rgba(0,0,0,.6), 0 0 8px var(--ph-glow);
   }
-  
+
   .push-btn-block{ display:flex; flex-direction:column; align-items:center; gap:8px; }
   .push-btn{
     width:58px; height:58px; border-radius:50%;
@@ -1083,10 +1083,21 @@ window.addEventListener('online', ()=>{ if(fbReady) dbUp(); else dbDown(); });
 window.addEventListener('offline', ()=>dbDown());
 if(navigator.onLine&&fbReady) dbUp();
 function cloudSaveProfile(op){
-  let stockWriteTs=0;
-    .then(function(){ console.log('[CLOUD] склад отправлен: '+list.length+' поз.'); })
-    .catch(function(err){ console.warn('[CLOUD] ошибка склада:', err); });
-  }catch(e){ console.warn('[CLOUD] сбой склада:', e); }
+  if(!fbReady||!fs||!op) return;
+  try{
+    fs.collection('operators').doc(op.name.replace(/\//g,'_')).set({
+      name: op.name,
+      xp: op.xp||0,
+      rank: op.rank||1,
+      manualRank: op.manualRank||null,
+      medals: op.medals||[],
+      stats: op.stats||freshStats(),
+      lastSeen: new Date().toISOString()
+    }, { merge: true })
+    .then(function(){ console.log('[CLOUD] профиль отправлен: '+op.name); })
+    .catch(function(err){ console.warn('[CLOUD] ОШИБКА ОТПРАВКИ:', err); });
+  }catch(e){ console.warn('[CLOUD] сбой:', e); }
+}
 
 function cloudFetchStock(){
   if(!fbReady||!fs) return;
@@ -4543,6 +4554,7 @@ function endDrag(){
 }
 leverKnob.addEventListener('pointerup',endDrag);
 leverKnob.addEventListener('pointercancel',endDrag);
+
 
 /* ==================================================================
    КНОПКА РЕЗЕРВ
