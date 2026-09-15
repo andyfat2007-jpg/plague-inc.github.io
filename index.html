@@ -3723,9 +3723,21 @@ function submitMenu(){
     renderInput(); return;
   }
 
-    if(menuState==='stock_menu'){
+      if(menuState==='stock_menu'){
     if(buf==='0'){ gotoMainMenu(); return; }
     const low=buf.toLowerCase();
+    if(low==='п'||low==='g'){
+      stockCurSec='common';
+      stockMode='add'; menuState='stock_add_name'; stockName='';
+      menuPrint(''); menuPrint(' ПРИЁМ ТОВАРА. НАИМЕНОВАНИЕ:','dim');
+      renderInput(); return;
+    }
+    if(low==='в'||low==='d'){
+      stockCurSec='common';
+      stockMode='take'; menuState='stock_take_name'; stockName='';
+      menuPrint(''); menuPrint(' ВЫДАЧА ТОВАРА. НАИМЕНОВАНИЕ:','dim');
+      renderInput(); return;
+    }
     if((low==='с'||low==='c')&&(adminMode||isMaker())){
       menuState='stock_pw_pick'; inputBuf=''; menuLines=[];
       menuPrint(sep('ПАРОЛИ СЕКЦИЙ'),'bright');
