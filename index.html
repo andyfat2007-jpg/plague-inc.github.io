@@ -1156,6 +1156,35 @@ window.addEventListener('online', ()=>{ if(fbReady) dbUp(); else dbDown(); });
 window.addEventListener('offline', ()=>dbDown());
 if(navigator.onLine&&fbReady) dbUp();
 function cloudSaveProfile(op){
+  let stockWriteTs=0;
+function cloudSaveStock(list){
+  if(!fbReady||!fs) return;
+  try{
+    stockWriteTs=Date.now();
+    fs.collection('warehouse').doc('stock').set({
+      items: list,
+      updated: new Date().toISOString()
+    })
+    .then(function(){ console.log('[CLOUD] склад отправлен: '+list.length+' поз.'); })
+    .catch(function(err){ console.warn('[CLOUD] ошибка склада:', err); });
+  }catch(e){ console.warn('[CLOUD] сбой склада:', e); }
+}
+function cloudFetchStock(){
+  if(!fbReady||!fs) return;
+  try{
+    fs.collection('warehouse').doc('stock').get()
+      .then(function(doc){
+        if(!doc.exists) return;
+        if(Date.now()-stockWriteTs<4000) return;
+        const items=doc.data().items;
+        if(Array.isArray(items)){
+          saveData(STOCK_KEY,items);
+          if(menuState==='stock_menu') showStock([' СКЛАД ОБНОВЛЁН ИЗ АРХИВА']);
+        }
+      })
+      .catch(function(err){ console.warn('[CLOUD] чтение склада:', err); });
+  }catch(e){}
+}
   if(!fbReady||!fs||!op) return;
   try{
     fs.collection('operators').doc(op.name.replace(/\//g,'_')).set({
@@ -2456,37 +2485,43 @@ function showStock(noteLines){
 /* v14: нормализация ключей при поиске товара */
 function stockApply(name,qty,mode){
   const key=name.trim().toLowerCase();
-  const stock=loadData(STOCK_KEY,[]);
-  const rec=stock.find(s=>String(s.name).trim().toLowerCase()===key);
+  const sec=stockCurSec;
+  const obj=loadStockObj();
+  const list=obj[sec]||[];
+  const rec=list.find(s=>String(s.name).trim().toLowerCase()===key);
   let note;
   if(mode==='add'){
-    if(rec) rec.qty+=qty; else stock.push({name:name.trim(),qty:qty});
-    saveData(STOCK_KEY,stock);
+    if(rec) rec.qty+=qty; else list.push({name:name.trim(),qty:qty});
+    obj[sec]=list;
+    saveStockObj(obj);
+    cloudSaveStock(obj);
     sfx.grant();
-    const now=loadData(STOCK_KEY,[]).find(s=>String(s.name).trim().toLowerCase()===key);
-    note=' ИТОГ ▸ ПРИНЯТО '+name+' +'+qty+' ШТ · ТЕПЕРЬ: '+(now?now.qty:qty)+' ШТ';
-    audit('СКЛАД ▸ ПРИНЯТО '+name+' +'+qty);
+    const now=list.find(s=>String(s.name).trim().toLowerCase()===key);
+    note=' ИТОГ ▸ ['+SEC_LABEL[sec]+'] ПРИНЯТО '+name+' +'+qty+' ШТ · ТЕПЕРЬ: '+(now?now.qty:qty)+' ШТ';
+    audit('СКЛАД ▸ ['+SEC_LABEL[sec]+'] ПРИНЯТО '+name+' +'+qty);
   } else {
     if(!isMaker()&&(!rec||rec.qty<qty)){
       sfx.error();
-      showStock([' ▲ ОТКАЗ ▸ '+(rec?rec.name+' В НАЛИЧИИ ТОЛЬКО '+rec.qty+' ШТ':'«'+name+'» НЕТ НА СКЛАДЕ · ПРИМИТЕ ЧЕРЕЗ [П]')]);
+      showStockSection([' ▲ ОТКАЗ ▸ '+(rec?rec.name+' В НАЛИЧИИ ТОЛЬКО '+rec.qty+' ШТ':'«'+name+'» НЕТ В СЕКЦИИ · ПРИМИТЕ ЧЕРЕЗ [П]')]);
       return;
     }
     let left;
     if(rec){
       rec.qty-=qty; left=rec.qty;
-      if(rec.qty===0) stock.splice(stock.indexOf(rec),1);
+      if(rec.qty===0) list.splice(list.indexOf(rec),1);
     } else {
-      stock.push({name:name.trim(),qty:-qty});
+      list.push({name:name.trim(),qty:-qty});
       left=-qty;
     }
-    saveData(STOCK_KEY,stock);
+    obj[sec]=list;
+    saveStockObj(obj);
+    cloudSaveStock(obj);
     sfx.grant();
-    note=' ИТОГ ▸ ВЫДАНО '+name+' -'+qty+' ШТ · ОСТАЛОСЬ: '+left+' ШТ';
-    audit('СКЛАД ▸ ВЫДАНО '+name+' -'+qty);
+    note=' ИТОГ ▸ ['+SEC_LABEL[sec]+'] ВЫДАНО '+name+' -'+qty+' ШТ · ОСТАЛОСЬ: '+left+' ШТ';
+    audit('СКЛАД ▸ ['+SEC_LABEL[sec]+'] ВЫДАНО '+name+' -'+qty);
   }
   const rn=grantReward(XP.STOCK,function(op){ ensureProfile(op); op.stats.stock++; return []; });
-  showStock([note].concat(rn));
+  showStockSection([note].concat(rn));
 }
 
 /* ---------- НАУКА ---------- */
@@ -3688,20 +3723,85 @@ function submitMenu(){
     renderInput(); return;
   }
 
-  if(menuState==='stock_menu'){
+    if(menuState==='stock_menu'){
     if(buf==='0'){ gotoMainMenu(); return; }
+    const low=buf.toLowerCase();
+    if((low==='с'||low==='c')&&(adminMode||isMaker())){
+      menuState='stock_pw_pick'; inputBuf=''; menuLines=[];
+      menuPrint(sep('ПАРОЛИ СЕКЦИЙ'),'bright');
+      menuPrint('');
+      menuPrint('  [1] ▸ [ОРУЖЕЙНЫЙ] · '+(stockAccess.weapons?'ПАРОЛЬ УСТАНОВЛЕН':'БЕЗ ПАРОЛЯ'));
+      menuPrint('  [2] ▸ [ИНЖЕНЕРНЫЙ] · '+(stockAccess.eng?'ПАРОЛЬ УСТАНОВЛЕН':'БЕЗ ПАРОЛЯ'));
+      menuPrint('');
+      menuPrint(' НОМЕР — ВЫБРАТЬ СЕКЦИЮ · [0] НАЗАД','dim');
+      renderInput(); sfx.beep(); return;
+    }
+    const n=parseInt(buf,10);
+    if(!buf||isNaN(n)||n<1||n>STOCK_SECTIONS.length){ menuErr('▲ НЕТ ТАКОЙ СЕКЦИИ'); renderInput(); return; }
+    const sec=STOCK_SECTIONS[n-1];
+    stockCurSec=sec.id;
+    if(secLocked(sec.id)){
+      if(!stockAccess[sec.id]){
+        menuErr('▲ СЕКЦИЯ ЗАКРЫТА · ПАРОЛЬ ЕЩЁ НЕ УСТАНОВЛЕН');
+        renderInput(); return;
+      }
+      menuState='stock_sec_pass'; inputBuf=''; menuLines=[];
+      menuPrint(sep('ДОСТУП ОГРАНИЧЕН'),'bright');
+      menuPrint('');
+      menuPrint(' СЕКЦИЯ ▸ ['+SEC_LABEL[sec.id]+']');
+      menuPrint('');
+      menuPrint(' ВВЕДИТЕ ПАРОЛЬ СЕКЦИИ + ENTER','dim');
+      renderInput(); sfx.beep(); return;
+    }
+    showStockSection();
+    return;
+  }
+  if(menuState==='stock_sec_pass'){
+    const want=stockAccess[stockCurSec]||'';
+    if(want&&normCode(buf)===normCode(want)){
+      stockUnlocked[stockCurSec]=true;
+      sfx.grant();
+      showStockSection([' ДОСТУП РАЗРЕШЁН ▸ ['+SEC_LABEL[stockCurSec]+']']);
+    } else {
+      menuErr('▲ НЕВЕРНЫЙ ПАРОЛЬ СЕКЦИИ');
+      renderInput();
+    }
+    return;
+  }
+  if(menuState==='stock_sec'){
+    if(buf==='0'){ showStock(); return; }
     const low=buf.toLowerCase();
     if(low==='п'||low==='g'){
       stockMode='add'; menuState='stock_add_name'; stockName='';
-      menuPrint(''); menuPrint(' ПРИЁМ ТОВАРА. НАИМЕНОВАНИЕ:','dim');
+      menuPrint(''); menuPrint(' ПРИЁМ ▸ ['+SEC_LABEL[stockCurSec]+'] НАИМЕНОВАНИЕ:','dim');
       renderInput(); return;
     }
     if(low==='в'||low==='d'){
       stockMode='take'; menuState='stock_take_name'; stockName='';
-      menuPrint(''); menuPrint(' ВЫДАЧА ТОВАРА. НАИМЕНОВАНИЕ:','dim');
+      menuPrint(''); menuPrint(' ВЫДАЧА ▸ ['+SEC_LABEL[stockCurSec]+'] НАИМЕНОВАНИЕ:','dim');
       renderInput(); return;
     }
     menuErr('▲ КОМАНДЫ: П / В / 0'); renderInput(); return;
+  }
+  if(menuState==='stock_pw_pick'){
+    if(buf==='0'){ showStock(); return; }
+    if(buf==='1'){ stockCurSec='weapons'; }
+    else if(buf==='2'){ stockCurSec='eng'; }
+    else { menuErr('▲ ВЫБЕРИТЕ 1-2'); renderInput(); return; }
+    menuState='stock_pw_new'; inputBuf='';
+    menuPrint(' СЕКЦИЯ ▸ ['+SEC_LABEL[stockCurSec]+']');
+    menuPrint(' НОВЫЙ ПАРОЛЬ (ПУСТО + ENTER = СНЯТЬ ПАРОЛЬ):','dim');
+    renderInput(); return;
+  }
+  if(menuState==='stock_pw_new'){
+    const v=buf.trim();
+    if(v){ stockAccess[stockCurSec]=v; stockUnlocked[stockCurSec]=true; }
+    else { stockAccess[stockCurSec]=null; stockUnlocked[stockCurSec]=false; }
+    cloudSaveAccess();
+    audit('СКЛАД ▸ ПАРОЛЬ '+(v?'УСТАНОВЛЕН':'СНЯТ')+' ▸ ['+SEC_LABEL[stockCurSec]+']');
+    sfx.grant();
+    showStock([v?(' ПАРОЛЬ УСТАНОВЛЕН ▸ ['+SEC_LABEL[stockCurSec]+']'):(' ПАРОЛЬ СНЯТ ▸ ['+SEC_LABEL[stockCurSec]+']')]);
+    return;
   }
   if(menuState==='stock_add_name'){
     if(!buf.trim()){ menuErr('▲ ПУСТОЕ НАИМЕНОВАНИЕ'); renderInput(); return; }
@@ -3718,9 +3818,9 @@ function submitMenu(){
   if(menuState==='stock_take_name'){
     if(!buf.trim()){ menuErr('▲ ПУСТОЕ НАИМЕНОВАНИЕ'); renderInput(); return; }
     stockName=buf.trim(); menuState='stock_take_qty';
-    const st=loadData(STOCK_KEY,[]);
-    const r=st.find(s=>String(s.name).trim().toLowerCase()===stockName.trim().toLowerCase());
-    menuPrint(' НАИМЕНОВАНИЕ ▸ '+stockName+(r?(' · В НАЛИЧИИ: '+r.qty+' ШТ'):' · НЕТ НА СКЛАДЕ'),'dim');
+    const lst=loadStockObj()[stockCurSec]||[];
+    const r=lst.find(s=>String(s.name).trim().toLowerCase()===stockName.trim().toLowerCase());
+    menuPrint(' НАИМЕНОВАНИЕ ▸ '+stockName+(r?(' · В НАЛИЧИИ: '+r.qty+' ШТ'):' · НЕТ В СЕКЦИИ'),'dim');
     menuPrint(' КОЛИЧЕСТВО (ЦЕЛОЕ > 0):','dim');
     renderInput(); return;
   }
