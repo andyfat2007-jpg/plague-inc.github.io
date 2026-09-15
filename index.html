@@ -4617,11 +4617,20 @@ function endDrag(){
 leverKnob.addEventListener('pointerup',endDrag);
 leverKnob.addEventListener('pointercancel',endDrag);
 
-let coverOpened=false, coverBusy=false;
+let coverOpened=false, coverBusy=false, coverFailSafe=null;
+function coverReset(){
+  if(!coverBusy) return;
+  coverBusy=false;
+  clearTimeout(coverFailSafe);
+  leverCover.classList.remove('opening','closing');
+  if(coverOpened) leverCover.classList.add('open');
+}
 leverCover.addEventListener('pointerdown',(e)=>e.stopPropagation());
 leverCover.addEventListener('click',()=>{
   if(coverBusy) return;
   coverBusy=true;
+  clearTimeout(coverFailSafe);
+  coverFailSafe=setTimeout(coverReset,1500);
   coverOpened=!coverOpened;
   if(coverOpened) sfx.coverOpen(); else sfx.coverClose();
   leverCover.classList.remove('open','opening','closing');
@@ -4629,9 +4638,10 @@ leverCover.addEventListener('click',()=>{
   leverCover.classList.add(coverOpened?'opening':'closing');
 });
 leverCover.addEventListener('animationend',()=>{
+  coverBusy=false;
+  clearTimeout(coverFailSafe);
   leverCover.classList.remove('opening','closing');
   if(coverOpened) leverCover.classList.add('open');
-  coverBusy=false;
 });
 
 /* ==================================================================
