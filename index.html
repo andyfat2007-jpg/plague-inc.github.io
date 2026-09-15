@@ -1157,18 +1157,10 @@ window.addEventListener('offline', ()=>dbDown());
 if(navigator.onLine&&fbReady) dbUp();
 function cloudSaveProfile(op){
   let stockWriteTs=0;
-function cloudSaveStock(list){
-  if(!fbReady||!fs) return;
-  try{
-    stockWriteTs=Date.now();
-    fs.collection('warehouse').doc('stock').set({
-      items: list,
-      updated: new Date().toISOString()
-    })
     .then(function(){ console.log('[CLOUD] склад отправлен: '+list.length+' поз.'); })
     .catch(function(err){ console.warn('[CLOUD] ошибка склада:', err); });
   }catch(e){ console.warn('[CLOUD] сбой склада:', e); }
-}
+
 function cloudFetchStock(){
   if(!fbReady||!fs) return;
   try{
@@ -2170,6 +2162,123 @@ function showMembers(fromCloud){
 let membersCloudRows=[];
 let membersPending=false;
 let membersToken=0;
+
+/* ==================================================================
+   СКЛАД: СЕКЦИИ + ОБЛАКО
+================================================================== */
+const STOCK_SECTIONS=[
+  {id:'common',  name:'ОБЩИЙ',      locked:false},
+  {id:'weapons', name:'ОРУЖЕЙНЫЙ',  locked:true},
+  {id:'eng',     name:'ИНЖЕНЕРНЫЙ', locked:true}
+];
+const SEC_LABEL={common:'ОБЩИЙ',weapons:'ОРУЖЕЙНЫЙ',eng:'ИНЖЕНЕРНЫЙ'};
+
+let stockAccess={weapons:null,eng:null};
+let stockUnlocked={weapons:false,eng:false};
+let stockCurSec='common';
+let stockPending=false;
+let stockWriteTs=0;
+
+function loadStockObj(){
+  try{
+    const v=JSON.parse(localStorage.getItem(STOCK_KEY));
+    if(v&&typeof v==='object'&&!Array.isArray(v)){
+      return {common:Array.isArray(v.common)?v.common:[],
+              weapons:Array.isArray(v.weapons)?v.weapons:[],
+              eng:Array.isArray(v.eng)?v.eng:[]};
+    }
+    if(Array.isArray(v)) return {common:v,weapons:[],eng:[]};
+  }catch(e){}
+  return {common:[],weapons:[],eng:[]};
+}
+function saveStockObj(o){ try{ localStorage.setItem(STOCK_KEY,JSON.stringify(o)); }catch(e){} }
+
+function secLocked(sec){
+  const s=STOCK_SECTIONS.find(x=>x.id===sec);
+  if(!s||!s.locked) return false;
+  if(adminMode||isMaker()) return false;
+  return !stockUnlocked[sec];
+}
+
+function cloudSaveStock(obj){
+  if(!fbReady||!fs) return;
+  try{
+    stockWriteTs=Date.now();
+    fs.collection('warehouse').doc('stock').set({
+      sections:{common:obj.common,weapons:obj.weapons,eng:obj.eng},
+      updated:new Date().toISOString()
+    }).then(function(){ console.log('[CLOUD] склад отправлен'); })
+      .catch(function(err){ console.warn('[CLOUD] ошибка склада:',err); });
+  }catch(e){ console.warn('[CLOUD] сбой склада:',e); }
+}
+function cloudSaveAccess(){
+  if(!fbReady||!fs) return;
+  try{
+    fs.collection('warehouse').doc('access').set({
+      passwords:{weapons:stockAccess.weapons,eng:stockAccess.eng},
+      updated:new Date().toISOString()
+    }).then(function(){ console.log('[CLOUD] пароли секций сохранены'); })
+      .catch(function(err){ console.warn('[CLOUD] ошибка паролей:',err); });
+  }catch(e){}
+}
+function cloudFetchStock(){
+  if(!fbReady||!fs) return;
+  try{
+    stockPending=true;
+    Promise.all([
+      fs.collection('warehouse').doc('stock').get(),
+      fs.collection('warehouse').doc('access').get()
+    ]).then(function(res){
+      stockPending=false;
+      let changed=false;
+      if(res[0].exists&&Date.now()-stockWriteTs>=4000){
+        const sec=res[0].data().sections;
+        if(sec&&typeof sec==='object'){
+          saveStockObj({common:Array.isArray(sec.common)?sec.common:[],
+                        weapons:Array.isArray(sec.weapons)?sec.weapons:[],
+                        eng:Array.isArray(sec.eng)?sec.eng:[]});
+          changed=true;
+        }
+      }
+      if(res[1].exists){
+        const pw=res[1].data().passwords;
+        if(pw&&typeof pw==='object'){
+          stockAccess={weapons:pw.weapons||null,eng:pw.eng||null};
+        }
+      }
+      if(menuState==='stock_menu'&&changed) showStock([' СКЛАД ОБНОВЛЁН ИЗ АРХИВА'],true);
+      if(menuState==='stock_sec'&&changed) showStockSection([' ДАННЫЕ ОБНОВЛЕНЫ ИЗ АРХИВА']);
+    }).catch(function(err){
+      stockPending=false;
+      console.warn('[CLOUD] чтение склада:',err);
+    });
+  }catch(e){ stockPending=false; }
+}
+
+function showStockSection(noteLines){
+  menuState='stock_sec'; inputBuf=''; resetScratch(); menuLines=[];
+  const obj=loadStockObj();
+  const list=obj[stockCurSec]||[];
+  menuPrint(dTop(),'bright');
+  menuPrint(dRow('СКЛАД ▸ ['+SEC_LABEL[stockCurSec]+']'),'bright');
+  menuPrint(dRow('УЧЁТ ИМУЩЕСТВА'),'bright');
+  menuPrint(dBot(),'bright');
+  menuPrint('');
+  if(!list.length) menuPrint(' СЕКЦИЯ ПУСТА','dim');
+  else{
+    menuPrint('──[ НАЛИЧИЕ ]──');
+    list.forEach((s,i)=>menuPrint('  ['+(i+1)+'] ▸ '+s.name+' · '+s.qty+' ШТ'));
+  }
+  menuPrint('');
+  menuPrint('  [П] ▸ ПРИНЯТЬ ТОВАР');
+  menuPrint('  [В] ▸ ВЫДАТЬ ТОВАР');
+  menuPrint('  [0] ▸ К СПИСКУ СЕКЦИЙ');
+  menuPrint('');
+  printNotes(noteLines);
+  menuPrint(' ИМЯ ТОВАРА ДОЛЖНО СОВПАДАТЬ С УЧЁТОМ','dim');
+  renderInput();
+  sfx.beep();
+}
 
 /* ---------- ПРОФИЛЬ ---------- */
 function showProfile(){
