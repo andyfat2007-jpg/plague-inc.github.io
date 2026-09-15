@@ -1155,7 +1155,22 @@ if(fbReady){
 window.addEventListener('online', ()=>{ if(fbReady) dbUp(); else dbDown(); });
 window.addEventListener('offline', ()=>dbDown());
 if(navigator.onLine&&fbReady) dbUp();
-
+function cloudSaveProfile(op){
+  if(!fbReady||!fs||!op) return;
+  try{
+    fs.collection('operators').doc(op.name.replace(/\//g,'_')).set({
+      name: op.name,
+      xp: op.xp||0,
+      rank: op.rank||1,
+      manualRank: op.manualRank||null,
+      medals: op.medals||[],
+      stats: op.stats||freshStats(),
+      lastSeen: new Date().toISOString()
+    }, { merge: true })
+    .then(function(){ console.log('[CLOUD] профиль отправлен: '+op.name); })
+    .catch(function(err){ console.warn('[CLOUD] ОШИБКА ОТПРАВКИ:', err); });
+  }catch(e){ console.warn('[CLOUD] сбой:', e); }
+}
 /* ==================================================================
    ХРАНИЛИЩЕ
 ================================================================== */
@@ -3059,6 +3074,7 @@ function submitMenu(){
       audit('ПЕРВЫЙ ВХОД ▸ '+fakeName+' · +'+XP.REG+' XP');
     }
     audit('ПОЗЫВНОЙ ПРИНЯТ ▸ '+fakeName);
+    cloudSaveProfile(myDoc);
     startRetinaScan();
     return;
   }
