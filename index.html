@@ -1115,7 +1115,8 @@ function cloudFetchStock(){
       .catch(function(err){ console.warn('[CLOUD] чтение склада:', err); });
   }catch(e){}
 }
-  if(!fbReady||!fs||!op) return;
+  function cloudSaveProfile(op){
+    if(!fbReady||!fs||!op) return;
   try{
     fs.collection('operators').doc(op.name.replace(/\//g,'_')).set({
       name: op.name,
