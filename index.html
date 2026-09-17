@@ -154,15 +154,24 @@
 
   .screen-inner{
     position:absolute; inset:0;
-    display:flex; flex-direction:column; justify-content:flex-end;
+    display:flex; flex-direction:column;
     padding:4% 5%;
-    overflow:hidden;
+    overflow-y:auto;
+    overflow-x:hidden;
+    overscroll-behavior:contain;
+    -webkit-overflow-scrolling:touch;
     color:var(--ph);
     text-shadow:0 0 5px var(--ph-glow), 0 0 18px rgba(46,255,106,.25);
     font-size:clamp(11px,1.6vw,18px);
     line-height:1.5;
     transform-origin:center;
+    scrollbar-width:thin;
+    scrollbar-color:rgba(61,255,116,.35) transparent;
   }
+  .screen-inner::-webkit-scrollbar{ width:6px; }
+  .screen-inner::-webkit-scrollbar-track{ background:rgba(2,8,3,.5); }
+  .screen-inner::-webkit-scrollbar-thumb{ background:rgba(61,255,116,.30); border-radius:3px; }
+  #screenContent{ margin-top:auto; }
   .screen-inner.crt-on{ animation:crtOn 1.2s ease-out forwards; }
   .screen-inner.crt-off{ animation:crtOff .65s ease-in forwards; }
   @keyframes crtOn{
@@ -1096,6 +1105,32 @@ function cloudSaveProfile(op){
     .then(function(){ console.log('[CLOUD] профиль отправлен: '+op.name); })
     .catch(function(err){ console.warn('[CLOUD] ОШИБКА ОТПРАВКИ:', err); });
   }catch(e){ console.warn('[CLOUD] сбой:', e); }
+  function cloudDeleteOp(name){
+  if(!fbReady||!fs||!name) return;
+  try{
+    fs.collection('operators').doc(String(name).replace(/\//g,'_')).delete()
+      .then(function(){ console.log('[CLOUD] оператор удалён из базы: '+name); })
+      .catch(function(err){ console.warn('[CLOUD] удаление из базы:', err); });
+  }catch(e){}
+}
+function doRenameOp(oldName,newName){
+  newName=newName.trim();
+  if(newName.length<NAME_MIN||newName.length>NAME_MAX){ menuErr('▲ ИМЯ '+NAME_MIN+'-'+NAME_MAX+' СИМВОЛОВ'); renderInput(); return; }
+  const ops=loadOps();
+  if(ops.some(o=>o.name.toLowerCase()===newName.toLowerCase())){ menuErr('▲ ТАКОЙ ОПЕРАТОР УЖЕ ЕСТЬ'); renderInput(); return; }
+  const op=ops.find(o=>o.name===oldName);
+  if(!op){ backToPanel([{t:'▲ ОПЕРАТОР ИСЧЕЗ'}]); return; }
+  op.name=newName;
+  saveOps(ops);
+  if(curOperator()===oldName){
+    try{ localStorage.setItem(OP_KEY,newName); }catch(e){}
+    myDoc=op;
+  }
+  cloudDeleteOp(oldName);
+  cloudSaveProfile(op);
+  audit('ПЕРЕИМЕНОВАНИЕ ▸ '+oldName+' → '+newName);
+  sfx.grant();
+  backToPanel([{t:' ПОЗЫВНОЙ ▸ '+oldName+' → '+newName}]);
 }
 
 function cloudFetchStock(){
@@ -1428,6 +1463,7 @@ function addLine(text,cls){
   div.textContent=text;
   brandify(div);
   screenContent.appendChild(div);
+  if(distBottom()<80) requestAnimationFrame(stickBottom);
   return div;
 }
 function sleep(ms){ return new Promise(res=>setTimeout(res,skipBoot?0:ms)); }
@@ -1439,7 +1475,12 @@ async function typeLine(text,speed){
     await sleep(speed);
   }
 }
-
+function distBottom(){
+  return screenInner.scrollHeight-screenInner.scrollTop-screenInner.clientHeight;
+}
+function stickBottom(){
+  screenInner.scrollTop=screenInner.scrollHeight;
+}
 const FW=42, INNER=40;
 function centerText(s,w){ if(s.length>=w) return s; const l=Math.floor((w-s.length)/2); return ' '.repeat(l)+s+' '.repeat(w-s.length-l); }
 function dTop(){ return '╔'+'═'.repeat(INNER)+'╗'; }
@@ -1825,6 +1866,8 @@ function promptFor(){
     case 'adm_rank_set':     return '┃ ДОПУСК ▸ ';
     case 'adm_xp_op':        return '┃ НОМЕР ▸ ';
     case 'adm_xp_set':       return '┃ XP ±N ▸ ';
+    case 'adm_rename_num':   return '┃ НОМЕР ▸ ';
+    case 'adm_rename_new':   return '┃ НОВЫЙ ПОЗЫВНОЙ ▸ ';
     case 'adm_keys':         return '┃ КЛЮЧИ ▸ ';
     case 'adm_key_revoke':   return '┃ НОМЕР ▸ ';
     case 'adm_key_revoke_yes':return '┃ ТОЧНО? ▸ ';
@@ -1896,7 +1939,7 @@ function inputMax(){
     case 'fake_pass': case 'admin_pass':
     case 'adm_code': case 'adm_code_confirm':
     case 'mk_code_new': case 'mk_code_confirm':    return PASS_MAX;
-    case 'fake_name': case 'med_new_name': case 'adm_member_add': return NAME_MAX;
+    case 'fake_name': case 'med_new_name': case 'adm_member_add': return NAME_MAX;    case 'adm_rename_new':                        return NAME_MAX; 
     case 'j_new_title':                           return 28;
     case 'sci_topic':                             return 22;
     case 'stock_add_name': case 'stock_take_name':return 20;
@@ -1919,6 +1962,7 @@ function inputRowClass(){
   return '';
 }
 function renderInput(){
+  const keepOff=distBottom();
   screenContent.innerHTML='';
   for(const l of menuLines){
     const d=document.createElement('div');
@@ -1929,6 +1973,7 @@ function renderInput(){
   }
   if(menuState==='retina'||menuState==='gear'||menuState==='analys'){
     updateTouchUI();
+    screenInner.scrollTop=Math.max(0,screenInner.scrollHeight-screenInner.clientHeight-keepOff);
     return;
   }
   const row=document.createElement('div');
@@ -3116,6 +3161,7 @@ function handleEscape(){
     case 'adm_reset_num': case 'adm_reset_yes': case 'adm_del_num':
     case 'adm_medals_op': case 'adm_medal_pick':
     case 'adm_rank_op': case 'adm_rank_set':
+    case 'adm_rename_num': case 'adm_rename_new':
     case 'adm_xp_op': case 'adm_xp_set':
     case 'adm_audit': case 'adm_members':
     case 'sci_del_num': case 'sci_del_yes':
@@ -3261,7 +3307,7 @@ function showAdmAudit(){
 /* ==================================================================
    ОБРАБОТКА ВВОДА
 ================================================================== */
-function submitMenu(){
+function submitMenu()
   const buf=inputBuf;
   inputBuf='';
 
@@ -3348,6 +3394,21 @@ function submitMenu(){
       menuPrint(''); menuPrint(' УДАЛЕНИЕ: НОМЕР ОПЕРАТОРА','dim');
       renderInput(); return;
     }
+      if(menuState==='adm_rename_num'){
+    const n=parseInt(buf,10);
+    const ops=loadOps();
+    if(!buf||isNaN(n)||n<1||n>ops.length){ menuErr('▲ НЕТ ОПЕРАТОРА С ТАКИМ НОМЕРОМ'); renderInput(); return; }
+    admTargetName=ops[n-1].name;
+    menuState='adm_rename_new';
+    menuPrint(' ОПЕРАТОР ▸ '+admTargetName);
+    menuPrint(' НОВЫЙ ПОЗЫВНОЙ:','dim');
+    renderInput(); return;
+  }
+  if(menuState==='adm_rename_new'){
+    if(!buf.trim()){ menuErr('▲ ПУСТОЕ ИМЯ'); renderInput(); return; }
+    doRenameOp(admTargetName,buf);
+    return;
+  }
     if(buf==='4'){
       if(hatchState==='busy'){ backToPanel([{t:'▲ ПРИВОД НИШИ ЗАНЯТ'}]); }
       else{
@@ -3380,6 +3441,11 @@ function submitMenu(){
     if(buf==='10'){ showStable(); return; }
     if(buf==='11'){ startSciDelete(); return; }
     if(buf==='12'){ startMedDelete(); return; }
+        if(buf==='13'){
+      if(!loadOps().length){ sfx.error(); backToPanel([{t:'▲ РЕЕСТР ПУСТ'}]); return; }
+      menuState='adm_rename_num';
+      menuPrint(''); menuPrint(' ПОЗЫВНОЙ: НОМЕР ОПЕРАТОРА','dim');
+      renderInput(); return;
     menuErr('▲ НЕТ ТАКОЙ КОМАНДЫ'); renderInput(); return;
   }
 
